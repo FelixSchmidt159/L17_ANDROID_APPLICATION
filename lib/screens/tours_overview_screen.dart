@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/tours.dart';
 import '../providers/tour.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/chart_bar.dart';
 
 class ToursOverviewScreen extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class ToursOverviewScreen extends StatefulWidget {
 
 class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
   List<Tour> _items;
+  int _overallDistance;
   int _selectedIndex = 0;
   @override
   void initState() {
@@ -27,28 +29,78 @@ class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _overallDistance = Provider.of<Tours>(context).overallDistance();
     _items = Provider.of<Tours>(context).items;
+    final appBar = AppBar(
+      title: const Text('Fahrtenbuch'),
+      centerTitle: true,
+    );
+    final bottomBar = BottomNavigationBar(
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+          backgroundColor: Colors.red,
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.business),
+          label: 'Business',
+          backgroundColor: Colors.green,
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.school),
+          label: 'School',
+          backgroundColor: Colors.purple,
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: 'Settings',
+          backgroundColor: Colors.pink,
+        ),
+      ],
+      currentIndex: _selectedIndex,
+      selectedItemColor: Colors.amber[800],
+      onTap: _onItemTapped,
+    );
+    final height = MediaQuery.of(context).size.height -
+        MediaQuery.of(context).padding.top -
+        appBar.preferredSize.height -
+        MediaQuery.of(context).padding.bottom -
+        kBottomNavigationBarHeight;
+    final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Fahrtenbuch'),
-        centerTitle: true,
-      ),
+      appBar: appBar,
       body: Column(
         children: <Widget>[
           Container(
             color: Colors.grey.shade200,
-            height: 60,
+            height: height * 0.10,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Text('hii'),
-                Text('hii'),
-                Text('hii'),
+                Container(
+                  alignment: Alignment.center,
+                  width: width * 0.25,
+                  child: Text('Christophorus'),
+                ),
+                SizedBox(
+                  width: width * 0.05,
+                ),
+                ChartBar('test', _overallDistance, 3000, height * 0.10),
+                SizedBox(
+                  width: width * 0.05,
+                ),
+                Container(
+                  width: width * 0.25,
+                  alignment: Alignment.center,
+                  child: Text('$_overallDistance km'),
+                ),
               ],
             ),
           ),
           Container(
-            height: 400,
+            height: height * 0.90,
             child: ListView.builder(
               itemBuilder: (context, position) {
                 return Column(
@@ -114,33 +166,7 @@ class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
         ],
       ),
       drawer: AppDrawer(),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-            backgroundColor: Colors.red,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
-            backgroundColor: Colors.green,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'School',
-            backgroundColor: Colors.purple,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-            backgroundColor: Colors.pink,
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
-      ),
+      bottomNavigationBar: bottomBar,
     );
   }
 }

@@ -179,6 +179,16 @@ class Tours with ChangeNotifier {
   List<Tour> get items {
     return [..._items];
   }
+
+  int overallDistance() {
+    int overallDistance = 0;
+
+    for (Tour item in _items) {
+      overallDistance += item.distance;
+    }
+
+    return overallDistance;
+  }
   // var _showFavoritesOnly = false;
 
   // List<Product> get items {
