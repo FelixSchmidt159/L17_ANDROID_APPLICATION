@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ChartBar extends StatelessWidget {
-  final String label;
   final int distanceDriven;
   final int distanceGoal;
   final double height;
 
-  ChartBar(this.label, this.distanceDriven, this.distanceGoal, this.height);
+  ChartBar(this.distanceDriven, this.distanceGoal, this.height);
 
   @override
   Widget build(BuildContext context) {
@@ -14,17 +13,17 @@ class ChartBar extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Container(
-          height: height * 0.25,
-          child: Row(
-            children: [
-              Text('Fortschritt'),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: height * 0.05,
-        ),
+        // Container(
+        //   height: height * 0.25,
+        //   child: Row(
+        //     children: [
+        //       Text('Fortschritt'),
+        //     ],
+        //   ),
+        // ),
+        // SizedBox(
+        //   height: height * 0.05,
+        // ),
         Container(
           height: height * 0.25,
           width: width * 0.3,
@@ -49,17 +48,6 @@ class ChartBar extends StatelessWidget {
             ],
           ),
         ),
-        // Container(
-        //   height: height * 0.25,
-        //   width: 140,
-        //   child: Row(
-        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //     children: [
-        //       Text('$distanceDriven km'),
-        //       Text('$distanceGoal km'),
-        //     ],
-        //   ),
-        // ),
       ],
     );
   }

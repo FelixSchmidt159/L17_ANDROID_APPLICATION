@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import '../providers/tours.dart';
 import '../providers/tour.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/chart_bar.dart';
+import '../widgets/tour_list_item.dart';
 
 class ToursOverviewScreen extends StatefulWidget {
   @override
@@ -12,14 +15,11 @@ class ToursOverviewScreen extends StatefulWidget {
 }
 
 class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
+  bool _showContent = false;
   List<Tour> _items;
   int _overallDistance;
   int _selectedIndex = 0;
-  @override
-  void initState() {
-    // _items = Provider.of<Tours>(context).items;
-    super.initState();
-  }
+  DateFormat dateFormat;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -29,8 +29,6 @@ class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _overallDistance = Provider.of<Tours>(context).overallDistance();
-    _items = Provider.of<Tours>(context).items;
     final appBar = AppBar(
       title: const Text('Fahrtenbuch'),
       centerTitle: true,
@@ -82,19 +80,29 @@ class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
                 Container(
                   alignment: Alignment.center,
                   width: width * 0.25,
-                  child: Text('Christophorus'),
+                  child: Text(
+                    'Christophorus',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 SizedBox(
                   width: width * 0.05,
                 ),
-                ChartBar('test', _overallDistance, 3000, height * 0.10),
+                ChartBar(_overallDistance, 3000, height * 0.10),
                 SizedBox(
                   width: width * 0.05,
                 ),
                 Container(
                   width: width * 0.25,
                   alignment: Alignment.center,
-                  child: Text('$_overallDistance km'),
+                  child: Text(
+                    '$_overallDistance km',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -103,62 +111,7 @@ class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
             height: height * 0.90,
             child: ListView.builder(
               itemBuilder: (context, position) {
-                return Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  12.0, 12.0, 12.0, 6.0),
-                              child: Text(
-                                _items[position].licensePlate,
-                                style: TextStyle(
-                                    fontSize: 22.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  12.0, 6.0, 12.0, 12.0),
-                              child: Text(
-                                _items[position].roadCondition,
-                                style: TextStyle(fontSize: 18.0),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: <Widget>[
-                              Text(
-                                "5m",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Icon(
-                                  Icons.star_border,
-                                  size: 35.0,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Divider(
-                      height: 2.0,
-                      color: Colors.grey,
-                    )
-                  ],
-                );
+                return TourListItem(position);
               },
               itemCount: _items.length,
             ),
