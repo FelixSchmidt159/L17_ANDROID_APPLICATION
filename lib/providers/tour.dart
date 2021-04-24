@@ -11,17 +11,18 @@ class Tour with ChangeNotifier {
   final String tourBegin;
   final String tourEnd;
   final String roadCondition;
+  final String attendant;
 
-  Tour({
-    @required this.timestamp,
-    @required this.distance,
-    @required this.mileageBegin,
-    @required this.mileageEnd,
-    @required this.licensePlate,
-    @required this.tourBegin,
-    @required this.tourEnd,
-    @required this.roadCondition,
-  });
+  Tour(
+      {@required this.timestamp,
+      @required this.distance,
+      @required this.mileageBegin,
+      @required this.mileageEnd,
+      @required this.licensePlate,
+      @required this.tourBegin,
+      @required this.tourEnd,
+      @required this.roadCondition,
+      @required this.attendant});
 
   // void _setFavValue(bool newValue) {
   //   isFavorite = newValue;

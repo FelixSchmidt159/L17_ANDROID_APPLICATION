@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
 
-import '../providers/tours.dart';
 import '../providers/tour.dart';
+import '../providers/tours.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/chart_bar.dart';
 import '../widgets/tour_list_item.dart';
@@ -15,7 +14,6 @@ class ToursOverviewScreen extends StatefulWidget {
 }
 
 class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
-  bool _showContent = false;
   List<Tour> _items;
   int _overallDistance;
   int _selectedIndex = 0;
@@ -29,6 +27,8 @@ class _ToursOverviewScreenState extends State<ToursOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _items = Provider.of<Tours>(context).items;
+    _overallDistance = Provider.of<Tours>(context).overallDistance();
     final appBar = AppBar(
       title: const Text('Fahrtenbuch'),
       centerTitle: true,
