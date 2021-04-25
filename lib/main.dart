@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import './screens/tours_overview_screen.dart';
+import 'screens/overview_screen.dart';
 import './providers/tours.dart';
 
 void main() {
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
             accentColor: Colors.deepOrange,
             fontFamily: 'Lato',
           ),
-          home: ToursOverviewScreen(),
+          home: OverviewScreen(),
           routes: {
             // ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
           }),
