@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l17/widgets/create_pdf.dart';
 
 import '../widgets/app_drawer.dart';
 import '../widgets/tour_list.dart';
@@ -53,7 +54,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final width = MediaQuery.of(context).size.width;
 
     List<Widget> _widgetOptions = <Widget>[
-      TourList(height, width),
+      CreatePdf(),
       TourList(height, width),
       TourList(height, width),
     ];
