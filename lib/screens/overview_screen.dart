@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:l17/screens/photo_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
 
 import '../widgets/app_drawer.dart';
 import '../widgets/tour_list.dart';
+import 'package:image_picker/image_picker.dart';
 
 class OverviewScreen extends StatefulWidget {
   @override
@@ -11,11 +15,75 @@ class OverviewScreen extends StatefulWidget {
 
 class _OverviewScreenState extends State<OverviewScreen> {
   int _selectedIndex = 0;
+  File _storedImage;
+  String codeDialog;
+  String valueText;
+
+  Future<PickedFile> _takePicture() async {
+    final picker = ImagePicker();
+    return await picker.getImage(
+      source: ImageSource.camera,
+      maxWidth: 600,
+    );
+  }
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      if (index != 2)
+        _selectedIndex = index;
+      else {
+        _displayTextInputDialog(context);
+      }
     });
+    // if (_selectedIndex == 2) {
+    //   // _takePicture().then((value) => _storedImage = File(value.path));
+    //   // Navigator.of(context)
+    //   //     .pushNamed(PhotoScreen.routeName, arguments: _storedImage);
+    //   _displayTextInputDialog(context);
+    // }
+  }
+
+  Future<void> _displayTextInputDialog(BuildContext context) async {
+    TextEditingController _textFieldController = TextEditingController();
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Fahrt hinzufügen'),
+            content: TextField(
+              onChanged: (value) {
+                setState(() {
+                  valueText = value;
+                });
+              },
+              controller: _textFieldController,
+              decoration: InputDecoration(hintText: "Kilometerstand"),
+            ),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Colors.red, primary: Colors.white),
+                child: Text('Abbrechen'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Colors.green, primary: Colors.white),
+                child: Text('Weiter'),
+                onPressed: () {
+                  setState(() {
+                    codeDialog = valueText;
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+            ],
+          );
+        });
   }
 
   @override
@@ -46,16 +114,26 @@ class _OverviewScreenState extends State<OverviewScreen> {
       type: BottomNavigationBarType.fixed,
       onTap: _onItemTapped,
     );
-    final height = MediaQuery.of(context).size.height -
+    var height = MediaQuery.of(context).size.height -
         MediaQuery.of(context).padding.top -
         appBar.preferredSize.height -
-        MediaQuery.of(context).padding.bottom -
-        kBottomNavigationBarHeight;
+        MediaQuery.of(context).viewInsets.bottom;
+    if (MediaQuery.of(context).viewInsets.bottom == 0) {
+      height -= kBottomNavigationBarHeight;
+    }
+    // print("--------------------------------------");
+    // print(MediaQuery.of(context).size.height);
+    // print(MediaQuery.of(context).padding.top);
+    // print(appBar.preferredSize.height);
+    // print(kBottomNavigationBarHeight);
+    // print(MediaQuery.of(context).viewInsets.bottom);
+    // print(MediaQuery.of(context).viewInsets.top);
+    // print("--------------------------------------");
+
     final width = MediaQuery.of(context).size.width;
 
     List<Widget> _widgetOptions = <Widget>[
       CreatePdf(),
-      TourList(height, width),
       TourList(height, width),
     ];
 
