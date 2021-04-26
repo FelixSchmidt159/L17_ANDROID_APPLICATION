@@ -1,30 +1,24 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:async';
 
 import 'package:l17/providers/tour.dart';
+import 'package:l17/providers/tours.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 class CreatePdf extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<Tour> data = [
-      Tour(
-          timestamp: DateTime.now(),
-          distance: 101,
-          licensePlate: 'VB-365 JG',
-          mileageBegin: 100000,
-          mileageEnd: 100005,
-          roadCondition: 'nass/Regen',
-          tourBegin: 'Graz',
-          tourEnd: 'Graz-Stadt',
-          attendant: 'Susanne Haberl'),
-    ];
+    List<List<String>> data;
+    List<Tour> _items;
+    _items = Provider.of<Tours>(context).items;
+    data = generatePdfData(_items);
 
     generateDocument(PdfPageFormat.a4, data);
     return Container(
@@ -45,6 +39,37 @@ class CreatePdf extends StatelessWidget {
       ),
     );
   }
+}
+
+List<List<String>> generatePdfData(List<Tour> items) {
+  List<List<String>> pdfData = [
+    <String>[
+      'Datum',
+      'Gefahrene KM',
+      'Kilometerstand  ',
+      'Kennzeichen  ',
+      'Tageszeit  ',
+      'Fahrstrecke / ziel',
+      'Straßenzustand, Witterung',
+      'Unterschrift Begleiter',
+      'Unterschrift Bewerber'
+    ]
+  ];
+
+  for (Tour tour in items) {
+    pdfData.add(<String>[
+      DateFormat.yMd('de_DE').format(tour.timestamp),
+      tour.distance.toString(),
+      tour.mileageBegin.toString() + ' / ' + tour.mileageEnd.toString(),
+      tour.licensePlate,
+      DateFormat.Hm().format(tour.timestamp),
+      tour.tourBegin + ' / ' + tour.tourEnd,
+      tour.roadCondition,
+      '',
+      '',
+    ]);
+  }
+  return pdfData;
 }
 
 Future openFile(File file) async {
@@ -68,7 +93,8 @@ Future<File> mySaveDocument({
   return file;
 }
 
-Future<File> generateDocument(PdfPageFormat format, List<Tour> data) async {
+Future<File> generateDocument(
+    PdfPageFormat format, List<List<String>> data) async {
   final doc = pw.Document(pageMode: PdfPageMode.outlines);
 
   // final font1 = await rootBundle.load('assets/open-sans.ttf');
@@ -117,116 +143,7 @@ Future<File> generateDocument(PdfPageFormat format, List<Tour> data) async {
                     children: <pw.Widget>[
                       pw.Text('Fahrtenprotokoll', textScaleFactor: 2),
                     ])),
-            pw.Table.fromTextArray(context: context, data: const <List<String>>[
-              <String>[
-                'Datum',
-                'Gefahrene KM',
-                'Kilometerstandbeginn',
-                'Kilometerstandende',
-                'Kfz-Kennzeichen',
-                'Tageszeit',
-                'Fahrstrecke/ -ziel',
-                'Straßenzustand, Witterung',
-                'Unterschrift Begleiter',
-                'Unterschrift Bewerber'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-              <String>[
-                '1993',
-                'PDF 1.0',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1',
-                'Acrobat 1'
-              ],
-            ]),
+            pw.Table.fromTextArray(context: context, data: data),
             pw.Padding(padding: const pw.EdgeInsets.all(10)),
           ]));
 

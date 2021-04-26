@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import 'screens/overview_screen.dart';
 import './providers/tours.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,6 +13,7 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    initializeDateFormatting();
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(
