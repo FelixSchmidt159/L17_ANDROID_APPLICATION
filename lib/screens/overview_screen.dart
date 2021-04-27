@@ -35,12 +35,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
         _displayTextInputDialog(context);
       }
     });
-    // if (_selectedIndex == 2) {
-    //   // _takePicture().then((value) => _storedImage = File(value.path));
-    //   // Navigator.of(context)
-    //   //     .pushNamed(PhotoScreen.routeName, arguments: _storedImage);
-    //   _displayTextInputDialog(context);
-    // }
   }
 
   Future<void> _displayTextInputDialog(BuildContext context) async {
@@ -50,14 +44,29 @@ class _OverviewScreenState extends State<OverviewScreen> {
         builder: (context) {
           return AlertDialog(
             title: Text('Fahrt hinzufügen'),
-            content: TextField(
-              onChanged: (value) {
-                setState(() {
-                  valueText = value;
-                });
-              },
-              controller: _textFieldController,
-              decoration: InputDecoration(hintText: "Kilometerstand"),
+            content: Stack(
+              alignment: AlignmentDirectional.centerEnd,
+              children: <Widget>[
+                TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      valueText = value;
+                    });
+                  },
+                  controller: _textFieldController,
+                  decoration: InputDecoration(hintText: "Kilometerstand"),
+                ),
+                IconButton(
+                  icon: Icon(Icons.camera_alt),
+                  onPressed: () {
+                    _takePicture().then((PickedFile value) {
+                      _storedImage = File(value.path);
+                      Navigator.of(context).pushNamed(PhotoScreen.routeName,
+                          arguments: _storedImage);
+                    });
+                  },
+                ),
+              ],
             ),
             actions: <Widget>[
               TextButton(
