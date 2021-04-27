@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'dart:ui';
 
 class PhotoScreen extends StatefulWidget {
   static const routeName = '/photo-screen';
@@ -10,13 +13,59 @@ class PhotoScreen extends StatefulWidget {
 }
 
 class _PhotoScreenState extends State<PhotoScreen> {
+  Future<VisionText> textRecognizer(File image) async {
+    final data = FirebaseVisionImage.fromFile(image);
+    // final visionImage = FirebaseVisionImage.fromBytes(bytes, metadata);
+    final TextRecognizer textRecognizer =
+        FirebaseVision.instance.textRecognizer();
+    return await textRecognizer.processImage(data);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final _storedImage = ModalRoute.of(context).settings.arguments as File;
+    // FirebaseFirestore.instance
+    //     .collection('/chats/uQqmW3UnKAA8k3QfZnkD/messages')
+    //     .doc('5WEFcgbfzgSBZiCC06MR')
+    //     .update({'test': 'MOIII'});
+    // FirebaseFirestore.instance
+    //     .collection('chats/jp0eMfsXmtBrfJTH6cfp/messages')
+    //     .snapshots()
+    //     .listen((event) {
+    //   print('////////////////////////////////');
+    //   print(event.docs[0]['text']);
+    //   print('////////////////////////////////');
+    // });
+    final image = ModalRoute.of(context).settings.arguments as File;
+
+    String result = "";
+
+    textRecognizer(image).then((value) {
+      String text = value.text;
+      for (TextBlock block in value.blocks) {
+        final Rect boundingBox = block.boundingBox;
+        final List<Offset> cornerPoints = block.cornerPoints;
+        final String text = block.text;
+        final List<RecognizedLanguage> languages = block.recognizedLanguages;
+        result += "\n";
+        for (TextLine line in block.lines) {
+          // Same getters as TextBlock
+          for (TextElement element in line.elements) {
+            // Same getters as TextBlockresult
+            result += element.text;
+          }
+        }
+        result += "\n";
+      }
+      print("--------------------------------");
+      print(result);
+      print("--------------------------------");
+    });
+
     final appBar = AppBar(
       title: const Text('Tour'),
       centerTitle: true,
     );
+
     return Scaffold(
       appBar: appBar,
       body: Row(
@@ -27,9 +76,9 @@ class _PhotoScreenState extends State<PhotoScreen> {
             decoration: BoxDecoration(
               border: Border.all(width: 1, color: Colors.grey),
             ),
-            child: _storedImage != null
+            child: image != null
                 ? Image.file(
-                    _storedImage,
+                    image,
                     fit: BoxFit.cover,
                     width: double.infinity,
                   )

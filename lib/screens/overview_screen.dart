@@ -22,7 +22,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   Future<PickedFile> _takePicture() async {
     final picker = ImagePicker();
     return await picker.getImage(
-      source: ImageSource.camera,
+      source: ImageSource.gallery,
       maxWidth: 600,
     );
   }
