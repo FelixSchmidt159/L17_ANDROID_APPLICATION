@@ -13,7 +13,7 @@ class Tours with ChangeNotifier {
         roadCondition: 'nass/Regen',
         tourBegin: 'Graz',
         tourEnd: 'Graz-Stadt',
-        attendant: 'Susanne Haberl'),
+        attendant: 'Susanne'),
     Tour(
         timestamp: DateTime.now(),
         distance: 101,

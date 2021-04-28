@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../providers/tours.dart';
+import '../screens/tour_screen.dart';
 import '../providers/tour.dart';
 
 class TourListItem extends StatefulWidget {
@@ -31,79 +32,85 @@ class _TourListItemState extends State<TourListItem> {
 
     return Column(
       children: <Widget>[
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 6.0),
-                  child: Text(
-                    _items[widget.position].tourBegin,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      // fontWeight: FontWeight.bold,
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).pushNamed(TourScreen.routeName,
+                arguments: _items[widget.position]);
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 6.0),
+                    child: Text(
+                      _items[widget.position].tourBegin,
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        // fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 1.0),
-                  child: Text(
-                    _items[widget.position].tourEnd,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      // fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 1.0),
+                    child: Text(
+                      _items[widget.position].tourEnd,
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        // fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 6.0),
-                  child: Text(
-                    DateFormat.MMMMd('de_DE')
-                        .format(_items[widget.position].timestamp),
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      // fontWeight: FontWeight.bold,
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 6.0),
+                    child: Text(
+                      DateFormat.MMMMd('de_DE')
+                          .format(_items[widget.position].timestamp),
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        // fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 1.0),
-                  child: Text(
-                    _items[widget.position].distance.toString() + " km",
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      // fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 1.0),
+                    child: Text(
+                      _items[widget.position].distance.toString() + " km",
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        // fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 1.0, 25, 1.0),
-                  child: IconButton(
-                    icon: Icon(_showContent
-                        ? Icons.arrow_drop_up
-                        : Icons.arrow_drop_down),
-                    onPressed: () {
-                      setState(() {
-                        _showContent = !_showContent;
-                      });
-                    },
+                ],
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 1.0, 25, 1.0),
+                    child: IconButton(
+                      icon: Icon(_showContent
+                          ? Icons.arrow_drop_up
+                          : Icons.arrow_drop_down),
+                      onPressed: () {
+                        setState(() {
+                          _showContent = !_showContent;
+                        });
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
         _showContent
             ? Row(
