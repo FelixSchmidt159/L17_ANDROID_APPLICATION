@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:l17/screens/photo_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/applicants.dart';
 import 'screens/overview_screen.dart';
 import './providers/tours.dart';
 import './screens/tour_screen.dart';
@@ -23,6 +24,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider.value(
           value: Tours(),
+        ),
+        ChangeNotifierProvider.value(
+          value: Applicants(),
         ),
       ],
       child: MaterialApp(

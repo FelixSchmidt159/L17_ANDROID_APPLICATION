@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ChartBar extends StatelessWidget {
-  final int distanceDriven;
-  final int distanceGoal;
+  int distanceDriven;
+  int distanceGoal;
   final double height;
 
   ChartBar(this.distanceDriven, this.distanceGoal, this.height);
@@ -10,6 +10,9 @@ class ChartBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    if (distanceDriven >= distanceGoal) {
+      distanceDriven = distanceGoal;
+    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[

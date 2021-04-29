@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:l17/providers/tours.dart';
 import 'package:l17/widgets/chart_bar.dart';
+import 'package:l17/widgets/dropdown_menue.dart';
 import 'package:l17/widgets/tour_list_item.dart';
 import 'package:provider/provider.dart';
 
@@ -27,19 +28,11 @@ class _TourListState extends State<TourList> {
         Container(
           color: Colors.grey.shade200,
           height: widget.height * 0.10,
+          // padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Container(
-                alignment: Alignment.center,
-                width: widget.width * 0.25,
-                child: Text(
-                  'Christophorus',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              DropDownMenue(widget.width * 0.25, widget.height * 0.10),
               SizedBox(
                 width: widget.width * 0.05,
               ),

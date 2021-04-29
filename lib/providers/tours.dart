@@ -6,7 +6,7 @@ class Tours with ChangeNotifier {
   List<Tour> _items = [
     Tour(
         timestamp: DateTime.now(),
-        distance: 101,
+        distance: 10001,
         licensePlate: 'VB-365 JG',
         mileageBegin: 100000,
         mileageEnd: 100005,

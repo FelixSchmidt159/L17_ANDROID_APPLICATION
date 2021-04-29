@@ -7,35 +7,18 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: <Widget>[
           AppBar(
-            title: Text('Hello Friend!'),
+            title: Text('Hallo!'),
             automaticallyImplyLeading: false,
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.shop),
-            title: Text('Shop'),
+            leading: Icon(Icons.people),
+            title: Text('Bewerber'),
             onTap: () {
               Navigator.of(context).pushReplacementNamed('/');
             },
           ),
           Divider(),
-          ListTile(
-            leading: Icon(Icons.payment),
-            title: Text('Orders'),
-            // onTap: () {
-            //   Navigator.of(context)
-            //       .pushReplacementNamed(OrdersScreen.routeName);
-            // },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.edit),
-            title: Text('Manage Products'),
-            // onTap: () {
-            //   Navigator.of(context)
-            //       .pushReplacementNamed(UserProductsScreen.routeName);
-            // },
-          ),
         ],
       ),
     );
