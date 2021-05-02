@@ -127,10 +127,10 @@ class _TestState extends State<Test> {
   }
 
   void _clearImage() {
-    textRecognizer(imageFile).then((value) {
+    textRecognizer(croppedFile).then((value) {
       Navigator.of(context).pop(context);
       Navigator.of(context).pushNamed(PhotoScreen.routeName,
-          arguments: PhotoScreenArguments(imageFile, value.text));
+          arguments: PhotoScreenArguments(croppedFile, value.text));
       print(value.text);
     });
   }
