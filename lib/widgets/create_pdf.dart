@@ -85,7 +85,6 @@ Future<File> mySaveDocument({
 
   final dir = await getApplicationDocumentsDirectory();
   print(dir.absolute);
-  print('hiiii');
   final file = File('${dir.path}/$name');
 
   await file.writeAsBytes(bytes);

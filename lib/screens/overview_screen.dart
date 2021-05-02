@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:l17/screens/photo_screen.dart';
+import 'package:l17/screens/test.dart';
 import 'package:l17/widgets/create_pdf.dart';
 
 import '../widgets/app_drawer.dart';
@@ -14,17 +15,16 @@ class OverviewScreen extends StatefulWidget {
 }
 
 class _OverviewScreenState extends State<OverviewScreen> {
+  File imageFile;
   int _selectedIndex = 0;
   File _storedImage;
   String codeDialog;
   String valueText;
 
-  Future<PickedFile> _takePicture() async {
-    final picker = ImagePicker();
-    return await picker.getImage(
-      source: ImageSource.camera,
-      maxWidth: 600,
-    );
+  Future<File> _pickImage() async {
+    final pickedImage =
+        await ImagePicker().getImage(source: ImageSource.camera);
+    return imageFile = pickedImage != null ? File(pickedImage.path) : null;
   }
 
   void _onItemTapped(int index) {
@@ -59,10 +59,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 IconButton(
                   icon: Icon(Icons.camera_alt),
                   onPressed: () {
-                    _takePicture().then((PickedFile value) {
-                      _storedImage = File(value.path);
-                      Navigator.of(context).pushNamed(PhotoScreen.routeName,
-                          arguments: _storedImage);
+                    _pickImage().then((file) {
+                      Navigator.of(context)
+                          .pushNamed(Test.routeName, arguments: file);
                     });
                   },
                 ),
@@ -130,14 +129,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
     if (MediaQuery.of(context).viewInsets.bottom == 0) {
       height -= kBottomNavigationBarHeight;
     }
-    // print("--------------------------------------");
-    // print(MediaQuery.of(context).size.height);
-    // print(MediaQuery.of(context).padding.top);
-    // print(appBar.preferredSize.height);
-    // print(kBottomNavigationBarHeight);
-    // print(MediaQuery.of(context).viewInsets.bottom);
-    // print(MediaQuery.of(context).viewInsets.top);
-    // print("--------------------------------------");
 
     final width = MediaQuery.of(context).size.width;
 

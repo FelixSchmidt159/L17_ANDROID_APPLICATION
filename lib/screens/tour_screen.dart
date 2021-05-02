@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/providers/tour.dart';
-import 'package:provider/provider.dart';
 
 class TourScreen extends StatefulWidget {
   static const routeName = '/tour-screen';
