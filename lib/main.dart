@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:l17/screens/photo_screen.dart';
-import 'package:l17/screens/test.dart';
+import 'package:l17/screens/crop_image_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/applicants.dart';
@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
           routes: {
             PhotoScreen.routeName: (ctx) => PhotoScreen(),
             TourScreen.routeName: (ctx) => TourScreen(),
-            Test.routeName: (ctx) => Test(),
+            CropImageScreen.routeName: (ctx) => CropImageScreen(),
           }),
     );
   }

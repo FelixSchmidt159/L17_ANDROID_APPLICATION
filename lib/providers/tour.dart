@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 
 class Tour with ChangeNotifier {
+  final DateTime id;
   final DateTime timestamp;
   final int distance;
   final int mileageBegin;
@@ -14,15 +15,16 @@ class Tour with ChangeNotifier {
   final String attendant;
 
   Tour(
-      {@required this.timestamp,
-      @required this.distance,
-      @required this.mileageBegin,
-      @required this.mileageEnd,
-      @required this.licensePlate,
-      @required this.tourBegin,
-      @required this.tourEnd,
-      @required this.roadCondition,
-      @required this.attendant});
+      {@required this.id,
+      @required this.timestamp,
+      this.distance,
+      this.mileageBegin,
+      this.mileageEnd,
+      this.licensePlate,
+      this.tourBegin,
+      this.tourEnd,
+      this.roadCondition,
+      this.attendant});
 
   // void _setFavValue(bool newValue) {
   //   isFavorite = newValue;

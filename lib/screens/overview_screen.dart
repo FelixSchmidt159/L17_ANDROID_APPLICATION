@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:l17/screens/photo_screen.dart';
-import 'package:l17/screens/test.dart';
+import 'package:l17/screens/crop_image_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
 
 import '../widgets/app_drawer.dart';
@@ -16,14 +16,13 @@ class OverviewScreen extends StatefulWidget {
 
 class _OverviewScreenState extends State<OverviewScreen> {
   File imageFile;
-  int _selectedIndex = 0;
-  File _storedImage;
+  int _selectedIndex = 1;
   String codeDialog;
   String valueText;
 
   Future<File> _pickImage() async {
     final pickedImage =
-        await ImagePicker().getImage(source: ImageSource.camera);
+        await ImagePicker().getImage(source: ImageSource.gallery);
     return imageFile = pickedImage != null ? File(pickedImage.path) : null;
   }
 
@@ -60,8 +59,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   icon: Icon(Icons.camera_alt),
                   onPressed: () {
                     _pickImage().then((file) {
-                      Navigator.of(context)
-                          .pushNamed(Test.routeName, arguments: file);
+                      Navigator.of(context).pushNamed(CropImageScreen.routeName,
+                          arguments: file);
                     });
                   },
                 ),

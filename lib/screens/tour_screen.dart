@@ -10,13 +10,19 @@ class TourScreen extends StatefulWidget {
 }
 
 class _TourScreenState extends State<TourScreen> {
-  final _priceFocusNode = FocusNode();
-  final _descriptionFocusNode = FocusNode();
-  final _imageUrlController = TextEditingController();
-  final _imageUrlFocusNode = FocusNode();
+  // final _distanceFocusNode = FocusNode();
+  // final _mileageBeginFocusNode = FocusNode();
+  // final _mileageEndFocusNode = FocusNode();
+  // final _licensePlateFocusNode = FocusNode();
+  // final _tourBeginFocusNode = FocusNode();
+  // final _tourEndFocusNode = FocusNode();
+  // final _roadConditionFocusNode = FocusNode();
+  // final _attendantFocusNode = FocusNode();
+
   final _form = GlobalKey<FormState>();
 
   var _editedProduct = Tour(
+    id: DateTime.now(),
     timestamp: DateTime.now(),
     distance: 0,
     mileageBegin: 0,
@@ -28,10 +34,11 @@ class _TourScreenState extends State<TourScreen> {
     attendant: "",
   );
   var _initValues = {
+    'id': DateTime.now(),
     'timestamp': DateTime.now(),
-    'distance': 0,
-    'mileageBegin': 0,
-    'mileageEnd': 0,
+    'distance': "",
+    'mileageBegin': "",
+    'mileageEnd': "",
     'licensePlate': "",
     'tourBegin': "",
     'tourEnd': "",
@@ -42,10 +49,12 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   void didChangeDependencies() {
+    print('ayyyyyyyyyyyyyyyyyyyyy');
     if (_isInit) {
       final tour = ModalRoute.of(context).settings.arguments as Tour;
       if (tour != null) {
         _initValues = {
+          'id': tour.id,
           'timestamp': tour.timestamp,
           'distance': tour.distance,
           'mileageBegin': tour.mileageBegin,
@@ -64,10 +73,14 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   void dispose() {
-    _priceFocusNode.dispose();
-    _descriptionFocusNode.dispose();
-    _imageUrlController.dispose();
-    _imageUrlFocusNode.dispose();
+    // _distanceFocusNode.dispose();
+    // _mileageBeginFocusNode.dispose();
+    // _mileageEndFocusNode.dispose();
+    // _licensePlateFocusNode.dispose();
+    // _tourBeginFocusNode.dispose();
+    // _tourEndFocusNode.dispose();
+    // _roadConditionFocusNode.dispose();
+    // _attendantFocusNode.dispose();
     super.dispose();
   }
 
@@ -88,6 +101,7 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('axxxxxxxxxxxxxxxxxxxxxxxx');
     return Scaffold(
       appBar: AppBar(
         title: Text('Tour'),
@@ -108,11 +122,11 @@ class _TourScreenState extends State<TourScreen> {
                 initialValue:
                     DateFormat.yMMMd('de_DE').format(_initValues['timestamp']),
                 decoration: InputDecoration(labelText: 'Datum'),
-                textInputAction: TextInputAction.next,
                 keyboardType: TextInputType.datetime,
-                onFieldSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_priceFocusNode);
-                },
+                // textInputAction: TextInputAction.next,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_distanceFocusNode);
+                // },
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please provide a value.';
@@ -121,6 +135,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -133,19 +148,22 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['distance'].toString(),
+                initialValue: _initValues['distance'] == null
+                    ? ""
+                    : _initValues['distance'].toString(),
                 decoration: InputDecoration(labelText: 'Distanz'),
-                textInputAction: TextInputAction.next,
                 keyboardType: TextInputType.number,
-                focusNode: _priceFocusNode,
-                onFieldSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_descriptionFocusNode);
-                },
-                validator: (value) {
-                  return null;
-                },
+                // textInputAction: TextInputAction.next,
+                // focusNode: _distanceFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_mileageBeginFocusNode);
+                // },
+                // validator: (value) {
+                //   return null;
+                // },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: int.parse(value),
                       mileageBegin: _editedProduct.mileageBegin,
@@ -158,19 +176,26 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['mileageBegin'].toString(),
+                initialValue: _initValues['mileageBegin'] == null
+                    ? ""
+                    : _initValues['mileageBegin'].toString(),
                 decoration:
                     InputDecoration(labelText: 'Kilometerstand (Beginn)'),
                 keyboardType: TextInputType.number,
-                focusNode: _descriptionFocusNode,
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
-                  }
-                  return null;
-                },
+                // textInputAction: TextInputAction.next,
+                // focusNode: _mileageBeginFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_mileageEndFocusNode);
+                // },
+                // validator: (value) {
+                //   if (value.isEmpty) {
+                //     return 'Please enter a description.';
+                //   }
+                //   return null;
+                // },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: int.parse(value),
@@ -183,10 +208,15 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['mileageEnd'].toString(),
+                initialValue: _initValues['mileageEnd'] == null
+                    ? ""
+                    : _initValues['mileageEnd'].toString(),
                 decoration: InputDecoration(labelText: 'Kilometerstand (Ziel)'),
                 keyboardType: TextInputType.number,
-                focusNode: _descriptionFocusNode,
+                // focusNode: _mileageEndFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_licensePlateFocusNode);
+                // },
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a description.';
@@ -195,6 +225,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -207,10 +238,15 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['licensePlate'],
+                initialValue: _initValues['licensePlate'] == null
+                    ? ""
+                    : _initValues['licensePlate'],
                 decoration: InputDecoration(labelText: 'Kennzeichen'),
                 keyboardType: TextInputType.text,
-                focusNode: _descriptionFocusNode,
+                // focusNode: _licensePlateFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_tourBeginFocusNode);
+                // },
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a description.';
@@ -219,6 +255,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -231,10 +268,15 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['tourBegin'],
+                initialValue: _initValues['tourBegin'] == null
+                    ? ""
+                    : _initValues['tourBegin'],
                 decoration: InputDecoration(labelText: 'Startort'),
                 keyboardType: TextInputType.text,
-                focusNode: _descriptionFocusNode,
+                // focusNode: _tourBeginFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_tourEndFocusNode);
+                // },
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a description.';
@@ -243,6 +285,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -255,10 +298,15 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['tourEnd'],
+                initialValue: _initValues['tourEnd'] == null
+                    ? ""
+                    : _initValues['tourEnd'],
                 decoration: InputDecoration(labelText: 'Zielort'),
                 keyboardType: TextInputType.text,
-                focusNode: _descriptionFocusNode,
+                // focusNode: _tourEndFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_roadConditionFocusNode);
+                // },
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a description.';
@@ -267,6 +315,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -279,11 +328,16 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['roadCondition'],
+                initialValue: _initValues['roadCondition'] == null
+                    ? ""
+                    : _initValues['roadCondition'],
                 decoration:
                     InputDecoration(labelText: 'Straßenzustand/Witterung'),
                 keyboardType: TextInputType.text,
-                focusNode: _descriptionFocusNode,
+                // focusNode: _roadConditionFocusNode,
+                // onFieldSubmitted: (_) {
+                //   FocusScope.of(context).requestFocus(_attendantFocusNode);
+                // },
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a description.';
@@ -292,6 +346,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -304,10 +359,12 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['attendant'],
+                initialValue: _initValues['attendant'] == null
+                    ? ""
+                    : _initValues['attendant'],
                 decoration: InputDecoration(labelText: 'Begleiter'),
-                keyboardType: TextInputType.text,
-                focusNode: _descriptionFocusNode,
+                // keyboardType: TextInputType.text,
+                // focusNode: _attendantFocusNode,
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a description.';
@@ -316,6 +373,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
+                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
