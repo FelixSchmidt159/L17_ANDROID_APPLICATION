@@ -1,10 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:l17/providers/tour.dart';
-import 'package:l17/providers/tours.dart';
 import 'package:l17/widgets/chart_bar.dart';
 import 'package:l17/widgets/dropdown_menue.dart';
 import 'package:l17/widgets/tour_list_item.dart';
-import 'package:provider/provider.dart';
 
 class TourList extends StatefulWidget {
   double height;
@@ -17,12 +17,34 @@ class TourList extends StatefulWidget {
 }
 
 class _TourListState extends State<TourList> {
-  List<Tour> _items;
-  int _overallDistance;
+  int _overallDistance = 0;
+  var currentUser = FirebaseAuth.instance.currentUser;
+
+  @override
+  void didChangeDependencies() {
+    int distance = 0;
+    FirebaseFirestore.instance
+        .collection('/users/' + currentUser.uid + '/tours')
+        .snapshots()
+        .listen((event) {
+      final toursDocs = event.docs;
+      if (toursDocs.isNotEmpty) {
+        for (int i = 0; i < toursDocs.length; i++) {
+          distance += toursDocs[i]['distance'];
+        }
+        if (mounted) {
+          setState(() {
+            _overallDistance = distance;
+          });
+        }
+      }
+    });
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
-    _items = Provider.of<Tours>(context).items;
-    _overallDistance = Provider.of<Tours>(context).overallDistance();
+    print(currentUser.uid);
     return Column(
       children: <Widget>[
         Container(
@@ -53,15 +75,43 @@ class _TourListState extends State<TourList> {
             ],
           ),
         ),
-        Container(
-          height: widget.height * 0.90,
-          child: ListView.builder(
-            itemBuilder: (context, position) {
-              return TourListItem(position);
-            },
-            itemCount: _items.length,
-          ),
-        ),
+        StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('/users/' + currentUser.uid + '/tours')
+              .snapshots(),
+          builder: (ctx, toursSnapshot) {
+            if (toursSnapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                height: widget.height * 0.90,
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            final toursDocs = toursSnapshot.data.docs;
+            return Container(
+              height: widget.height * 0.90,
+              child: ListView.builder(
+                itemBuilder: (context, index) {
+                  print(toursDocs[index].id);
+                  return TourListItem(Tour(
+                      timestamp: DateTime.fromMicrosecondsSinceEpoch(
+                          toursDocs[index]['timestamp'].microsecondsSinceEpoch),
+                      id: "",
+                      attendant: toursDocs[index]['attendant'],
+                      distance: toursDocs[index]['distance'],
+                      licensePlate: toursDocs[index]['licensePlate'],
+                      mileageBegin: toursDocs[index]['mileageBegin'],
+                      mileageEnd: toursDocs[index]['mileageEnd'],
+                      roadCondition: toursDocs[index]['roadCondition'],
+                      tourBegin: toursDocs[index]['tourBegin'],
+                      tourEnd: toursDocs[index]['tourEnd']));
+                },
+                itemCount: toursDocs.length,
+              ),
+            );
+          },
+        )
       ],
     );
   }

@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import '../providers/tours.dart';
 import '../screens/tour_screen.dart';
 import '../providers/tour.dart';
 
 class TourListItem extends StatefulWidget {
-  final int position;
+  final Tour tour;
 
-  TourListItem(this.position);
+  TourListItem(this.tour);
 
   @override
   _TourListItemState createState() => _TourListItemState();
@@ -18,7 +16,6 @@ class TourListItem extends StatefulWidget {
 
 class _TourListItemState extends State<TourListItem> {
   bool _showContent = false;
-  List<Tour> _items;
 
   @override
   void initState() {
@@ -28,11 +25,10 @@ class _TourListItemState extends State<TourListItem> {
 
   @override
   Widget build(BuildContext context) {
-    _items = Provider.of<Tours>(context).items;
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pushNamed(TourScreen.routeName,
-            arguments: _items[widget.position]);
+        Navigator.of(context)
+            .pushNamed(TourScreen.routeName, arguments: widget.tour);
       },
       child: Card(
         elevation: 5,
@@ -46,18 +42,16 @@ class _TourListItemState extends State<TourListItem> {
             child: Padding(
               padding: EdgeInsets.all(6),
               child: FittedBox(
-                child: Text(_items[widget.position].distance.toString() + 'km'),
+                child: Text(widget.tour.distance.toString() + 'km'),
               ),
             ),
           ),
           title: Text(
-            _items[widget.position].tourBegin +
-                " - " +
-                _items[widget.position].tourEnd,
+            widget.tour.tourBegin + " - " + widget.tour.tourEnd,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
-            DateFormat.yMMMd().format(_items[widget.position].timestamp),
+            DateFormat.yMMMd().format(widget.tour.timestamp),
           ),
           trailing: MediaQuery.of(context).size.width > 460
               ? TextButton.icon(

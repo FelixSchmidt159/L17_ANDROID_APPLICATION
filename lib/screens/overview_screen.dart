@@ -1,7 +1,8 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/screens/photo_screen.dart';
+
 import 'package:l17/screens/crop_image_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
 
@@ -22,7 +23,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   Future<File> _pickImage() async {
     final pickedImage =
-        await ImagePicker().getImage(source: ImageSource.gallery);
+        await ImagePicker().getImage(source: ImageSource.camera);
     return imageFile = pickedImage != null ? File(pickedImage.path) : null;
   }
 
@@ -98,6 +99,38 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final appBar = AppBar(
       title: const Text('Fahrtenbuch'),
       centerTitle: true,
+      actions: [
+        DropdownButton(
+          icon: Icon(
+            Icons.more_vert,
+            color: Theme.of(context).primaryIconTheme.color,
+          ),
+          items: [
+            DropdownMenuItem(
+              child: Container(
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.exit_to_app,
+                      color: Colors.black,
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Text('Logout'),
+                  ],
+                ),
+              ),
+              value: 'logout',
+            )
+          ],
+          onChanged: (itemIdentifier) {
+            if (itemIdentifier == 'logout') {
+              FirebaseAuth.instance.signOut();
+            }
+          },
+        )
+      ],
     );
     final bottomBar = BottomNavigationBar(
       items: <BottomNavigationBarItem>[
@@ -115,8 +148,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
         ),
       ],
       currentIndex: _selectedIndex,
-      selectedItemColor: Colors.orange,
-      backgroundColor: Colors.green,
+      selectedItemColor: Colors.black,
+      backgroundColor: Theme.of(context).backgroundColor,
       unselectedItemColor: Colors.white,
       type: BottomNavigationBarType.fixed,
       onTap: _onItemTapped,

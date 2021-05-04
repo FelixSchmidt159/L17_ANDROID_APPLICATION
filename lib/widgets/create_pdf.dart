@@ -1,26 +1,49 @@
 import 'dart:io';
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:l17/providers/tour.dart';
-import 'package:l17/providers/tours.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 class CreatePdf extends StatelessWidget {
+  final currentUser = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
     List<List<String>> data;
-    List<Tour> _items;
-    _items = Provider.of<Tours>(context).items;
-    data = generatePdfData(_items);
+    List<Tour> tours = [];
+    FirebaseFirestore.instance
+        .collection('/users/' + currentUser.uid + '/tours')
+        .snapshots()
+        .listen((event) {
+      final toursDocs = event.docs;
+      if (toursDocs.isNotEmpty) {
+        for (int i = 0; i < toursDocs.length; i++) {
+          tours.add(Tour(
+            attendant: toursDocs[i]['attendant'],
+            distance: toursDocs[i]['distance'],
+            licensePlate: toursDocs[i]['licensePlate'],
+            mileageBegin: toursDocs[i]['mileageBegin'],
+            mileageEnd: toursDocs[i]['mileageEnd'],
+            roadCondition: toursDocs[i]['roadCondition'],
+            timestamp: DateTime.fromMicrosecondsSinceEpoch(
+                toursDocs[i]['timestamp'].microsecondsSinceEpoch),
+            tourBegin: toursDocs[i]['tourBegin'],
+            tourEnd: toursDocs[i]['tourEnd'],
+          ));
+        }
+        data = generatePdfData(tours);
 
-    generateDocument(PdfPageFormat.a4, data);
+        generateDocument(PdfPageFormat.a4, data);
+      }
+    });
+
     return Container(
       padding: EdgeInsets.all(32),
       child: Center(
@@ -88,7 +111,7 @@ Future<File> mySaveDocument({
   final file = File('${dir.path}/$name');
 
   await file.writeAsBytes(bytes);
-  file.readAsLines().then((value) => print(value.first));
+  // file.readAsLines().then((value) => print(value.first));
   return file;
 }
 

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/providers/tour.dart';
@@ -18,11 +20,11 @@ class _TourScreenState extends State<TourScreen> {
   // final _tourEndFocusNode = FocusNode();
   // final _roadConditionFocusNode = FocusNode();
   // final _attendantFocusNode = FocusNode();
+  var currentUser = FirebaseAuth.instance.currentUser;
 
   final _form = GlobalKey<FormState>();
 
   var _editedProduct = Tour(
-    id: DateTime.now(),
     timestamp: DateTime.now(),
     distance: 0,
     mileageBegin: 0,
@@ -34,7 +36,7 @@ class _TourScreenState extends State<TourScreen> {
     attendant: "",
   );
   var _initValues = {
-    'id': DateTime.now(),
+    'id': "",
     'timestamp': DateTime.now(),
     'distance': "",
     'mileageBegin': "",
@@ -49,7 +51,6 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   void didChangeDependencies() {
-    print('ayyyyyyyyyyyyyyyyyyyyy');
     if (_isInit) {
       final tour = ModalRoute.of(context).settings.arguments as Tour;
       if (tour != null) {
@@ -90,6 +91,20 @@ class _TourScreenState extends State<TourScreen> {
       return;
     }
     _form.currentState.save();
+    FirebaseFirestore.instance
+        .collection('/users/' + currentUser.uid + '/tours')
+        .add({
+      'id': _editedProduct.id,
+      'timestamp': _editedProduct.timestamp,
+      'distance': _editedProduct.distance,
+      'mileageBegin': _editedProduct.mileageBegin,
+      'mileageEnd': _editedProduct.mileageEnd,
+      'licensePlate': _editedProduct.licensePlate,
+      'tourBegin': _editedProduct.tourBegin,
+      'tourEnd': _editedProduct.tourEnd,
+      'roadCondition': _editedProduct.roadCondition,
+      'attendant': _editedProduct.attendant
+    });
     // if (_editedProduct.id != null) {
     //   Provider.of<Products>(context, listen: false)
     //       .updateProduct(_editedProduct.id, _editedProduct);
@@ -101,7 +116,6 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('axxxxxxxxxxxxxxxxxxxxxxxx');
     return Scaffold(
       appBar: AppBar(
         title: Text('Tour'),
@@ -148,7 +162,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['distance'] == null
+                initialValue: _initValues['distance'] == 0
                     ? ""
                     : _initValues['distance'].toString(),
                 decoration: InputDecoration(labelText: 'Distanz'),
@@ -161,11 +175,17 @@ class _TourScreenState extends State<TourScreen> {
                 // validator: (value) {
                 //   return null;
                 // },
+                validator: (value) {
+                  if (value.isNotEmpty && num.tryParse(value) == null) {
+                    return 'Geben Sie bitte eine ganze Zahl ein.';
+                  }
+                  return null;
+                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
                       timestamp: DateTime.now(),
-                      distance: int.parse(value),
+                      distance: value.isEmpty ? 0 : int.parse(value),
                       mileageBegin: _editedProduct.mileageBegin,
                       mileageEnd: _editedProduct.mileageEnd,
                       licensePlate: _editedProduct.licensePlate,
@@ -176,7 +196,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['mileageBegin'] == null
+                initialValue: _initValues['mileageBegin'] == 0
                     ? ""
                     : _initValues['mileageBegin'].toString(),
                 decoration:
@@ -193,12 +213,18 @@ class _TourScreenState extends State<TourScreen> {
                 //   }
                 //   return null;
                 // },
+                validator: (value) {
+                  if (value.isNotEmpty && num.tryParse(value) == null) {
+                    return 'Geben Sie bitte eine ganze Zahl ein.';
+                  }
+                  return null;
+                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
-                      mileageBegin: int.parse(value),
+                      mileageBegin: value.isEmpty ? 0 : int.parse(value),
                       mileageEnd: _editedProduct.mileageEnd,
                       licensePlate: _editedProduct.licensePlate,
                       tourBegin: _editedProduct.tourBegin,
@@ -208,7 +234,7 @@ class _TourScreenState extends State<TourScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initValues['mileageEnd'] == null
+                initialValue: _initValues['mileageEnd'] == 0
                     ? ""
                     : _initValues['mileageEnd'].toString(),
                 decoration: InputDecoration(labelText: 'Kilometerstand (Ziel)'),
@@ -218,8 +244,8 @@ class _TourScreenState extends State<TourScreen> {
                 //   FocusScope.of(context).requestFocus(_licensePlateFocusNode);
                 // },
                 validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
+                  if (value.isNotEmpty && num.tryParse(value) == null) {
+                    return 'Geben Sie bitte eine ganze Zahl ein.';
                   }
                   return null;
                 },
@@ -229,7 +255,7 @@ class _TourScreenState extends State<TourScreen> {
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: int.parse(value),
+                      mileageEnd: value.isEmpty ? 0 : int.parse(value),
                       licensePlate: _editedProduct.licensePlate,
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
@@ -247,12 +273,6 @@ class _TourScreenState extends State<TourScreen> {
                 // onFieldSubmitted: (_) {
                 //   FocusScope.of(context).requestFocus(_tourBeginFocusNode);
                 // },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
-                  }
-                  return null;
-                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
@@ -277,12 +297,6 @@ class _TourScreenState extends State<TourScreen> {
                 // onFieldSubmitted: (_) {
                 //   FocusScope.of(context).requestFocus(_tourEndFocusNode);
                 // },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
-                  }
-                  return null;
-                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
@@ -307,12 +321,6 @@ class _TourScreenState extends State<TourScreen> {
                 // onFieldSubmitted: (_) {
                 //   FocusScope.of(context).requestFocus(_roadConditionFocusNode);
                 // },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
-                  }
-                  return null;
-                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
@@ -338,12 +346,6 @@ class _TourScreenState extends State<TourScreen> {
                 // onFieldSubmitted: (_) {
                 //   FocusScope.of(context).requestFocus(_attendantFocusNode);
                 // },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
-                  }
-                  return null;
-                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
@@ -351,10 +353,10 @@ class _TourScreenState extends State<TourScreen> {
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
                       mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: value,
+                      licensePlate: _editedProduct.licensePlate,
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
+                      roadCondition: value,
                       attendant: _editedProduct.attendant);
                 },
               ),
@@ -365,12 +367,6 @@ class _TourScreenState extends State<TourScreen> {
                 decoration: InputDecoration(labelText: 'Begleiter'),
                 // keyboardType: TextInputType.text,
                 // focusNode: _attendantFocusNode,
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a description.';
-                  }
-                  return null;
-                },
                 onSaved: (value) {
                   _editedProduct = Tour(
                       id: _editedProduct.id,
@@ -378,11 +374,11 @@ class _TourScreenState extends State<TourScreen> {
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
                       mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: value,
+                      licensePlate: _editedProduct.licensePlate,
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: value);
                 },
               ),
             ],

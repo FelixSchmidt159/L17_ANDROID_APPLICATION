@@ -3,7 +3,7 @@
 import 'package:flutter/foundation.dart';
 
 class Tour with ChangeNotifier {
-  final DateTime id;
+  final String id;
   final DateTime timestamp;
   final int distance;
   final int mileageBegin;
@@ -15,8 +15,8 @@ class Tour with ChangeNotifier {
   final String attendant;
 
   Tour(
-      {@required this.id,
-      @required this.timestamp,
+      {this.id,
+      this.timestamp,
       this.distance,
       this.mileageBegin,
       this.mileageEnd,

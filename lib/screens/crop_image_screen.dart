@@ -22,16 +22,26 @@ class _CropImageScreenState extends State<CropImageScreen> {
   AppState state;
   File imageFile;
   File croppedFile;
+  bool mounted = true;
 
   @override
   void initState() {
     super.initState();
-    state = AppState.picked;
+    state = AppState.cropped;
+  }
+
+  @override
+  void didChangeDependencies() {
+    if (mounted) {
+      imageFile = ModalRoute.of(context).settings.arguments as File;
+      _cropImage();
+      mounted = false;
+    }
+    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-    imageFile = ModalRoute.of(context).settings.arguments as File;
     return Scaffold(
       appBar: AppBar(
         title: Text('Kilometerstand korrigieren'),
@@ -81,23 +91,8 @@ class _CropImageScreenState extends State<CropImageScreen> {
     croppedFile = await ImageCropper.cropImage(
         sourcePath: imageFile.path,
         aspectRatioPresets: Platform.isAndroid
-            ? [
-                // CropAspectRatioPreset.square,
-                // CropAspectRatioPreset.ratio3x2,
-                // CropAspectRatioPreset.original,
-                // CropAspectRatioPreset.ratio4x3,
-                CropAspectRatioPreset.ratio16x9
-              ]
-            : [
-                // CropAspectRatioPreset.original,
-                // CropAspectRatioPreset.square,
-                // CropAspectRatioPreset.ratio3x2,
-                // CropAspectRatioPreset.ratio4x3,
-                // CropAspectRatioPreset.ratio5x3,
-                // CropAspectRatioPreset.ratio5x4,
-                // CropAspectRatioPreset.ratio7x5,
-                CropAspectRatioPreset.ratio16x9
-              ],
+            ? [CropAspectRatioPreset.ratio16x9]
+            : [CropAspectRatioPreset.ratio16x9],
         androidUiSettings: AndroidUiSettings(
             toolbarTitle: 'Zuschneiden',
             toolbarColor: Colors.green,
@@ -125,29 +120,22 @@ class _CropImageScreenState extends State<CropImageScreen> {
     return await textRecognizer.processImage(data);
   }
 
-  int replaceLetters(String value) {
-    print('---------');
-    print(value);
-    String number = value.replaceAll('I', '1');
-    print(number);
-    number = number.replaceAll('i', '1');
-    print(number);
-    var tryParse = int.tryParse(number);
-    if (tryParse == null) {
-      return 0;
-    }
-    return tryParse;
-  }
-
   void _clearImage() {
     textRecognizer(croppedFile).then((value) {
       Navigator.of(context).pop(context);
       Navigator.of(context).pushNamed(TourScreen.routeName,
           arguments: Tour(
-            id: DateTime.now(),
-            timestamp: DateTime.now(),
-            mileageBegin: replaceLetters(value.text),
-          ));
+              id: "",
+              timestamp: DateTime.now(),
+              mileageBegin:
+                  num.tryParse(value.text) == null ? 0 : int.parse(value.text),
+              mileageEnd: 0,
+              attendant: "",
+              distance: 0,
+              licensePlate: "",
+              tourBegin: "",
+              tourEnd: "",
+              roadCondition: ""));
     });
   }
 }
