@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/tour.dart';
 
 class TourScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _TourScreenState extends State<TourScreen> {
   // final _roadConditionFocusNode = FocusNode();
   // final _attendantFocusNode = FocusNode();
   var currentUser = FirebaseAuth.instance.currentUser;
+  TourScreenArguments tourObject;
 
   final _form = GlobalKey<FormState>();
 
@@ -52,19 +54,19 @@ class _TourScreenState extends State<TourScreen> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      final tour = ModalRoute.of(context).settings.arguments as Tour;
-      if (tour != null) {
+      tourObject =
+          ModalRoute.of(context).settings.arguments as TourScreenArguments;
+      if (tourObject != null) {
         _initValues = {
-          'id': tour.id,
-          'timestamp': tour.timestamp,
-          'distance': tour.distance,
-          'mileageBegin': tour.mileageBegin,
-          'mileageEnd': tour.mileageEnd,
-          'licensePlate': tour.licensePlate,
-          'tourBegin': tour.tourBegin,
-          'tourEnd': tour.tourEnd,
-          'roadCondition': tour.roadCondition,
-          'attendant': tour.attendant
+          'timestamp': tourObject.tour.timestamp,
+          'distance': tourObject.tour.distance,
+          'mileageBegin': tourObject.tour.mileageBegin,
+          'mileageEnd': tourObject.tour.mileageEnd,
+          'licensePlate': tourObject.tour.licensePlate,
+          'tourBegin': tourObject.tour.tourBegin,
+          'tourEnd': tourObject.tour.tourEnd,
+          'roadCondition': tourObject.tour.roadCondition,
+          'attendant': tourObject.tour.attendant
         };
       }
     }
@@ -91,26 +93,38 @@ class _TourScreenState extends State<TourScreen> {
       return;
     }
     _form.currentState.save();
-    FirebaseFirestore.instance
-        .collection('/users/' + currentUser.uid + '/tours')
-        .add({
-      'id': _editedProduct.id,
-      'timestamp': _editedProduct.timestamp,
-      'distance': _editedProduct.distance,
-      'mileageBegin': _editedProduct.mileageBegin,
-      'mileageEnd': _editedProduct.mileageEnd,
-      'licensePlate': _editedProduct.licensePlate,
-      'tourBegin': _editedProduct.tourBegin,
-      'tourEnd': _editedProduct.tourEnd,
-      'roadCondition': _editedProduct.roadCondition,
-      'attendant': _editedProduct.attendant
-    });
-    // if (_editedProduct.id != null) {
-    //   Provider.of<Products>(context, listen: false)
-    //       .updateProduct(_editedProduct.id, _editedProduct);
-    // } else {
-    //   Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
-    // }
+    if (tourObject.id == "") {
+      FirebaseFirestore.instance
+          .collection('/users/' + currentUser.uid + '/tours')
+          .add({
+        'timestamp': _editedProduct.timestamp,
+        'distance': _editedProduct.distance,
+        'mileageBegin': _editedProduct.mileageBegin,
+        'mileageEnd': _editedProduct.mileageEnd,
+        'licensePlate': _editedProduct.licensePlate,
+        'tourBegin': _editedProduct.tourBegin,
+        'tourEnd': _editedProduct.tourEnd,
+        'roadCondition': _editedProduct.roadCondition,
+        'attendant': _editedProduct.attendant
+      });
+    } else {
+      print("---------------");
+      print(tourObject.id);
+      FirebaseFirestore.instance
+          .collection('/users/' + currentUser.uid + '/tours')
+          .doc(tourObject.id)
+          .update({
+        'timestamp': _editedProduct.timestamp,
+        'distance': _editedProduct.distance,
+        'mileageBegin': _editedProduct.mileageBegin,
+        'mileageEnd': _editedProduct.mileageEnd,
+        'licensePlate': _editedProduct.licensePlate,
+        'tourBegin': _editedProduct.tourBegin,
+        'tourEnd': _editedProduct.tourEnd,
+        'roadCondition': _editedProduct.roadCondition,
+        'attendant': _editedProduct.attendant
+      });
+    }
     Navigator.of(context).pop();
   }
 
@@ -149,7 +163,6 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -183,7 +196,6 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: value.isEmpty ? 0 : int.parse(value),
                       mileageBegin: _editedProduct.mileageBegin,
@@ -221,7 +233,6 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: value.isEmpty ? 0 : int.parse(value),
@@ -251,7 +262,6 @@ class _TourScreenState extends State<TourScreen> {
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -275,7 +285,6 @@ class _TourScreenState extends State<TourScreen> {
                 // },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -299,7 +308,6 @@ class _TourScreenState extends State<TourScreen> {
                 // },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -323,7 +331,6 @@ class _TourScreenState extends State<TourScreen> {
                 // },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -348,7 +355,6 @@ class _TourScreenState extends State<TourScreen> {
                 // },
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,
@@ -369,7 +375,6 @@ class _TourScreenState extends State<TourScreen> {
                 // focusNode: _attendantFocusNode,
                 onSaved: (value) {
                   _editedProduct = Tour(
-                      id: _editedProduct.id,
                       timestamp: DateTime.now(),
                       distance: _editedProduct.distance,
                       mileageBegin: _editedProduct.mileageBegin,

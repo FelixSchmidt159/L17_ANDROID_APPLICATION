@@ -23,6 +23,7 @@ class _TourListState extends State<TourList> {
   @override
   void didChangeDependencies() {
     int distance = 0;
+    _overallDistance = 0;
     FirebaseFirestore.instance
         .collection('/users/' + currentUser.uid + '/tours')
         .snapshots()
@@ -31,6 +32,7 @@ class _TourListState extends State<TourList> {
       if (toursDocs.isNotEmpty) {
         for (int i = 0; i < toursDocs.length; i++) {
           distance += toursDocs[i]['distance'];
+          print(distance.toString());
         }
         if (mounted) {
           setState(() {
@@ -94,18 +96,20 @@ class _TourListState extends State<TourList> {
               child: ListView.builder(
                 itemBuilder: (context, index) {
                   print(toursDocs[index].id);
-                  return TourListItem(Tour(
-                      timestamp: DateTime.fromMicrosecondsSinceEpoch(
-                          toursDocs[index]['timestamp'].microsecondsSinceEpoch),
-                      id: "",
-                      attendant: toursDocs[index]['attendant'],
-                      distance: toursDocs[index]['distance'],
-                      licensePlate: toursDocs[index]['licensePlate'],
-                      mileageBegin: toursDocs[index]['mileageBegin'],
-                      mileageEnd: toursDocs[index]['mileageEnd'],
-                      roadCondition: toursDocs[index]['roadCondition'],
-                      tourBegin: toursDocs[index]['tourBegin'],
-                      tourEnd: toursDocs[index]['tourEnd']));
+                  return TourListItem(
+                      Tour(
+                          timestamp: DateTime.fromMicrosecondsSinceEpoch(
+                              toursDocs[index]['timestamp']
+                                  .microsecondsSinceEpoch),
+                          attendant: toursDocs[index]['attendant'],
+                          distance: toursDocs[index]['distance'],
+                          licensePlate: toursDocs[index]['licensePlate'],
+                          mileageBegin: toursDocs[index]['mileageBegin'],
+                          mileageEnd: toursDocs[index]['mileageEnd'],
+                          roadCondition: toursDocs[index]['roadCondition'],
+                          tourBegin: toursDocs[index]['tourBegin'],
+                          tourEnd: toursDocs[index]['tourEnd']),
+                      toursDocs[index].id);
                 },
                 itemCount: toursDocs.length,
               ),

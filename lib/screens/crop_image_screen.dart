@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:l17/models/TourScreenArguments.dart';
 
 import 'package:l17/providers/tour.dart';
 import 'package:l17/screens/tour_screen.dart';
@@ -123,19 +124,23 @@ class _CropImageScreenState extends State<CropImageScreen> {
   void _clearImage() {
     textRecognizer(croppedFile).then((value) {
       Navigator.of(context).pop(context);
-      Navigator.of(context).pushNamed(TourScreen.routeName,
-          arguments: Tour(
-              id: "",
-              timestamp: DateTime.now(),
-              mileageBegin:
-                  num.tryParse(value.text) == null ? 0 : int.parse(value.text),
-              mileageEnd: 0,
-              attendant: "",
-              distance: 0,
-              licensePlate: "",
-              tourBegin: "",
-              tourEnd: "",
-              roadCondition: ""));
+      Navigator.of(context).pushNamed(
+        TourScreen.routeName,
+        arguments: TourScreenArguments(
+            Tour(
+                timestamp: DateTime.now(),
+                mileageBegin: num.tryParse(value.text) == null
+                    ? 0
+                    : int.parse(value.text),
+                mileageEnd: 0,
+                attendant: "",
+                distance: 0,
+                licensePlate: "",
+                tourBegin: "",
+                tourEnd: "",
+                roadCondition: ""),
+            ""),
+      );
     });
   }
 }
