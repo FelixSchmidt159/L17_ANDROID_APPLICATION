@@ -112,10 +112,13 @@ class _TourScreenState extends State<TourScreen> {
       _test = tourObject.tour.roadCondition == ""
           ? "trocken"
           : tourObject.tour.roadCondition;
+
       _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _typeAheadControllerTourBegin.text = tourObject.tour.tourBegin;
       _typeAheadControllerTourEnd.text = tourObject.tour.tourEnd;
       _typeAheadControllerAttendant.text = tourObject.tour.attendant;
+
+      _editedProduct.timestamp = tourObject.tour.timestamp;
     }
     super.didChangeDependencies();
   }
