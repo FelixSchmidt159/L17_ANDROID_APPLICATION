@@ -7,8 +7,8 @@ import 'package:l17/widgets/dropdown_menue.dart';
 import 'package:l17/widgets/tour_list_item.dart';
 
 class TourList extends StatefulWidget {
-  double height;
-  double width;
+  final double height;
+  final double width;
 
   TourList(this.height, this.width);
 
@@ -17,7 +17,7 @@ class TourList extends StatefulWidget {
 }
 
 class _TourListState extends State<TourList> {
-  int _overallDistance = 0;
+  int _overallDistance;
   var currentUser = FirebaseAuth.instance.currentUser;
 
   @override
@@ -32,7 +32,6 @@ class _TourListState extends State<TourList> {
       if (toursDocs.isNotEmpty) {
         for (int i = 0; i < toursDocs.length; i++) {
           distance += toursDocs[i]['distance'];
-          print(distance.toString());
         }
         if (mounted) {
           setState(() {
@@ -46,7 +45,6 @@ class _TourListState extends State<TourList> {
 
   @override
   Widget build(BuildContext context) {
-    print(currentUser.uid);
     return Column(
       children: <Widget>[
         Container(
@@ -95,7 +93,6 @@ class _TourListState extends State<TourList> {
               height: widget.height * 0.90,
               child: ListView.builder(
                 itemBuilder: (context, index) {
-                  print(toursDocs[index].id);
                   return TourListItem(
                       Tour(
                           timestamp: DateTime.fromMicrosecondsSinceEpoch(

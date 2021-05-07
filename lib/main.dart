@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:l17/screens/auth_screen.dart';
 import 'package:l17/screens/photo_screen.dart';
-import 'package:l17/screens/crop_image_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/applicants.dart';
@@ -36,7 +35,7 @@ class MyApp extends StatelessWidget {
             // fontFamily: 'Lato',
             primarySwatch: Colors.pink,
             backgroundColor: Colors.pink,
-            accentColor: Colors.deepPurple,
+            accentColor: Colors.pink,
             accentColorBrightness: Brightness.dark,
             buttonTheme: ButtonTheme.of(context).copyWith(
               buttonColor: Colors.pink,
@@ -58,7 +57,6 @@ class MyApp extends StatelessWidget {
           routes: {
             PhotoScreen.routeName: (ctx) => PhotoScreen(),
             TourScreen.routeName: (ctx) => TourScreen(),
-            CropImageScreen.routeName: (ctx) => CropImageScreen(),
           }),
     );
   }

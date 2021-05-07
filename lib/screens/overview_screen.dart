@@ -1,9 +1,13 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:l17/models/TourScreenArguments.dart';
+import 'package:l17/providers/tour.dart';
 
-import 'package:l17/screens/crop_image_screen.dart';
+import 'package:l17/screens/tour_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
 
 import '../widgets/app_drawer.dart';
@@ -16,83 +20,8 @@ class OverviewScreen extends StatefulWidget {
 }
 
 class _OverviewScreenState extends State<OverviewScreen> {
-  File imageFile;
   int _selectedIndex = 1;
-  String codeDialog;
   String valueText;
-
-  Future<File> _pickImage() async {
-    final pickedImage =
-        await ImagePicker().getImage(source: ImageSource.camera);
-    return imageFile = pickedImage != null ? File(pickedImage.path) : null;
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      if (index != 2)
-        _selectedIndex = index;
-      else {
-        _displayTextInputDialog(context);
-      }
-    });
-  }
-
-  Future<void> _displayTextInputDialog(BuildContext context) async {
-    TextEditingController _textFieldController = TextEditingController();
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Fahrt hinzufügen'),
-            content: Stack(
-              alignment: AlignmentDirectional.centerEnd,
-              children: <Widget>[
-                TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      valueText = value;
-                    });
-                  },
-                  controller: _textFieldController,
-                  decoration: InputDecoration(hintText: "Kilometerstand"),
-                ),
-                IconButton(
-                  icon: Icon(Icons.camera_alt),
-                  onPressed: () {
-                    _pickImage().then((file) {
-                      Navigator.of(context).pushNamed(CropImageScreen.routeName,
-                          arguments: file);
-                    });
-                  },
-                ),
-              ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                style: TextButton.styleFrom(
-                    backgroundColor: Colors.red, primary: Colors.white),
-                child: Text('Abbrechen'),
-                onPressed: () {
-                  setState(() {
-                    Navigator.pop(context);
-                  });
-                },
-              ),
-              TextButton(
-                style: TextButton.styleFrom(
-                    backgroundColor: Colors.green, primary: Colors.white),
-                child: Text('Weiter'),
-                onPressed: () {
-                  setState(() {
-                    codeDialog = valueText;
-                    Navigator.pop(context);
-                  });
-                },
-              ),
-            ],
-          );
-        });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,5 +104,141 @@ class _OverviewScreenState extends State<OverviewScreen> {
       drawer: AppDrawer(),
       bottomNavigationBar: bottomBar,
     );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      if (index != 2)
+        _selectedIndex = index;
+      else {
+        _displayTextInputDialog(context);
+      }
+    });
+  }
+
+  Future<void> _displayTextInputDialog(BuildContext context) async {
+    TextEditingController _textFieldController = TextEditingController();
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Fahrt hinzufügen'),
+            content: Stack(
+              alignment: AlignmentDirectional.centerEnd,
+              children: <Widget>[
+                TextField(
+                  onChanged: (value) {
+                    valueText = value;
+                  },
+                  controller: _textFieldController,
+                  decoration: InputDecoration(hintText: "Kilometerstand"),
+                ),
+                IconButton(
+                  icon: Icon(Icons.camera_alt),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _pickImage();
+                  },
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Colors.red, primary: Colors.white),
+                child: Text('Abbrechen'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Colors.green, primary: Colors.white),
+                child: Text('Weiter'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(context);
+                    Navigator.of(context).pushNamed(
+                      TourScreen.routeName,
+                      arguments: TourScreenArguments(
+                          Tour(
+                              timestamp: DateTime.now(),
+                              mileageBegin: (valueText == null ||
+                                      num.tryParse(valueText) == null)
+                                  ? 0
+                                  : int.parse(valueText),
+                              mileageEnd: 0,
+                              attendant: "",
+                              distance: 0,
+                              licensePlate: "",
+                              tourBegin: "",
+                              tourEnd: "",
+                              roadCondition: ""),
+                          ""),
+                    );
+                  });
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<Null> _pickImage() async {
+    final pickedImage =
+        await ImagePicker().getImage(source: ImageSource.camera);
+    if (pickedImage != null) {
+      final croppedImage = await _cropImage(pickedImage.path);
+      if (croppedImage != null) {
+        textRecognizer(croppedImage).then((value) {
+          Navigator.of(context).pushNamed(
+            TourScreen.routeName,
+            arguments: TourScreenArguments(
+                Tour(
+                    timestamp: DateTime.now(),
+                    mileageBegin: num.tryParse(value.text) == null
+                        ? 0
+                        : int.parse(value.text),
+                    mileageEnd: 0,
+                    attendant: "",
+                    distance: 0,
+                    licensePlate: "",
+                    tourBegin: "",
+                    tourEnd: "",
+                    roadCondition: ""),
+                ""),
+          );
+        });
+      }
+    }
+  }
+
+  Future<VisionText> textRecognizer(File image) async {
+    final data = FirebaseVisionImage.fromFile(image);
+    final TextRecognizer textRecognizer =
+        FirebaseVision.instance.textRecognizer();
+    return await textRecognizer.processImage(data);
+  }
+
+  Future<File> _cropImage(String path) async {
+    final croppedImage = await ImageCropper.cropImage(
+        sourcePath: path,
+        aspectRatioPresets: Platform.isAndroid
+            ? [CropAspectRatioPreset.ratio16x9]
+            : [CropAspectRatioPreset.ratio16x9],
+        androidUiSettings: AndroidUiSettings(
+            toolbarTitle: 'Zuschneiden',
+            toolbarColor: Theme.of(context).backgroundColor,
+            statusBarColor: Theme.of(context).backgroundColor,
+            toolbarWidgetColor: Colors.white,
+            activeControlsWidgetColor: Theme.of(context).backgroundColor,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false),
+        iosUiSettings: IOSUiSettings(
+          title: 'Cropper',
+        ));
+    return croppedImage;
   }
 }
