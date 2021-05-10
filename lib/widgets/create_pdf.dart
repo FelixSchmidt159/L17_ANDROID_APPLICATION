@@ -36,6 +36,7 @@ class CreatePdf extends StatelessWidget {
                 toursDocs[i]['timestamp'].microsecondsSinceEpoch),
             tourBegin: toursDocs[i]['tourBegin'],
             tourEnd: toursDocs[i]['tourEnd'],
+            daytime: toursDocs[i]['daytime'],
           ));
         }
         data = generatePdfData(tours);
@@ -68,6 +69,7 @@ List<List<String>> generatePdfData(List<Tour> items) {
   List<List<String>> pdfData = [
     <String>[
       'Datum',
+      'Tageszeit',
       'Gefahrene KM',
       'Kilometerstand  ',
       'Kennzeichen  ',
@@ -82,6 +84,7 @@ List<List<String>> generatePdfData(List<Tour> items) {
   for (Tour tour in items) {
     pdfData.add(<String>[
       DateFormat.yMd('de_DE').format(tour.timestamp),
+      tour.daytime,
       tour.distance.toString(),
       tour.mileageBegin.toString() + ' / ' + tour.mileageEnd.toString(),
       tour.licensePlate,

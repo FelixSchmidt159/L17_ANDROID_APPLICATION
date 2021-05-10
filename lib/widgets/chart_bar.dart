@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ChartBar extends StatelessWidget {
-  int distanceDriven;
-  int distanceGoal;
+  final int distanceDriven;
+  final int distanceGoal;
   final double height;
 
   ChartBar(this.distanceDriven, this.distanceGoal, this.height);
@@ -10,9 +10,6 @@ class ChartBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    if (distanceDriven >= distanceGoal) {
-      distanceDriven = distanceGoal;
-    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -29,7 +26,9 @@ class ChartBar extends StatelessWidget {
                 ),
               ),
               FractionallySizedBox(
-                widthFactor: distanceDriven / distanceGoal,
+                widthFactor: distanceDriven / distanceGoal <= 1.0
+                    ? distanceDriven / distanceGoal
+                    : 1.0,
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).primaryColor,

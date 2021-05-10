@@ -22,7 +22,7 @@ class _TourListState extends State<TourList> {
 
   @override
   void didChangeDependencies() {
-    // _overallDistance = 0;
+    _overallDistance = 0;
     FirebaseFirestore.instance
         .collection('/users/' + currentUser.uid + '/tours')
         .snapshots()
@@ -33,7 +33,11 @@ class _TourListState extends State<TourList> {
         for (int i = 0; i < toursDocs.length; i++) {
           _overallDistance += toursDocs[i]['distance'];
         }
-        setState(() {});
+        if (mounted) {
+          setState(() {
+            _overallDistance = _overallDistance;
+          });
+        }
       }
     });
     super.didChangeDependencies();
@@ -101,7 +105,8 @@ class _TourListState extends State<TourList> {
                           mileageEnd: toursDocs[index]['mileageEnd'],
                           roadCondition: toursDocs[index]['roadCondition'],
                           tourBegin: toursDocs[index]['tourBegin'],
-                          tourEnd: toursDocs[index]['tourEnd']),
+                          tourEnd: toursDocs[index]['tourEnd'],
+                          daytime: toursDocs[index]['daytime']),
                       toursDocs[index].id);
                 },
                 itemCount: toursDocs.length,

@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/tour.dart';
 
@@ -13,6 +15,7 @@ import 'package:l17/widgets/create_pdf.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/tour_list.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:instant/instant.dart';
 
 class OverviewScreen extends StatefulWidget {
   @override
@@ -21,7 +24,34 @@ class OverviewScreen extends StatefulWidget {
 
 class _OverviewScreenState extends State<OverviewScreen> {
   int _selectedIndex = 1;
-  String valueText;
+  var currentUser = FirebaseAuth.instance.currentUser;
+  int lastMileageEnd;
+  TextEditingController _textFieldController = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    lastMileageEnd = 0;
+    FirebaseFirestore.instance
+        .collection('/users/' + currentUser.uid + '/tours')
+        .snapshots()
+        .listen((event) {
+      final toursDocs = event.docs;
+      if (toursDocs.isNotEmpty) {
+        for (int i = 0; i < 1; i++) {
+          lastMileageEnd = toursDocs[i]['mileageEnd'];
+          _textFieldController.text = toursDocs[i]['mileageEnd'].toString();
+        }
+      }
+    });
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    _textFieldController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +147,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   Future<void> _displayTextInputDialog(BuildContext context) async {
-    TextEditingController _textFieldController = TextEditingController();
     return showDialog(
         context: context,
         builder: (context) {
@@ -128,7 +157,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
               children: <Widget>[
                 TextField(
                   onChanged: (value) {
-                    valueText = value;
+                    if (num.tryParse(value) != null)
+                      lastMileageEnd = int.parse(value);
+                    else
+                      lastMileageEnd = 0;
                   },
                   controller: _textFieldController,
                   decoration: InputDecoration(hintText: "Kilometerstand"),
@@ -159,23 +191,23 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 child: Text('Weiter'),
                 onPressed: () {
                   setState(() {
+                    var daytime =
+                        dateTimeToOffset(offset: 2.0, datetime: DateTime.now());
                     Navigator.pop(context);
                     Navigator.of(context).pushNamed(
                       TourScreen.routeName,
                       arguments: TourScreenArguments(
                           Tour(
-                              timestamp: DateTime.now(),
-                              mileageBegin: (valueText == null ||
-                                      num.tryParse(valueText) == null)
-                                  ? 0
-                                  : int.parse(valueText),
+                              timestamp: daytime,
+                              mileageBegin: lastMileageEnd,
                               mileageEnd: 0,
                               attendant: "",
                               distance: 0,
                               licensePlate: "",
                               tourBegin: "",
                               tourEnd: "",
-                              roadCondition: ""),
+                              roadCondition: "",
+                              daytime: DateFormat.Hm('de_DE').format(daytime)),
                           ""),
                     );
                   });
@@ -193,11 +225,12 @@ class _OverviewScreenState extends State<OverviewScreen> {
       final croppedImage = await _cropImage(pickedImage.path);
       if (croppedImage != null) {
         textRecognizer(croppedImage).then((value) {
+          var daytime = dateTimeToOffset(offset: 2.0, datetime: DateTime.now());
           Navigator.of(context).pushNamed(
             TourScreen.routeName,
             arguments: TourScreenArguments(
                 Tour(
-                    timestamp: DateTime.now(),
+                    timestamp: daytime,
                     mileageBegin: num.tryParse(value.text) == null
                         ? 0
                         : int.parse(value.text),
@@ -207,7 +240,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     licensePlate: "",
                     tourBegin: "",
                     tourEnd: "",
-                    roadCondition: ""),
+                    roadCondition: "",
+                    daytime: DateFormat.Hm('de_DE').format(
+                      daytime,
+                    )),
                 ""),
           );
         });

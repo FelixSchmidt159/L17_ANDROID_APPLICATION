@@ -18,12 +18,6 @@ class TourListItem extends StatefulWidget {
 
 class _TourListItemState extends State<TourListItem> {
   @override
-  void initState() {
-    super.initState();
-    initializeDateFormatting();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -51,7 +45,7 @@ class _TourListItemState extends State<TourListItem> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
-            DateFormat.yMMMd().format(widget.tour.timestamp),
+            DateFormat.yMMMd('de_DE').format(widget.tour.timestamp),
           ),
           trailing: MediaQuery.of(context).size.width > 460
               ? TextButton.icon(

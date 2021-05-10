@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class TourScreen extends StatefulWidget {
   static const routeName = '/tour-screen';
@@ -28,10 +29,14 @@ class _TourScreenState extends State<TourScreen> {
       TextEditingController();
   final TextEditingController _typeAheadControllerAttendant =
       TextEditingController();
-  String _test = "trocken";
+  TextEditingController _initialDate = TextEditingController();
   List<String> _licensePlates = [];
   List<String> _attendants = [];
   List<String> _locations = [];
+  String suggestedLicensePlate = "";
+  String suggestedAttendant = "";
+  String suggestedRoadCondition = "trocken";
+  bool _initialize = true;
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -43,44 +48,8 @@ class _TourScreenState extends State<TourScreen> {
     tourEnd: "",
     roadCondition: "",
     attendant: "",
+    daytime: "",
   );
-  var _initValues = {
-    'id': "",
-    'timestamp': DateTime.now(),
-    'distance': "",
-    'mileageBegin': "",
-    'mileageEnd': "",
-    'licensePlate': "",
-    'tourBegin': "",
-    'tourEnd': "",
-    'roadCondition': "",
-    'attendant': "",
-  };
-
-  @override
-  void initState() {
-    FirebaseFirestore.instance
-        .collection('/users/' + currentUser.uid + '/tours')
-        .where('licensePlate')
-        .snapshots()
-        .listen(
-      (event) {
-        final toursDocs = event.docs;
-        if (toursDocs.isNotEmpty) {
-          for (int i = 0; i < toursDocs.length; i++) {
-            _licensePlates.add(toursDocs[i]['licensePlate']);
-            _attendants.add(toursDocs[i]['attendant']);
-            _locations.add(toursDocs[i]['tourBegin']);
-            _locations.add(toursDocs[i]['tourEnd']);
-          }
-          _licensePlates = _licensePlates.toSet().toList();
-          _locations = _locations.toSet().toList();
-          _attendants = _attendants.toSet().toList();
-        }
-      },
-    );
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -88,6 +57,7 @@ class _TourScreenState extends State<TourScreen> {
     _typeAheadControllerTourBegin.dispose();
     _typeAheadControllerTourEnd.dispose();
     _typeAheadControllerAttendant.dispose();
+    _initialDate.dispose();
 
     // TODO: implement dispose
     super.dispose();
@@ -97,29 +67,58 @@ class _TourScreenState extends State<TourScreen> {
   void didChangeDependencies() {
     tourObject =
         ModalRoute.of(context).settings.arguments as TourScreenArguments;
-    if (tourObject != null) {
-      _initValues = {
-        'timestamp': tourObject.tour.timestamp,
-        'distance': tourObject.tour.distance,
-        'mileageBegin': tourObject.tour.mileageBegin,
-        'mileageEnd': tourObject.tour.mileageEnd,
-        'licensePlate': tourObject.tour.licensePlate,
-        'tourBegin': tourObject.tour.tourBegin,
-        'tourEnd': tourObject.tour.tourEnd,
-        'roadCondition': tourObject.tour.roadCondition,
-        'attendant': tourObject.tour.attendant
-      };
-      _test = tourObject.tour.roadCondition == ""
+
+    if (_initialize) {
+      suggestedRoadCondition = tourObject.tour.roadCondition == ""
           ? "trocken"
           : tourObject.tour.roadCondition;
-
-      _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _typeAheadControllerTourBegin.text = tourObject.tour.tourBegin;
       _typeAheadControllerTourEnd.text = tourObject.tour.tourEnd;
+      _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _typeAheadControllerAttendant.text = tourObject.tour.attendant;
-
       _editedProduct.timestamp = tourObject.tour.timestamp;
+      _initialDate.text =
+          DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
+      _initialize = false;
     }
+
+    FirebaseFirestore.instance
+        .collection('/users/' + currentUser.uid + '/tours')
+        .snapshots()
+        .listen(
+      (event) {
+        final toursDocs = event.docs;
+        if (toursDocs.isNotEmpty) {
+          for (int i = 0; i < toursDocs.length; i++) {
+            if (toursDocs[i]['licensePlate'] != "")
+              _licensePlates.add(toursDocs[i]['licensePlate']);
+            if (toursDocs[i]['attendant'] != "")
+              _attendants.add(toursDocs[i]['attendant']);
+            if (toursDocs[i]['tourBegin'] != "")
+              _locations.add(toursDocs[i]['tourBegin']);
+            if (toursDocs[i]['tourEnd'] != "")
+              _locations.add(toursDocs[i]['tourEnd']);
+            if (i == 0) {
+              suggestedAttendant = toursDocs[i]['attendant'];
+              suggestedLicensePlate = toursDocs[i]['licensePlate'];
+            }
+          }
+          _licensePlates = _licensePlates.toSet().toList();
+          _locations = _locations.toSet().toList();
+          _attendants = _attendants.toSet().toList();
+
+          if (tourObject.id == "") {
+            if (mounted) {
+              setState(() {
+                _typeAheadControllerLicensePlate.text = suggestedLicensePlate;
+                _typeAheadControllerAttendant.text = suggestedAttendant;
+              });
+            }
+          }
+        }
+      },
+    );
+
     super.didChangeDependencies();
   }
 
@@ -141,7 +140,8 @@ class _TourScreenState extends State<TourScreen> {
         'tourBegin': _editedProduct.tourBegin,
         'tourEnd': _editedProduct.tourEnd,
         'roadCondition': _editedProduct.roadCondition,
-        'attendant': _editedProduct.attendant
+        'attendant': _editedProduct.attendant,
+        'daytime': _editedProduct.daytime,
       });
     } else {
       FirebaseFirestore.instance
@@ -156,7 +156,8 @@ class _TourScreenState extends State<TourScreen> {
         'tourBegin': _editedProduct.tourBegin,
         'tourEnd': _editedProduct.tourEnd,
         'roadCondition': _editedProduct.roadCondition,
-        'attendant': _editedProduct.attendant
+        'attendant': _editedProduct.attendant,
+        'daytime': _editedProduct.daytime,
       });
     }
     Navigator.of(context).pop();
@@ -193,6 +194,15 @@ class _TourScreenState extends State<TourScreen> {
     return suggestions;
   }
 
+  Future<DateTime> _selectDate() async {
+    return await showDatePicker(
+      context: context,
+      initialDate: _editedProduct.timestamp,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -212,13 +222,51 @@ class _TourScreenState extends State<TourScreen> {
           child: ListView(
             children: <Widget>[
               TextFormField(
-                initialValue:
-                    DateFormat.yMMMd('de_DE').format(_initValues['timestamp']),
+                maxLines: 1,
                 validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please provide a value.';
+                  if (value.isEmpty || value.length < 1) {
+                    return 'Wähle ein Datum.';
                   }
                   return null;
+                },
+                controller: _initialDate,
+                decoration: InputDecoration(
+                  labelText: 'Datum',
+                  //filled: true,
+                  // icon: const Icon(Icons.calendar_today),
+                  labelStyle: TextStyle(
+                    decorationStyle: TextDecorationStyle.solid,
+                  ),
+                ),
+                keyboardType: TextInputType.text,
+                onTap: () async {
+                  FocusScope.of(context).requestFocus(new FocusNode());
+                  await _selectDate().then((value) {
+                    if (value != null) {
+                      _initialDate.text =
+                          DateFormat.yMMMd('de_DE').format(value);
+                      _editedProduct = Tour(
+                          timestamp: value,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    }
+                  });
+                },
+              ),
+              TextFormField(
+                initialValue: tourObject.tour.daytime,
+                validator: (value) {
+                  if (value.contains(
+                          RegExp(r'(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]')) &&
+                      value.length == 5) return null;
+                  return "Bitte geben Sie eine Uhrzeit im Format hh:mm an.";
                 },
                 onSaved: (value) {
                   _editedProduct = Tour(
@@ -230,15 +278,16 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: value);
                 },
-                decoration: InputDecoration(labelText: 'Datum'),
-                keyboardType: TextInputType.datetime,
+                decoration: InputDecoration(labelText: 'Tageszeit'),
+                keyboardType: TextInputType.number,
               ),
               TextFormField(
-                initialValue: _initValues['distance'] == 0
+                initialValue: tourObject.tour.distance == 0
                     ? ""
-                    : _initValues['distance'].toString(),
+                    : tourObject.tour.distance.toString(),
                 decoration: InputDecoration(labelText: 'Distanz'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -257,13 +306,14 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
               ),
               TextFormField(
-                initialValue: _initValues['mileageBegin'] == 0
+                initialValue: tourObject.tour.mileageBegin == 0
                     ? ""
-                    : _initValues['mileageBegin'].toString(),
+                    : tourObject.tour.mileageBegin.toString(),
                 decoration:
                     InputDecoration(labelText: 'Kilometerstand (Beginn)'),
                 keyboardType: TextInputType.number,
@@ -283,13 +333,14 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
               ),
               TextFormField(
-                initialValue: _initValues['mileageEnd'] == 0
+                initialValue: tourObject.tour.mileageEnd == 0
                     ? ""
-                    : _initValues['mileageEnd'].toString(),
+                    : tourObject.tour.mileageEnd.toString(),
                 decoration: InputDecoration(labelText: 'Kilometerstand (Ziel)'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -308,7 +359,8 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
               ),
               TypeAheadFormField(
@@ -327,7 +379,8 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
                 suggestionsCallback: (pattern) {
                   return getSuggestions(pattern, LifeSearch.licensePlates);
@@ -360,7 +413,8 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: value,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
                 suggestionsCallback: (pattern) {
                   return getSuggestions(pattern, LifeSearch.locations);
@@ -393,7 +447,8 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: value,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
                 suggestionsCallback: (pattern) {
                   return getSuggestions(pattern, LifeSearch.locations);
@@ -425,7 +480,8 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: _editedProduct.roadCondition,
-                      attendant: value);
+                      attendant: value,
+                      daytime: _editedProduct.daytime);
                 },
                 suggestionsCallback: (pattern) {
                   return getSuggestions(pattern, LifeSearch.attendants);
@@ -452,10 +508,10 @@ class _TourScreenState extends State<TourScreen> {
                     .toList(),
                 onChanged: (value) {
                   setState(() {
-                    _test = value;
+                    suggestedRoadCondition = value;
                   });
                 },
-                value: _test,
+                value: suggestedRoadCondition,
                 onSaved: (value) {
                   _editedProduct = Tour(
                       timestamp: _editedProduct.timestamp,
@@ -466,7 +522,8 @@ class _TourScreenState extends State<TourScreen> {
                       tourBegin: _editedProduct.tourBegin,
                       tourEnd: _editedProduct.tourEnd,
                       roadCondition: value,
-                      attendant: _editedProduct.attendant);
+                      attendant: _editedProduct.attendant,
+                      daytime: _editedProduct.daytime);
                 },
               ),
             ],

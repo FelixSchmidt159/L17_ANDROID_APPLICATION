@@ -12,6 +12,7 @@ class Tour with ChangeNotifier {
   final String tourEnd;
   final String roadCondition;
   final String attendant;
+  final String daytime;
 
   Tour(
       {this.timestamp,
@@ -22,7 +23,8 @@ class Tour with ChangeNotifier {
       this.tourBegin,
       this.tourEnd,
       this.roadCondition,
-      this.attendant});
+      this.attendant,
+      @required this.daytime});
 
   // void _setFavValue(bool newValue) {
   //   isFavorite = newValue;
