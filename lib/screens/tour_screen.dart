@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class TourScreen extends StatefulWidget {
   static const routeName = '/tour-screen';
@@ -221,26 +220,8 @@ class _TourScreenState extends State<TourScreen> {
           key: _form,
           child: ListView(
             children: <Widget>[
-              TextFormField(
-                maxLines: 1,
-                validator: (value) {
-                  if (value.isEmpty || value.length < 1) {
-                    return 'Wähle ein Datum.';
-                  }
-                  return null;
-                },
-                controller: _initialDate,
-                decoration: InputDecoration(
-                  labelText: 'Datum',
-                  //filled: true,
-                  // icon: const Icon(Icons.calendar_today),
-                  labelStyle: TextStyle(
-                    decorationStyle: TextDecorationStyle.solid,
-                  ),
-                ),
-                keyboardType: TextInputType.text,
+              InkWell(
                 onTap: () async {
-                  FocusScope.of(context).requestFocus(new FocusNode());
                   await _selectDate().then((value) {
                     if (value != null) {
                       _initialDate.text =
@@ -259,6 +240,29 @@ class _TourScreenState extends State<TourScreen> {
                     }
                   });
                 },
+                child: IgnorePointer(
+                  child: Stack(
+                      alignment: AlignmentDirectional.centerEnd,
+                      children: <Widget>[
+                        TextFormField(
+                          maxLines: 1,
+                          validator: (value) {
+                            if (value.isEmpty || value.length < 1) {
+                              return 'Wähle ein Datum.';
+                            }
+                            return null;
+                          },
+                          controller: _initialDate,
+                          decoration: InputDecoration(
+                            labelText: 'Datum',
+                            labelStyle: TextStyle(
+                              decorationStyle: TextDecorationStyle.solid,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.calendar_today),
+                      ]),
+                ),
               ),
               TextFormField(
                 initialValue: tourObject.tour.daytime,
