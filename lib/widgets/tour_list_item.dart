@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -17,6 +19,7 @@ class TourListItem extends StatefulWidget {
 }
 
 class _TourListItemState extends State<TourListItem> {
+  final currentUser = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -56,7 +59,13 @@ class _TourListItemState extends State<TourListItem> {
                     size: 25,
                   ),
                   label: Text('Delete'),
-                  onPressed: () {},
+                  onPressed: () {
+                    print(widget.id);
+                    FirebaseFirestore.instance
+                        .collection('/users/' + currentUser.uid + '/tours')
+                        .doc(widget.id)
+                        .delete();
+                  },
                 )
               : IconButton(
                   icon: Icon(
@@ -64,7 +73,13 @@ class _TourListItemState extends State<TourListItem> {
                     size: 25,
                   ),
                   color: Theme.of(context).errorColor,
-                  onPressed: () => () {},
+                  onPressed: () {
+                    print(widget.id);
+                    FirebaseFirestore.instance
+                        .collection('/users/' + currentUser.uid + '/tours')
+                        .doc(widget.id)
+                        .delete();
+                  },
                 ),
         ),
       ),

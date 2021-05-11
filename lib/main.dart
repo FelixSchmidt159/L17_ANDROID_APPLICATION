@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'providers/applicants.dart';
 import 'screens/overview_screen.dart';
+import 'screens/applicant_screen.dart';
 import './screens/tour_screen.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
           routes: {
             PhotoScreen.routeName: (ctx) => PhotoScreen(),
             TourScreen.routeName: (ctx) => TourScreen(),
+            ApplicantScreen.routeName: (ctx) => ApplicantScreen(),
           }),
     );
   }

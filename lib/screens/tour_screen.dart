@@ -78,7 +78,6 @@ class _TourScreenState extends State<TourScreen> {
       _editedProduct.timestamp = tourObject.tour.timestamp;
       _initialDate.text =
           DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
-      _initialize = false;
     }
 
     FirebaseFirestore.instance
@@ -87,7 +86,7 @@ class _TourScreenState extends State<TourScreen> {
         .listen(
       (event) {
         final toursDocs = event.docs;
-        if (toursDocs.isNotEmpty) {
+        if (toursDocs.isNotEmpty && _initialize) {
           for (int i = 0; i < toursDocs.length; i++) {
             if (toursDocs[i]['licensePlate'] != "")
               _licensePlates.add(toursDocs[i]['licensePlate']);
@@ -114,6 +113,7 @@ class _TourScreenState extends State<TourScreen> {
               });
             }
           }
+          _initialize = false;
         }
       },
     );

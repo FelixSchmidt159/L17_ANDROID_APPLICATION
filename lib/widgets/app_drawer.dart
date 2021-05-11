@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:l17/screens/applicant_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -15,7 +16,10 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.people),
             title: Text('Bewerber'),
             onTap: () {
-              Navigator.of(context).pushReplacementNamed('/');
+              Navigator.of(context).pushNamed(
+                ApplicantScreen.routeName,
+                // arguments: ,
+              );
             },
           ),
           Divider(),
