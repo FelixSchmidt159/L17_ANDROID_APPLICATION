@@ -58,7 +58,6 @@ class _TourScreenState extends State<TourScreen> {
     _typeAheadControllerAttendant.dispose();
     _initialDate.dispose();
 
-    // TODO: implement dispose
     super.dispose();
   }
 

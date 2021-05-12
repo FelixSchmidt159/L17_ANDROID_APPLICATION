@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:l17/screens/auth_screen.dart';
 import 'package:l17/screens/photo_screen.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +11,6 @@ import 'screens/overview_screen.dart';
 import 'screens/applicant_screen.dart';
 import './screens/tour_screen.dart';
 
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
@@ -68,6 +68,7 @@ class MyApp extends StatelessWidget {
             PhotoScreen.routeName: (ctx) => PhotoScreen(),
             TourScreen.routeName: (ctx) => TourScreen(),
             ApplicantScreen.routeName: (ctx) => ApplicantScreen(),
+            ApplicantDetailScreen.routeName: (ctx) => ApplicantDetailScreen(),
           }),
     );
   }

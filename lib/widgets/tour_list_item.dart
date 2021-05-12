@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:l17/models/TourScreenArguments.dart';
 
 import '../screens/tour_screen.dart';
@@ -74,7 +73,6 @@ class _TourListItemState extends State<TourListItem> {
                   ),
                   color: Theme.of(context).errorColor,
                   onPressed: () {
-                    print(widget.id);
                     FirebaseFirestore.instance
                         .collection('/users/' + currentUser.uid + '/tours')
                         .doc(widget.id)

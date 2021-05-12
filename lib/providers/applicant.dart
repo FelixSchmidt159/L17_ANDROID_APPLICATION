@@ -1,17 +1,16 @@
 import 'package:flutter/foundation.dart';
 
-import 'tour.dart';
-
 class Applicant with ChangeNotifier {
-  int id;
-  String name;
-  List<Tour> _tours;
+  String _id;
+  String _name;
 
-  Applicant({
-    @required this.name,
-  });
+  Applicant(this._name, this._id);
 
-  int overallDistance() {
-    return 1253;
+  String get name {
+    return _name;
+  }
+
+  String get id {
+    return _id;
   }
 }
