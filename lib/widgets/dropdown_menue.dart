@@ -23,7 +23,7 @@ class _DropDownMenueState extends State<DropDownMenue> {
 
   @override
   Widget build(BuildContext context) {
-    // _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     print(_selectedDriver);
     return StreamBuilder(
       stream: FirebaseFirestore.instance
@@ -70,11 +70,19 @@ class _DropDownMenueState extends State<DropDownMenue> {
 
         if (init) {
           _selectedDriver = null;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Provider.of<Applicants>(context, listen: false).selectedDriverId =
+                _selectedDriver;
+          });
         }
 
         if (_selectedDriver == null) {
           if (dropdownMenuItemList.length > 0) {
             _selectedDriver = dropdownMenuItemList[0].value;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Provider.of<Applicants>(context, listen: false).selectedDriverId =
+                  _selectedDriver;
+            });
           }
         }
 
@@ -99,8 +107,8 @@ class _DropDownMenueState extends State<DropDownMenue> {
                 if (value != null) {
                   setState(() {
                     _selectedDriver = value;
-                    // Provider.of<Applicants>(context, listen: false)
-                    //     .selectedDriverId = value;
+                    Provider.of<Applicants>(context, listen: false)
+                        .selectedDriverId = value;
                   });
                 }
               },
