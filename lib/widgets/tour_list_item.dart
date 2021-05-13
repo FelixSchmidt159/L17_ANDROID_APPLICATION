@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
+import 'package:l17/providers/applicants.dart';
+import 'package:provider/provider.dart';
 
 import '../screens/tour_screen.dart';
 import '../providers/tour.dart';
@@ -18,9 +20,11 @@ class TourListItem extends StatefulWidget {
 }
 
 class _TourListItemState extends State<TourListItem> {
+  String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed(TourScreen.routeName,
@@ -59,11 +63,16 @@ class _TourListItemState extends State<TourListItem> {
                   ),
                   label: Text('Delete'),
                   onPressed: () {
-                    print(widget.id);
-                    FirebaseFirestore.instance
-                        .collection('/users/' + currentUser.uid + '/tours')
-                        .doc(widget.id)
-                        .delete();
+                    if (_selectedDriver != null) {
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(currentUser.uid)
+                          .collection('drivers')
+                          .doc(_selectedDriver)
+                          .collection('tours')
+                          .doc(widget.id)
+                          .delete();
+                    }
                   },
                 )
               : IconButton(
@@ -73,10 +82,16 @@ class _TourListItemState extends State<TourListItem> {
                   ),
                   color: Theme.of(context).errorColor,
                   onPressed: () {
-                    FirebaseFirestore.instance
-                        .collection('/users/' + currentUser.uid + '/tours')
-                        .doc(widget.id)
-                        .delete();
+                    if (_selectedDriver != null) {
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(currentUser.uid)
+                          .collection('drivers')
+                          .doc(_selectedDriver)
+                          .collection('tours')
+                          .doc(widget.id)
+                          .delete();
+                    }
                   },
                 ),
         ),

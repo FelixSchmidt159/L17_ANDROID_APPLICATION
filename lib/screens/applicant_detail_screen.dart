@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:l17/providers/applicant.dart';
+import 'package:l17/providers/applicants.dart';
+import 'package:provider/provider.dart';
 
 class ApplicantDetailScreen extends StatefulWidget {
   static const routeName = '/applicant-detail-screen';
@@ -79,7 +81,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   _editedApplicant = Applicant(value, _editedApplicant.id);
                 },
                 decoration: InputDecoration(labelText: 'Name des Bewerbers'),
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.name,
               )
             ],
           ),

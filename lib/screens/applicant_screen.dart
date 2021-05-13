@@ -50,7 +50,6 @@ class _ApplicantScreenState extends State<ApplicantScreen> {
                     itemBuilder: (context, index) {
                       return ApplicantListItem(Applicant(
                           toursDocs[index]['name'], toursDocs[index].id));
-                      //     daytime: toursDocs[index]['daytime']),
                     },
                     itemCount: toursDocs.length,
                   ),

@@ -17,10 +17,10 @@ class ApplicantListItem extends StatefulWidget {
 
 class _ApplicantListItemState extends State<ApplicantListItem> {
   final currentUser = FirebaseAuth.instance.currentUser;
-  // String _selectedDriver;
+  String _selectedDriver;
   @override
   Widget build(BuildContext context) {
-    // _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed(ApplicantDetailScreen.routeName,
@@ -36,15 +36,26 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
               size: 25,
             ),
             color: Theme.of(context).errorColor,
-            onPressed: () {
-              // if (_selectedDriver == widget.applicant.id) {
-              //   Provider.of<Applicants>(context, listen: false)
-              //       .selectedDriverId = "";
-              // }
-              FirebaseFirestore.instance
-                  .collection('/users/' + currentUser.uid + '/drivers')
-                  .doc(widget.applicant.id)
-                  .delete();
+            onPressed: () async {
+              if (_selectedDriver == widget.applicant.id) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Provider.of<Applicants>(context, listen: false)
+                      .selectedDriverId = null;
+                });
+              }
+              var instance = FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(currentUser.uid)
+                  .collection('drivers')
+                  .doc(widget.applicant.id);
+
+              await instance.collection('tours').get().then((value) {
+                final toursDocs = value.docs;
+                for (int i = 0; i < toursDocs.length; i++) {
+                  instance.collection('tours').doc(toursDocs[i].id).delete();
+                }
+                instance.delete();
+              });
             },
           ),
         ),

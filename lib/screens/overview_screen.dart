@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
+import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
 
 import 'package:l17/screens/tour_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
+import 'package:provider/provider.dart';
 
 import '../widgets/app_drawer.dart';
 import '../widgets/tour_list.dart';
@@ -27,22 +29,33 @@ class _OverviewScreenState extends State<OverviewScreen> {
   var currentUser = FirebaseAuth.instance.currentUser;
   int lastMileageEnd;
   TextEditingController _textFieldController = TextEditingController();
+  String _selectedDriver;
 
   @override
   void didChangeDependencies() {
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     lastMileageEnd = 0;
-    FirebaseFirestore.instance
-        .collection('/users/' + currentUser.uid + '/tours')
-        .snapshots()
-        .listen((event) {
-      final toursDocs = event.docs;
-      if (toursDocs.isNotEmpty) {
-        for (int i = 0; i < 1; i++) {
-          lastMileageEnd = toursDocs[i]['mileageEnd'];
-          _textFieldController.text = toursDocs[i]['mileageEnd'].toString();
+    if (_selectedDriver != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('tours')
+          .snapshots()
+          .listen((event) {
+        final toursDocs = event.docs;
+        if (toursDocs.isNotEmpty) {
+          for (int i = 0; i < 1; i++) {
+            lastMileageEnd = toursDocs[i]['mileageEnd'];
+            _textFieldController.text = toursDocs[i]['mileageEnd'].toString();
+          }
+          if (lastMileageEnd == 0) {
+            _textFieldController.text = "";
+          }
         }
-      }
-    });
+      });
+    }
     super.didChangeDependencies();
   }
 
@@ -59,6 +72,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       centerTitle: true,
       actions: [
         DropdownButton(
+          underline: Container(),
           icon: Icon(
             Icons.more_vert,
             color: Theme.of(context).primaryIconTheme.color,
@@ -162,10 +176,15 @@ class _OverviewScreenState extends State<OverviewScreen> {
                       lastMileageEnd = 0;
                   },
                   controller: _textFieldController,
-                  decoration: InputDecoration(hintText: "Kilometerstand"),
+                  decoration:
+                      InputDecoration(hintText: "Kilometerstand (Beginn)"),
+                  keyboardType: TextInputType.number,
                 ),
                 IconButton(
-                  icon: Icon(Icons.camera_alt),
+                  icon: Icon(
+                    Icons.camera_alt,
+                    color: Colors.black,
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                     _pickImage();

@@ -3,8 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
+import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:provider/provider.dart';
 
 class TourScreen extends StatefulWidget {
   static const routeName = '/tour-screen';
@@ -36,6 +38,7 @@ class _TourScreenState extends State<TourScreen> {
   String suggestedAttendant = "";
   String suggestedRoadCondition = "trocken";
   bool _initialize = true;
+  String _selectedDriver;
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -63,6 +66,7 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   void didChangeDependencies() {
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     tourObject =
         ModalRoute.of(context).settings.arguments as TourScreenArguments;
 
@@ -79,43 +83,49 @@ class _TourScreenState extends State<TourScreen> {
           DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
     }
 
-    FirebaseFirestore.instance
-        .collection('/users/' + currentUser.uid + '/tours')
-        .snapshots()
-        .listen(
-      (event) {
-        final toursDocs = event.docs;
-        if (toursDocs.isNotEmpty && _initialize) {
-          for (int i = 0; i < toursDocs.length; i++) {
-            if (toursDocs[i]['licensePlate'] != "")
-              _licensePlates.add(toursDocs[i]['licensePlate']);
-            if (toursDocs[i]['attendant'] != "")
-              _attendants.add(toursDocs[i]['attendant']);
-            if (toursDocs[i]['tourBegin'] != "")
-              _locations.add(toursDocs[i]['tourBegin']);
-            if (toursDocs[i]['tourEnd'] != "")
-              _locations.add(toursDocs[i]['tourEnd']);
-            if (i == 0) {
-              suggestedAttendant = toursDocs[i]['attendant'];
-              suggestedLicensePlate = toursDocs[i]['licensePlate'];
+    if (_selectedDriver != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('tours')
+          .snapshots()
+          .listen(
+        (event) {
+          final toursDocs = event.docs;
+          if (toursDocs.isNotEmpty && _initialize) {
+            for (int i = 0; i < toursDocs.length; i++) {
+              if (toursDocs[i]['licensePlate'] != "")
+                _licensePlates.add(toursDocs[i]['licensePlate']);
+              if (toursDocs[i]['attendant'] != "")
+                _attendants.add(toursDocs[i]['attendant']);
+              if (toursDocs[i]['tourBegin'] != "")
+                _locations.add(toursDocs[i]['tourBegin']);
+              if (toursDocs[i]['tourEnd'] != "")
+                _locations.add(toursDocs[i]['tourEnd']);
+              if (i == 0) {
+                suggestedAttendant = toursDocs[i]['attendant'];
+                suggestedLicensePlate = toursDocs[i]['licensePlate'];
+              }
             }
-          }
-          _licensePlates = _licensePlates.toSet().toList();
-          _locations = _locations.toSet().toList();
-          _attendants = _attendants.toSet().toList();
+            _licensePlates = _licensePlates.toSet().toList();
+            _locations = _locations.toSet().toList();
+            _attendants = _attendants.toSet().toList();
 
-          if (tourObject.id == "") {
-            if (mounted) {
-              setState(() {
-                _typeAheadControllerLicensePlate.text = suggestedLicensePlate;
-                _typeAheadControllerAttendant.text = suggestedAttendant;
-              });
+            if (tourObject.id == "") {
+              if (mounted) {
+                setState(() {
+                  _typeAheadControllerLicensePlate.text = suggestedLicensePlate;
+                  _typeAheadControllerAttendant.text = suggestedAttendant;
+                });
+              }
             }
+            _initialize = false;
           }
-          _initialize = false;
-        }
-      },
-    );
+        },
+      );
+    }
 
     super.didChangeDependencies();
   }
@@ -126,37 +136,57 @@ class _TourScreenState extends State<TourScreen> {
       return;
     }
     _form.currentState.save();
-    if (tourObject.id == "") {
-      FirebaseFirestore.instance
-          .collection('/users/' + currentUser.uid + '/tours')
-          .add({
-        'timestamp': _editedProduct.timestamp,
-        'distance': _editedProduct.distance,
-        'mileageBegin': _editedProduct.mileageBegin,
-        'mileageEnd': _editedProduct.mileageEnd,
-        'licensePlate': _editedProduct.licensePlate,
-        'tourBegin': _editedProduct.tourBegin,
-        'tourEnd': _editedProduct.tourEnd,
-        'roadCondition': _editedProduct.roadCondition,
-        'attendant': _editedProduct.attendant,
-        'daytime': _editedProduct.daytime,
-      });
+    if (_selectedDriver != null) {
+      if (tourObject.id == "") {
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('drivers')
+            .doc(_selectedDriver)
+            .collection('tours')
+            .add({
+          'timestamp': _editedProduct.timestamp,
+          'distance': _editedProduct.distance,
+          'mileageBegin': _editedProduct.mileageBegin,
+          'mileageEnd': _editedProduct.mileageEnd,
+          'licensePlate': _editedProduct.licensePlate,
+          'tourBegin': _editedProduct.tourBegin,
+          'tourEnd': _editedProduct.tourEnd,
+          'roadCondition': _editedProduct.roadCondition,
+          'attendant': _editedProduct.attendant,
+          'daytime': _editedProduct.daytime,
+        });
+      } else {
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('drivers')
+            .doc(_selectedDriver)
+            .collection('tours')
+            .doc(tourObject.id)
+            .update({
+          'timestamp': _editedProduct.timestamp,
+          'distance': _editedProduct.distance,
+          'mileageBegin': _editedProduct.mileageBegin,
+          'mileageEnd': _editedProduct.mileageEnd,
+          'licensePlate': _editedProduct.licensePlate,
+          'tourBegin': _editedProduct.tourBegin,
+          'tourEnd': _editedProduct.tourEnd,
+          'roadCondition': _editedProduct.roadCondition,
+          'attendant': _editedProduct.attendant,
+          'daytime': _editedProduct.daytime,
+        });
+      }
     } else {
-      FirebaseFirestore.instance
-          .collection('/users/' + currentUser.uid + '/tours')
-          .doc(tourObject.id)
-          .update({
-        'timestamp': _editedProduct.timestamp,
-        'distance': _editedProduct.distance,
-        'mileageBegin': _editedProduct.mileageBegin,
-        'mileageEnd': _editedProduct.mileageEnd,
-        'licensePlate': _editedProduct.licensePlate,
-        'tourBegin': _editedProduct.tourBegin,
-        'tourEnd': _editedProduct.tourEnd,
-        'roadCondition': _editedProduct.roadCondition,
-        'attendant': _editedProduct.attendant,
-        'daytime': _editedProduct.daytime,
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Fügen Sie vorerst einen neuen Fahrer hinzu.',
+            textAlign: TextAlign.center,
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
     Navigator.of(context).pop();
   }

@@ -20,11 +20,12 @@ class _DropDownMenueState extends State<DropDownMenue> {
   List<Applicant> _items = [];
   String _selectedDriver;
   bool init = true;
+  String _driver;
 
   @override
   Widget build(BuildContext context) {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-    print(_selectedDriver);
+
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('/users/' + currentUser.uid + '/drivers')
@@ -35,9 +36,9 @@ class _DropDownMenueState extends State<DropDownMenue> {
             alignment: Alignment.center,
             width: widget.width,
             height: widget.height,
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+            // child: Center(
+            //   child: CircularProgressIndicator(),
+            // ),
           );
         }
         _items = [];
@@ -45,6 +46,7 @@ class _DropDownMenueState extends State<DropDownMenue> {
         for (int i = 0; i < toursDocs.length; i++) {
           _items.add(Applicant(toursDocs[i]['name'], toursDocs[i].id));
         }
+        if (_items.length > 0) _driver = _items[0].name;
         init = true;
 
         var dropdownMenuItemList =
@@ -86,36 +88,58 @@ class _DropDownMenueState extends State<DropDownMenue> {
           }
         }
 
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
-          child: Container(
-            alignment: Alignment.center,
-            width: widget.width,
-            height: widget.height,
-            child: DropdownButton<String>(
-              hint: SizedBox(
-                  width: widget.width * 0.75,
-                  child: Text(
-                    '',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.black),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                  )),
-              value: _selectedDriver,
-              onChanged: (String value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedDriver = value;
-                    Provider.of<Applicants>(context, listen: false)
-                        .selectedDriverId = value;
-                  });
-                }
-              },
-              items: dropdownMenuItemList,
-            ),
-          ),
-        );
+        return _selectedDriver != null
+            ? Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                child: Container(
+                  alignment: Alignment.center,
+                  width: widget.width,
+                  height: widget.height,
+                  child: DropdownButton<String>(
+                    iconDisabledColor: Colors.grey.shade200,
+                    underline: Container(),
+                    // hint: SizedBox(
+                    //     width: widget.width * 0.75,
+                    //     child: Text(
+                    //       '',
+                    //       style: TextStyle(
+                    //           fontWeight: FontWeight.bold, color: Colors.black),
+                    //       textAlign: TextAlign.center,
+                    //       overflow: TextOverflow.ellipsis,
+                    //     )),
+                    disabledHint: SizedBox(
+                      width: widget.width * 0.75,
+                      child: Text(
+                        _driver,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.black),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    value: dropdownMenuItemList.length > 1
+                        ? _selectedDriver
+                        : null,
+                    onChanged: dropdownMenuItemList.length > 1
+                        ? (String value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedDriver = value;
+                                Provider.of<Applicants>(context, listen: false)
+                                    .selectedDriverId = value;
+                              });
+                            }
+                          }
+                        : null,
+                    items: dropdownMenuItemList,
+                  ),
+                ),
+              )
+            : Container(
+                alignment: Alignment.center,
+                width: widget.width,
+                height: widget.height,
+              );
       },
     );
   }

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:l17/widgets/chart_bar.dart';
 import 'package:l17/widgets/dropdown_menue.dart';
 import 'package:l17/widgets/tour_list_item.dart';
+import 'package:provider/provider.dart';
 
 class TourList extends StatefulWidget {
   final double height;
@@ -19,27 +21,35 @@ class TourList extends StatefulWidget {
 class _TourListState extends State<TourList> {
   int _overallDistance;
   var currentUser = FirebaseAuth.instance.currentUser;
+  String _selectedDriver;
 
   @override
   void didChangeDependencies() {
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     _overallDistance = 0;
-    FirebaseFirestore.instance
-        .collection('/users/' + currentUser.uid + '/tours')
-        .snapshots()
-        .listen((event) {
-      final toursDocs = event.docs;
-      if (toursDocs.isNotEmpty) {
-        _overallDistance = 0;
-        for (int i = 0; i < toursDocs.length; i++) {
-          _overallDistance += toursDocs[i]['distance'];
+    if (_selectedDriver != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('tours')
+          .snapshots()
+          .listen((event) {
+        final toursDocs = event.docs;
+        if (toursDocs.isNotEmpty) {
+          _overallDistance = 0;
+          for (int i = 0; i < toursDocs.length; i++) {
+            _overallDistance += toursDocs[i]['distance'];
+          }
+          if (mounted) {
+            setState(() {
+              _overallDistance = _overallDistance;
+            });
+          }
         }
-        if (mounted) {
-          setState(() {
-            _overallDistance = _overallDistance;
-          });
-        }
-      }
-    });
+      });
+    }
     super.didChangeDependencies();
   }
 
@@ -65,55 +75,100 @@ class _TourListState extends State<TourList> {
               Container(
                 width: widget.width * 0.25,
                 alignment: Alignment.center,
-                child: Text(
-                  '$_overallDistance km',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _overallDistance != 0
+                    ? Text(
+                        '$_overallDistance km',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : Container(),
               ),
             ],
           ),
         ),
-        StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('/users/' + currentUser.uid + '/tours')
-              .snapshots(),
-          builder: (ctx, toursSnapshot) {
-            if (toursSnapshot.connectionState == ConnectionState.waiting) {
-              return Container(
-                height: widget.height * 0.90,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-            final toursDocs = toursSnapshot.data.docs;
-            return Container(
-              height: widget.height * 0.90,
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  return TourListItem(
-                      Tour(
-                          timestamp: DateTime.fromMicrosecondsSinceEpoch(
-                              toursDocs[index]['timestamp']
-                                  .microsecondsSinceEpoch),
-                          attendant: toursDocs[index]['attendant'],
-                          distance: toursDocs[index]['distance'],
-                          licensePlate: toursDocs[index]['licensePlate'],
-                          mileageBegin: toursDocs[index]['mileageBegin'],
-                          mileageEnd: toursDocs[index]['mileageEnd'],
-                          roadCondition: toursDocs[index]['roadCondition'],
-                          tourBegin: toursDocs[index]['tourBegin'],
-                          tourEnd: toursDocs[index]['tourEnd'],
-                          daytime: toursDocs[index]['daytime']),
-                      toursDocs[index].id);
+        _selectedDriver != null
+            ? StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('drivers')
+                    .doc(_selectedDriver)
+                    .collection('tours')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
+                builder: (ctx, toursSnapshot) {
+                  if (toursSnapshot.connectionState ==
+                          ConnectionState.waiting &&
+                      _selectedDriver != null) {
+                    return Container(
+                      height: widget.height * 0.90,
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  final toursDocs = toursSnapshot.data.docs;
+                  return toursDocs.length > 0
+                      ? Container(
+                          height: widget.height * 0.90,
+                          child: ListView.builder(
+                            itemBuilder: (context, index) {
+                              return TourListItem(
+                                  Tour(
+                                      timestamp:
+                                          DateTime.fromMicrosecondsSinceEpoch(
+                                              toursDocs[index]['timestamp']
+                                                  .microsecondsSinceEpoch),
+                                      attendant: toursDocs[index]['attendant'],
+                                      distance: toursDocs[index]['distance'],
+                                      licensePlate: toursDocs[index]
+                                          ['licensePlate'],
+                                      mileageBegin: toursDocs[index]
+                                          ['mileageBegin'],
+                                      mileageEnd: toursDocs[index]
+                                          ['mileageEnd'],
+                                      roadCondition: toursDocs[index]
+                                          ['roadCondition'],
+                                      tourBegin: toursDocs[index]['tourBegin'],
+                                      tourEnd: toursDocs[index]['tourEnd'],
+                                      daytime: toursDocs[index]['daytime']),
+                                  toursDocs[index].id);
+                            },
+                            itemCount: toursDocs.length,
+                          ),
+                        )
+                      : Container(
+                          height: widget.height * 0.90,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_road,
+                                color: Theme.of(context).iconTheme.color,
+                                size: 50,
+                              ),
+                              Text('Fügen Sie eine neue Fahrt hinzu.'),
+                            ],
+                          ),
+                        );
                 },
-                itemCount: toursDocs.length,
-              ),
-            );
-          },
-        )
+              )
+            : Container(
+                height: widget.height * 0.90,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people,
+                      size: 50,
+                    ),
+                    Text('Fügen Sie einen neuen Fahrer im Side-Menü hinzu.'),
+                  ],
+                ),
+              )
       ],
     );
   }
