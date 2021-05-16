@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:l17/screens/auth_screen.dart';
+import 'package:l17/screens/goal_screen.dart';
 import 'package:l17/screens/photo_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -70,6 +71,7 @@ class MyApp extends StatelessWidget {
             TourScreen.routeName: (ctx) => TourScreen(),
             ApplicantScreen.routeName: (ctx) => ApplicantScreen(),
             ApplicantDetailScreen.routeName: (ctx) => ApplicantDetailScreen(),
+            GoalScreen.routeName: (ctx) => GoalScreen(),
           }),
     );
   }

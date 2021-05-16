@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,15 +12,33 @@ import 'package:pdf/widgets.dart' as pw;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-class CreatePdf extends StatelessWidget {
+class CreatePdf extends StatefulWidget {
+  @override
+  _CreatePdfState createState() => _CreatePdfState();
+}
+
+// class _LineChartWidgetState extends State<LineChartWidget> {
+class _CreatePdfState extends State<CreatePdf> {
+  void didChangeDependencies() {
+    _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
+    super.didChangeDependencies();
+  }
+
+  String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
+
   @override
   Widget build(BuildContext context) {
-    List<List<String>> data;
+    List<List<String>> data = [];
     List<Tour> tours = [];
     FirebaseFirestore.instance
-        .collection('/users/' + currentUser.uid + '/tours')
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('drivers')
+        .doc(_selectedDriver)
+        .collection('tours')
         .snapshots()
         .listen((event) {
       final toursDocs = event.docs;
@@ -39,9 +58,10 @@ class CreatePdf extends StatelessWidget {
             daytime: toursDocs[i]['daytime'],
           ));
         }
+
         data = generatePdfData(tours);
 
-        generateDocument(PdfPageFormat.a4, data);
+        // generateDocument(PdfPageFormat.a4, data);
       }
     });
 
@@ -54,8 +74,11 @@ class CreatePdf extends StatelessWidget {
             TextButton(
               child: Text('Image PDF extern öffnen'),
               onPressed: () async {
-                final pdfFile = await generateDocument(PdfPageFormat.a4, data);
-                openFile(pdfFile);
+                if (data.length > 1) {
+                  final pdfFile =
+                      await generateDocument(PdfPageFormat.a4, data);
+                  openFile(pdfFile);
+                }
               },
             ),
           ],
@@ -73,14 +96,13 @@ List<List<String>> generatePdfData(List<Tour> items) {
       'Gefahrene KM',
       'Kilometerstand  ',
       'Kennzeichen  ',
-      'Tageszeit  ',
       'Fahrstrecke / ziel',
       'Straßenzustand, Witterung',
       'Unterschrift Begleiter',
       'Unterschrift Bewerber'
     ]
   ];
-
+  print("dddddddddddddddddddddddddddddd");
   for (Tour tour in items) {
     pdfData.add(<String>[
       DateFormat.yMd('de_DE').format(tour.timestamp),
@@ -88,8 +110,7 @@ List<List<String>> generatePdfData(List<Tour> items) {
       tour.distance.toString(),
       tour.mileageBegin.toString() + ' / ' + tour.mileageEnd.toString(),
       tour.licensePlate,
-      DateFormat.Hm().format(tour.timestamp),
-      tour.tourBegin + ' / ' + tour.tourEnd,
+      tour.tourBegin + ' - ' + tour.tourEnd,
       tour.roadCondition,
       '',
       '',
@@ -172,5 +193,5 @@ Future<File> generateDocument(
             pw.Padding(padding: const pw.EdgeInsets.all(10)),
           ]));
 
-  return mySaveDocument(pdf: doc, name: 'test');
+  return mySaveDocument(pdf: doc, name: 'Fahrtenbuch');
 }

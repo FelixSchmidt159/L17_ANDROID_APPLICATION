@@ -43,6 +43,7 @@ dependencies:
   flutter_typeahead: ^3.1.2
   instant: ^0.4.1
   syncfusion_flutter_datepicker: ^19.1.59-beta
+  fl_chart: ^0.36.1
   
 
 dev_dependencies:

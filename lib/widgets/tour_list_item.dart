@@ -53,47 +53,26 @@ class _TourListItemState extends State<TourListItem> {
           subtitle: Text(
             DateFormat.yMMMd('de_DE').format(widget.tour.timestamp),
           ),
-          trailing: MediaQuery.of(context).size.width > 460
-              ? TextButton.icon(
-                  style: TextButton.styleFrom(
-                      primary: Theme.of(context).errorColor),
-                  icon: Icon(
-                    Icons.delete,
-                    size: 25,
-                  ),
-                  label: Text('Delete'),
-                  onPressed: () {
-                    if (_selectedDriver != null) {
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(currentUser.uid)
-                          .collection('drivers')
-                          .doc(_selectedDriver)
-                          .collection('tours')
-                          .doc(widget.id)
-                          .delete();
-                    }
-                  },
-                )
-              : IconButton(
-                  icon: Icon(
-                    Icons.delete,
-                    size: 25,
-                  ),
-                  color: Theme.of(context).errorColor,
-                  onPressed: () {
-                    if (_selectedDriver != null) {
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(currentUser.uid)
-                          .collection('drivers')
-                          .doc(_selectedDriver)
-                          .collection('tours')
-                          .doc(widget.id)
-                          .delete();
-                    }
-                  },
-                ),
+          trailing: IconButton(
+            icon: Icon(
+              Icons.delete,
+              size: 25,
+            ),
+            color: Theme.of(context).errorColor,
+            onPressed: () {
+              if (_selectedDriver != null) {
+                FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('drivers')
+                    .doc(_selectedDriver)
+                    .collection('tours')
+                    .doc(widget.id)
+                    .delete();
+                setState(() {});
+              }
+            },
+          ),
         ),
       ),
     );

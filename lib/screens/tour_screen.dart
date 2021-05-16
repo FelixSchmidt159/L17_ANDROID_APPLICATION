@@ -231,32 +231,105 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => new AlertDialog(
+            title: new Text('Die Änderungen wurden nicht gespeichert.'),
+            content: new Text('Wollen Sie, dennoch den zur Hauptseite?'),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Colors.green, primary: Colors.white),
+                onPressed: () => Navigator.of(context).pop(true),
+                child: new Text('Ja'),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Colors.red, primary: Colors.white),
+                onPressed: () => Navigator.of(context).pop(false),
+                child: new Text('Nein'),
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Tour'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: _saveForm,
+    return new WillPopScope(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Tour'),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.save),
+                onPressed: _saveForm,
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _form,
-          child: ListView(
-            children: <Widget>[
-              InkWell(
-                onTap: () async {
-                  await _selectDate().then((value) {
-                    if (value != null) {
-                      _initialDate.text =
-                          DateFormat.yMMMd('de_DE').format(value);
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _form,
+              child: ListView(
+                children: <Widget>[
+                  InkWell(
+                    onTap: () async {
+                      await _selectDate().then((value) {
+                        if (value != null) {
+                          _initialDate.text =
+                              DateFormat.yMMMd('de_DE').format(value);
+                          _editedProduct = Tour(
+                              timestamp: value,
+                              distance: _editedProduct.distance,
+                              mileageBegin: _editedProduct.mileageBegin,
+                              mileageEnd: _editedProduct.mileageEnd,
+                              licensePlate: _editedProduct.licensePlate,
+                              tourBegin: _editedProduct.tourBegin,
+                              tourEnd: _editedProduct.tourEnd,
+                              roadCondition: _editedProduct.roadCondition,
+                              attendant: _editedProduct.attendant,
+                              daytime: _editedProduct.daytime);
+                        }
+                      });
+                    },
+                    child: IgnorePointer(
+                      child: Stack(
+                          alignment: AlignmentDirectional.centerEnd,
+                          children: <Widget>[
+                            TextFormField(
+                              maxLines: 1,
+                              validator: (value) {
+                                if (value.isEmpty || value.length < 1) {
+                                  return 'Wähle ein Datum.';
+                                }
+                                return null;
+                              },
+                              controller: _initialDate,
+                              decoration: InputDecoration(
+                                labelText: 'Datum',
+                                labelStyle: TextStyle(
+                                  decorationStyle: TextDecorationStyle.solid,
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.calendar_today),
+                          ]),
+                    ),
+                  ),
+                  TextFormField(
+                    initialValue: tourObject.tour.daytime,
+                    validator: (value) {
+                      if (value.contains(
+                              RegExp(r'(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]')) &&
+                          value.length == 5) return null;
+                      return "Bitte geben Sie eine Uhrzeit im Format hh:mm an.";
+                    },
+                    onSaved: (value) {
                       _editedProduct = Tour(
-                          timestamp: value,
+                          timestamp: _editedProduct.timestamp,
                           distance: _editedProduct.distance,
                           mileageBegin: _editedProduct.mileageBegin,
                           mileageEnd: _editedProduct.mileageEnd,
@@ -265,304 +338,259 @@ class _TourScreenState extends State<TourScreen> {
                           tourEnd: _editedProduct.tourEnd,
                           roadCondition: _editedProduct.roadCondition,
                           attendant: _editedProduct.attendant,
+                          daytime: value);
+                    },
+                    decoration: InputDecoration(labelText: 'Tageszeit'),
+                    keyboardType: TextInputType.number,
+                  ),
+                  TextFormField(
+                    initialValue: tourObject.tour.distance == 0
+                        ? ""
+                        : tourObject.tour.distance.toString(),
+                    decoration: InputDecoration(labelText: 'Distanz'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value.isNotEmpty && num.tryParse(value) == null) {
+                        return 'Geben Sie bitte eine ganze Zahl ein.';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: value.isEmpty ? 0 : int.parse(value),
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
                           daytime: _editedProduct.daytime);
-                    }
-                  });
-                },
-                child: IgnorePointer(
-                  child: Stack(
-                      alignment: AlignmentDirectional.centerEnd,
-                      children: <Widget>[
-                        TextFormField(
-                          maxLines: 1,
-                          validator: (value) {
-                            if (value.isEmpty || value.length < 1) {
-                              return 'Wähle ein Datum.';
-                            }
-                            return null;
-                          },
-                          controller: _initialDate,
-                          decoration: InputDecoration(
-                            labelText: 'Datum',
-                            labelStyle: TextStyle(
-                              decorationStyle: TextDecorationStyle.solid,
-                            ),
-                          ),
-                        ),
-                        const Icon(Icons.calendar_today),
-                      ]),
-                ),
+                    },
+                  ),
+                  TextFormField(
+                    initialValue: tourObject.tour.mileageBegin == 0
+                        ? ""
+                        : tourObject.tour.mileageBegin.toString(),
+                    decoration:
+                        InputDecoration(labelText: 'Kilometerstand (Beginn)'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value.isNotEmpty && num.tryParse(value) == null) {
+                        return 'Geben Sie bitte eine ganze Zahl ein.';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: value.isEmpty ? 0 : int.parse(value),
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                  ),
+                  TextFormField(
+                    initialValue: tourObject.tour.mileageEnd == 0
+                        ? ""
+                        : tourObject.tour.mileageEnd.toString(),
+                    decoration:
+                        InputDecoration(labelText: 'Kilometerstand (Ziel)'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value.isNotEmpty && num.tryParse(value) == null) {
+                        return 'Geben Sie bitte eine ganze Zahl ein.';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: value.isEmpty ? 0 : int.parse(value),
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                  ),
+                  TypeAheadFormField(
+                    textFieldConfiguration: TextFieldConfiguration(
+                      decoration: InputDecoration(labelText: 'Kennzeichen'),
+                      keyboardType: TextInputType.text,
+                      controller: _typeAheadControllerLicensePlate,
+                    ),
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: value,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                    suggestionsCallback: (pattern) {
+                      return getSuggestions(pattern, LifeSearch.licensePlates);
+                    },
+                    itemBuilder: (context, suggestion) {
+                      return ListTile(
+                        title: Text(suggestion),
+                      );
+                    },
+                    transitionBuilder: (context, suggestionsBox, controller) {
+                      return suggestionsBox;
+                    },
+                    onSuggestionSelected: (suggestion) {
+                      this._typeAheadControllerLicensePlate.text = suggestion;
+                    },
+                  ),
+                  TypeAheadFormField(
+                    textFieldConfiguration: TextFieldConfiguration(
+                      decoration: InputDecoration(labelText: 'Startort'),
+                      keyboardType: TextInputType.text,
+                      controller: _typeAheadControllerTourBegin,
+                    ),
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: value,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                    suggestionsCallback: (pattern) {
+                      return getSuggestions(pattern, LifeSearch.locations);
+                    },
+                    itemBuilder: (context, suggestion) {
+                      return ListTile(
+                        title: Text(suggestion),
+                      );
+                    },
+                    transitionBuilder: (context, suggestionsBox, controller) {
+                      return suggestionsBox;
+                    },
+                    onSuggestionSelected: (suggestion) {
+                      this._typeAheadControllerTourBegin.text = suggestion;
+                    },
+                  ),
+                  TypeAheadFormField(
+                    textFieldConfiguration: TextFieldConfiguration(
+                      decoration: InputDecoration(labelText: 'Zielort'),
+                      keyboardType: TextInputType.text,
+                      controller: _typeAheadControllerTourEnd,
+                    ),
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: value,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                    suggestionsCallback: (pattern) {
+                      return getSuggestions(pattern, LifeSearch.locations);
+                    },
+                    itemBuilder: (context, suggestion) {
+                      return ListTile(
+                        title: Text(suggestion),
+                      );
+                    },
+                    transitionBuilder: (context, suggestionsBox, controller) {
+                      return suggestionsBox;
+                    },
+                    onSuggestionSelected: (suggestion) {
+                      this._typeAheadControllerTourEnd.text = suggestion;
+                    },
+                  ),
+                  TypeAheadFormField(
+                    textFieldConfiguration: TextFieldConfiguration(
+                      decoration: InputDecoration(labelText: 'Begleiter'),
+                      controller: _typeAheadControllerAttendant,
+                    ),
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: value,
+                          daytime: _editedProduct.daytime);
+                    },
+                    suggestionsCallback: (pattern) {
+                      return getSuggestions(pattern, LifeSearch.attendants);
+                    },
+                    itemBuilder: (context, suggestion) {
+                      return ListTile(
+                        title: Text(suggestion),
+                      );
+                    },
+                    transitionBuilder: (context, suggestionsBox, controller) {
+                      return suggestionsBox;
+                    },
+                    onSuggestionSelected: (suggestion) {
+                      this._typeAheadControllerAttendant.text = suggestion;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(labelText: 'Straßenzustand'),
+                    items: ['nass', 'trocken', 'eisig', 'schneebedeckt']
+                        .map((label) => DropdownMenuItem(
+                              child: Text(label),
+                              value: label,
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        suggestedRoadCondition = value;
+                      });
+                    },
+                    value: suggestedRoadCondition,
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: _editedProduct.licensePlate,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: value,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                  ),
+                ],
               ),
-              TextFormField(
-                initialValue: tourObject.tour.daytime,
-                validator: (value) {
-                  if (value.contains(
-                          RegExp(r'(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]')) &&
-                      value.length == 5) return null;
-                  return "Bitte geben Sie eine Uhrzeit im Format hh:mm an.";
-                },
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: value);
-                },
-                decoration: InputDecoration(labelText: 'Tageszeit'),
-                keyboardType: TextInputType.number,
-              ),
-              TextFormField(
-                initialValue: tourObject.tour.distance == 0
-                    ? ""
-                    : tourObject.tour.distance.toString(),
-                decoration: InputDecoration(labelText: 'Distanz'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value.isNotEmpty && num.tryParse(value) == null) {
-                    return 'Geben Sie bitte eine ganze Zahl ein.';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: value.isEmpty ? 0 : int.parse(value),
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-              ),
-              TextFormField(
-                initialValue: tourObject.tour.mileageBegin == 0
-                    ? ""
-                    : tourObject.tour.mileageBegin.toString(),
-                decoration:
-                    InputDecoration(labelText: 'Kilometerstand (Beginn)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value.isNotEmpty && num.tryParse(value) == null) {
-                    return 'Geben Sie bitte eine ganze Zahl ein.';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: value.isEmpty ? 0 : int.parse(value),
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-              ),
-              TextFormField(
-                initialValue: tourObject.tour.mileageEnd == 0
-                    ? ""
-                    : tourObject.tour.mileageEnd.toString(),
-                decoration: InputDecoration(labelText: 'Kilometerstand (Ziel)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value.isNotEmpty && num.tryParse(value) == null) {
-                    return 'Geben Sie bitte eine ganze Zahl ein.';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: value.isEmpty ? 0 : int.parse(value),
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-              ),
-              TypeAheadFormField(
-                textFieldConfiguration: TextFieldConfiguration(
-                  decoration: InputDecoration(labelText: 'Kennzeichen'),
-                  keyboardType: TextInputType.text,
-                  controller: _typeAheadControllerLicensePlate,
-                ),
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: value,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-                suggestionsCallback: (pattern) {
-                  return getSuggestions(pattern, LifeSearch.licensePlates);
-                },
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion),
-                  );
-                },
-                transitionBuilder: (context, suggestionsBox, controller) {
-                  return suggestionsBox;
-                },
-                onSuggestionSelected: (suggestion) {
-                  this._typeAheadControllerLicensePlate.text = suggestion;
-                },
-              ),
-              TypeAheadFormField(
-                textFieldConfiguration: TextFieldConfiguration(
-                  decoration: InputDecoration(labelText: 'Startort'),
-                  keyboardType: TextInputType.text,
-                  controller: _typeAheadControllerTourBegin,
-                ),
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: value,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-                suggestionsCallback: (pattern) {
-                  return getSuggestions(pattern, LifeSearch.locations);
-                },
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion),
-                  );
-                },
-                transitionBuilder: (context, suggestionsBox, controller) {
-                  return suggestionsBox;
-                },
-                onSuggestionSelected: (suggestion) {
-                  this._typeAheadControllerTourBegin.text = suggestion;
-                },
-              ),
-              TypeAheadFormField(
-                textFieldConfiguration: TextFieldConfiguration(
-                  decoration: InputDecoration(labelText: 'Zielort'),
-                  keyboardType: TextInputType.text,
-                  controller: _typeAheadControllerTourEnd,
-                ),
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: value,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-                suggestionsCallback: (pattern) {
-                  return getSuggestions(pattern, LifeSearch.locations);
-                },
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion),
-                  );
-                },
-                transitionBuilder: (context, suggestionsBox, controller) {
-                  return suggestionsBox;
-                },
-                onSuggestionSelected: (suggestion) {
-                  this._typeAheadControllerTourEnd.text = suggestion;
-                },
-              ),
-              TypeAheadFormField(
-                textFieldConfiguration: TextFieldConfiguration(
-                  decoration: InputDecoration(labelText: 'Begleiter'),
-                  controller: _typeAheadControllerAttendant,
-                ),
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: _editedProduct.roadCondition,
-                      attendant: value,
-                      daytime: _editedProduct.daytime);
-                },
-                suggestionsCallback: (pattern) {
-                  return getSuggestions(pattern, LifeSearch.attendants);
-                },
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion),
-                  );
-                },
-                transitionBuilder: (context, suggestionsBox, controller) {
-                  return suggestionsBox;
-                },
-                onSuggestionSelected: (suggestion) {
-                  this._typeAheadControllerAttendant.text = suggestion;
-                },
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Straßenzustand'),
-                items: ['nass', 'trocken', 'eisig', 'schneebedeckt']
-                    .map((label) => DropdownMenuItem(
-                          child: Text(label),
-                          value: label,
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    suggestedRoadCondition = value;
-                  });
-                },
-                value: suggestedRoadCondition,
-                onSaved: (value) {
-                  _editedProduct = Tour(
-                      timestamp: _editedProduct.timestamp,
-                      distance: _editedProduct.distance,
-                      mileageBegin: _editedProduct.mileageBegin,
-                      mileageEnd: _editedProduct.mileageEnd,
-                      licensePlate: _editedProduct.licensePlate,
-                      tourBegin: _editedProduct.tourBegin,
-                      tourEnd: _editedProduct.tourEnd,
-                      roadCondition: value,
-                      attendant: _editedProduct.attendant,
-                      daytime: _editedProduct.daytime);
-                },
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
+        onWillPop: _onWillPop);
   }
 }
