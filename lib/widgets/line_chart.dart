@@ -17,17 +17,17 @@ class _LineChartWidgetState extends State<LineChartWidget> {
   ];
   String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
+  double width = 0.0;
 
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     super.didChangeDependencies();
   }
 
-  void prepareData(dynamic toursSnapshot) {}
-
   bool showAvg = false;
   @override
   Widget build(BuildContext context) {
+    width = MediaQuery.of(context).size.width;
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -48,34 +48,40 @@ class _LineChartWidgetState extends State<LineChartWidget> {
           );
         }
         final toursDocs = toursSnapshot.data.docs;
-        return Stack(
-          children: <Widget>[
-            AspectRatio(
-              aspectRatio: 1.70,
-              child: Container(
-                decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(18),
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).backgroundColor.withOpacity(0.6),
+                spreadRadius: 5,
+                blurRadius: 7,
+                offset: Offset(0, 3), // changes position of shadow
+              ),
+            ],
+          ),
+          width: width * 0.8,
+          child: Stack(
+            children: <Widget>[
+              AspectRatio(
+                aspectRatio: 1.40,
+                child: Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(18),
+                      ),
+                      color: Theme.of(context).backgroundColor),
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        right: 18.0, left: 12.0, top: 24, bottom: 12),
+                    child: LineChart(
+                      mainData(toursDocs),
                     ),
-                    color: Color(0xff232d37)),
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      right: 18.0, left: 12.0, top: 24, bottom: 12),
-                  child: LineChart(
-                    mainData(toursDocs),
                   ),
                 ),
               ),
-            ),
-            // SizedBox(
-            //   width: 60,
-            //   height: 34,
-            //   child: Text(
-            //     '[km]',
-            //     style: TextStyle(fontSize: 12, color: Colors.white),
-            //   ),
-            // ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -104,13 +110,13 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         drawVerticalLine: true,
         getDrawingHorizontalLine: (value) {
           return FlLine(
-            color: const Color(0xff37434d),
+            color: Colors.white,
             strokeWidth: 1,
           );
         },
         getDrawingVerticalLine: (value) {
           return FlLine(
-            color: const Color(0xff37434d),
+            color: Colors.white,
             strokeWidth: 1,
           );
         },
@@ -121,9 +127,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
           showTitles: true,
           reservedSize: 22,
           getTextStyles: (value) => const TextStyle(
-              color: Color(0xff68737d),
-              fontWeight: FontWeight.bold,
-              fontSize: 16),
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           getTitles: (value) {
             switch (value.toInt()) {
               case 0:
@@ -146,7 +150,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         leftTitles: SideTitles(
           showTitles: true,
           getTextStyles: (value) => const TextStyle(
-            color: Color(0xff67727d),
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 15,
           ),
@@ -175,7 +179,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
       ),
       borderData: FlBorderData(
           show: true,
-          border: Border.all(color: const Color(0xff37434d), width: 1)),
+          border: Border.all(color: Theme.of(context).accentColor, width: 1)),
       minX: 0,
       maxX: 13,
       minY: 0,
@@ -199,110 +203,4 @@ class _LineChartWidgetState extends State<LineChartWidget> {
       ],
     );
   }
-
-  // LineChartData avgData() {
-  //   return LineChartData(
-  //     lineTouchData: LineTouchData(enabled: false),
-  //     gridData: FlGridData(
-  //       show: true,
-  //       drawHorizontalLine: true,
-  //       getDrawingVerticalLine: (value) {
-  //         return FlLine(
-  //           color: const Color(0xff37434d),
-  //           strokeWidth: 1,
-  //         );
-  //       },
-  //       getDrawingHorizontalLine: (value) {
-  //         return FlLine(
-  //           color: const Color(0xff37434d),
-  //           strokeWidth: 1,
-  //         );
-  //       },
-  //     ),
-  //     titlesData: FlTitlesData(
-  //       show: true,
-  //       bottomTitles: SideTitles(
-  //         showTitles: true,
-  //         reservedSize: 22,
-  //         getTextStyles: (value) => const TextStyle(
-  //             color: Color(0xff68737d),
-  //             fontWeight: FontWeight.bold,
-  //             fontSize: 16),
-  //         getTitles: (value) {
-  //           switch (value.toInt()) {
-  //             case 1:
-  //               return 'Jan';
-  //             case 5:
-  //               return 'Jun';
-  //             case 12:
-  //               return 'Dez';
-  //           }
-  //           return '';
-  //         },
-  //         margin: 8,
-  //       ),
-  //       leftTitles: SideTitles(
-  //         showTitles: true,
-  //         getTextStyles: (value) => const TextStyle(
-  //           color: Color(0xff67727d),
-  //           fontWeight: FontWeight.bold,
-  //           fontSize: 15,
-  //         ),
-  //         getTitles: (value) {
-  //           switch (value.toInt()) {
-  //             case 1:
-  //               return '100km';
-  //             case 3:
-  //               return '300km';
-  //             case 5:
-  //               return '400km';
-  //           }
-  //           return '';
-  //         },
-  //         reservedSize: 28,
-  //         margin: 12,
-  //       ),
-  //     ),
-  //     borderData: FlBorderData(
-  //         show: true,
-  //         border: Border.all(color: const Color(0xff37434d), width: 1)),
-  //     minX: 0,
-  //     maxX: 11,
-  //     minY: 0,
-  //     maxY: 6,
-  //     lineBarsData: [
-  //       LineChartBarData(
-  //         spots: [
-  //           FlSpot(0, 3.44),
-  //           FlSpot(2.6, 3.44),
-  //           FlSpot(4.9, 3.44),
-  //           FlSpot(6.8, 3.44),
-  //           FlSpot(8, 3.44),
-  //           FlSpot(9.5, 3.44),
-  //           FlSpot(11, 3.44),
-  //         ],
-  //         isCurved: true,
-  //         colors: [
-  //           ColorTween(begin: gradientColors[0], end: gradientColors[1])
-  //               .lerp(0.2),
-  //           ColorTween(begin: gradientColors[0], end: gradientColors[1])
-  //               .lerp(0.2),
-  //         ],
-  //         barWidth: 5,
-  //         isStrokeCapRound: true,
-  //         dotData: FlDotData(
-  //           show: false,
-  //         ),
-  //         belowBarData: BarAreaData(show: true, colors: [
-  //           ColorTween(begin: gradientColors[0], end: gradientColors[1])
-  //               .lerp(0.2)
-  //               .withOpacity(0.1),
-  //           ColorTween(begin: gradientColors[0], end: gradientColors[1])
-  //               .lerp(0.2)
-  //               .withOpacity(0.1),
-  //         ]),
-  //       ),
-  //     ],
-  //   );
-  // }
 }

@@ -13,21 +13,27 @@ class _GoalScreenState extends State<GoalScreen> {
     const Color(0xff23b6e6),
     const Color(0xff02d39a),
   ];
+  double width = 0.0;
 
   bool showAvg = false;
   @override
   Widget build(BuildContext context) {
+    width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         title: Text('Fortschritt'),
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 120,
-          ),
-          LineChartWidget(),
-        ],
+      body: Container(
+        width: width,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 120,
+            ),
+            LineChartWidget(),
+          ],
+        ),
       ),
     );
   }

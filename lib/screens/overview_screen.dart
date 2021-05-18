@@ -243,7 +243,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       final croppedImage = await _cropImage(pickedImage.path);
       if (croppedImage != null) {
         textRecognizer(croppedImage).then((value) {
-          var daytime = dateTimeToOffset(offset: 2.0, datetime: DateTime.now());
+          var daytime = DateTime.now();
           Navigator.of(context).pushNamed(
             TourScreen.routeName,
             arguments: TourScreenArguments(

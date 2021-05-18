@@ -56,12 +56,12 @@ class _AuthFormState extends State<AuthForm> {
                       if (value == null ||
                           value.isEmpty ||
                           !value.contains('@')) {
-                        return 'Please enter a valid email address.';
+                        return 'Bitte geben sie eine gültige Email-Adresse an.';
                       }
                       return null;
                     },
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(labelText: 'Email address'),
+                    decoration: InputDecoration(labelText: 'Email Adresse'),
                     onSaved: (value) {
                       _userEmail = value;
                     },
@@ -72,8 +72,8 @@ class _AuthFormState extends State<AuthForm> {
                       validator: (value) {
                         if (value == null ||
                             value.isEmpty ||
-                            value.length < 4) {
-                          return 'Please enter at least 4 characters long.';
+                            value.length < 1) {
+                          return 'Bitte geben Sie eine Nutzernamen an.';
                         }
                         return null;
                       },
@@ -86,14 +86,14 @@ class _AuthFormState extends State<AuthForm> {
                     key: ValueKey('password'),
                     validator: (value) {
                       if (value == null || value.isEmpty || value.length < 7) {
-                        return 'Password must be at least 7 characters long.';
+                        return 'Das Passwort muss mindestens 7 Zeichen haben.';
                       }
                       return null;
                     },
                     onSaved: (value) {
                       _userPassword = value;
                     },
-                    decoration: InputDecoration(labelText: 'Password'),
+                    decoration: InputDecoration(labelText: 'Passwort'),
                     obscureText: true,
                   ),
                   SizedBox(
@@ -102,14 +102,14 @@ class _AuthFormState extends State<AuthForm> {
                   if (widget.isLoading) CircularProgressIndicator(),
                   if (!widget.isLoading)
                     ElevatedButton(
-                      child: Text(_isLogin ? 'Login' : 'Signup'),
+                      child: Text(_isLogin ? 'Login' : 'Registrieren'),
                       onPressed: _trySubmit,
                     ),
                   if (!widget.isLoading)
                     TextButton(
                       child: Text(_isLogin
-                          ? 'Create new account'
-                          : 'I already have an account'),
+                          ? 'Neuen Account erstellen'
+                          : 'Ich habe bereits einen Account'),
                       onPressed: () {
                         setState(() {
                           _isLogin = !_isLogin;

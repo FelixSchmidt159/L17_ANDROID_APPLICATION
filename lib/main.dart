@@ -8,6 +8,7 @@ import 'package:l17/screens/photo_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/applicants.dart';
+import 'models/mat_color.dart';
 import 'screens/overview_screen.dart';
 import 'screens/applicant_screen.dart';
 import './screens/tour_screen.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    MaterialColor mc = MatColor.createMaterialColor(Color(0xFF3b5998));
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(
@@ -36,13 +38,13 @@ class MyApp extends StatelessWidget {
             // primarySwatch: Colors.green,
             // accentColor: Colors.deepOrange,
             // fontFamily: 'Lato',
-            primarySwatch: Colors.pink,
-            backgroundColor: Colors.pink,
-            accentColor: Colors.pink,
-            iconTheme: IconThemeData(color: Colors.pink),
+            primarySwatch: mc,
+            backgroundColor: mc.shade900,
+            accentColor: mc.shade900,
+            iconTheme: IconThemeData(color: mc),
             accentColorBrightness: Brightness.dark,
             buttonTheme: ButtonTheme.of(context).copyWith(
-              buttonColor: Colors.pink,
+              buttonColor: mc,
               textTheme: ButtonTextTheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
