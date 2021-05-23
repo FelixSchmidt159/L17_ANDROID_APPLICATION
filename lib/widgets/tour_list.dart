@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -22,20 +24,30 @@ class _TourListState extends State<TourList> {
   int _overallDistance;
   var currentUser = FirebaseAuth.instance.currentUser;
   String _selectedDriver;
+  Stream<QuerySnapshot> reference;
+  StreamSubscription<QuerySnapshot> streamRef;
+  @override
+  void dispose() {
+    if (streamRef != null) {
+      streamRef.cancel();
+    }
+    // TODO: implement dispose
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     _overallDistance = 0;
     if (_selectedDriver != null) {
-      FirebaseFirestore.instance
+      reference = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
-          .snapshots()
-          .listen((event) {
+          .snapshots();
+      streamRef = reference.listen((event) {
         final toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
           _overallDistance = 0;

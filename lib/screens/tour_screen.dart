@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,6 +39,7 @@ class _TourScreenState extends State<TourScreen> {
   final TextEditingController _mileageBegin = TextEditingController();
   final TextEditingController _mileageEnd = TextEditingController();
   TextEditingController _initialDate = TextEditingController();
+  TextEditingController _distance = TextEditingController();
   List<String> _licensePlates = [];
   List<String> _attendants = [];
   List<String> _locations = [];
@@ -46,6 +48,8 @@ class _TourScreenState extends State<TourScreen> {
   String suggestedRoadCondition = "trocken";
   bool _initialize = true;
   String _selectedDriver;
+  Stream<QuerySnapshot> reference;
+  StreamSubscription<QuerySnapshot> streamRef;
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -69,6 +73,10 @@ class _TourScreenState extends State<TourScreen> {
     _initialDate.dispose();
     _mileageBegin.dispose();
     _mileageEnd.dispose();
+    _distance.dispose();
+    if (streamRef != null) {
+      streamRef.cancel();
+    }
 
     super.dispose();
   }
@@ -101,14 +109,14 @@ class _TourScreenState extends State<TourScreen> {
     }
 
     if (_selectedDriver != null) {
-      FirebaseFirestore.instance
+      reference = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
-          .snapshots()
-          .listen(
+          .snapshots();
+      streamRef = reference.listen(
         (event) {
           final toursDocs = event.docs;
           if (toursDocs.isNotEmpty && _initialize) {

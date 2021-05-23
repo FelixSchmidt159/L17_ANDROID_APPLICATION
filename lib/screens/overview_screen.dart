@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,20 +31,22 @@ class _OverviewScreenState extends State<OverviewScreen> {
   int lastMileageEnd;
   TextEditingController _textFieldController = TextEditingController();
   String _selectedDriver;
+  Stream<QuerySnapshot> reference;
+  StreamSubscription<QuerySnapshot> streamRef;
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     lastMileageEnd = 0;
     if (_selectedDriver != null) {
-      FirebaseFirestore.instance
+      reference = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
-          .snapshots()
-          .listen((event) {
+          .snapshots();
+      streamRef = reference.listen((event) {
         final toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < 1; i++) {
@@ -61,6 +64,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   void dispose() {
+    if (streamRef != null) {
+      streamRef.cancel();
+    }
     _textFieldController.dispose();
     super.dispose();
   }
@@ -137,7 +143,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final width = MediaQuery.of(context).size.width;
 
     List<Widget> _widgetOptions = <Widget>[
-      CreatePdf(),
+      CreatePdf(height, width),
       TourList(height, width),
     ];
 

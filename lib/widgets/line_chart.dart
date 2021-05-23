@@ -70,7 +70,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
                       borderRadius: BorderRadius.all(
                         Radius.circular(18),
                       ),
-                      color: Theme.of(context).backgroundColor),
+                      color: Theme.of(context).accentColor),
                   child: Padding(
                     padding: const EdgeInsets.only(
                         right: 18.0, left: 12.0, top: 24, bottom: 12),

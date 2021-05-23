@@ -5,6 +5,8 @@ import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:l17/screens/auth_screen.dart';
 import 'package:l17/screens/goal_screen.dart';
 import 'package:l17/screens/photo_screen.dart';
+import 'package:l17/screens/vehicle_detail_screen.dart';
+import 'package:l17/screens/vehicle_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/applicants.dart';
@@ -39,8 +41,8 @@ class MyApp extends StatelessWidget {
             // accentColor: Colors.deepOrange,
             // fontFamily: 'Lato',
             primarySwatch: mc,
-            backgroundColor: mc.shade900,
-            accentColor: mc.shade900,
+            backgroundColor: mc.shade700,
+            accentColor: mc.shade400,
             iconTheme: IconThemeData(color: mc),
             accentColorBrightness: Brightness.dark,
             buttonTheme: ButtonTheme.of(context).copyWith(
@@ -74,6 +76,8 @@ class MyApp extends StatelessWidget {
             ApplicantScreen.routeName: (ctx) => ApplicantScreen(),
             ApplicantDetailScreen.routeName: (ctx) => ApplicantDetailScreen(),
             GoalScreen.routeName: (ctx) => GoalScreen(),
+            VehicleScreen.routeName: (ctx) => VehicleScreen(),
+            VehicleDetailScreen.routeName: (ctx) => VehicleDetailScreen(),
           }),
     );
   }

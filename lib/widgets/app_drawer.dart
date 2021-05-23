@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:l17/screens/applicant_screen.dart';
 import 'package:l17/screens/goal_screen.dart';
+import 'package:l17/screens/vehicle_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -12,14 +13,23 @@ class AppDrawer extends StatelessWidget {
             // title: Text('Hallo!'),
             automaticallyImplyLeading: false,
           ),
-          Divider(),
+          // Divider(),
           ListTile(
             leading: Icon(Icons.people),
             title: Text('Bewerber'),
             onTap: () {
               Navigator.of(context).pushNamed(
                 ApplicantScreen.routeName,
-                // arguments: ,
+              );
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.directions_car),
+            title: Text('Fahrzeuge'),
+            onTap: () {
+              Navigator.of(context).pushNamed(
+                VehicleScreen.routeName,
               );
             },
           ),
@@ -30,7 +40,6 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.of(context).pushNamed(
                 GoalScreen.routeName,
-                // arguments: ,
               );
             },
           ),

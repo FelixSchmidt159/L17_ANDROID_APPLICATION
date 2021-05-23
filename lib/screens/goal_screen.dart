@@ -24,6 +24,7 @@ class _GoalScreenState extends State<GoalScreen> {
         title: Text('Fortschritt'),
       ),
       body: Container(
+        color: Theme.of(context).backgroundColor,
         width: width,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,

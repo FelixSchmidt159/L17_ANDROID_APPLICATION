@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
-
-class Applicant with ChangeNotifier {
+class Applicant {
   String _id;
   String _name;
 

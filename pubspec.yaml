@@ -44,6 +44,7 @@ dependencies:
   instant: ^0.4.1
   syncfusion_flutter_datepicker: ^19.1.59-beta
   fl_chart: ^0.36.1
+  syncfusion_flutter_pdfviewer: ^19.1.64-beta
   
 
 dev_dependencies:
@@ -78,7 +79,7 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   # fonts:
-  #   - family: Schyler
+    # - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
