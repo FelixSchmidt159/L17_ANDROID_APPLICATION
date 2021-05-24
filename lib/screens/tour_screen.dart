@@ -22,14 +22,15 @@ class TourScreen extends StatefulWidget {
   _TourScreenState createState() => _TourScreenState();
 }
 
-enum LifeSearch { attendants, locations }
+enum LifeSearch { attendants, locations, licensePlates }
 
 class _TourScreenState extends State<TourScreen> {
   final currentUser = FirebaseAuth.instance.currentUser;
   TourScreenArguments tourObject;
 
   final _form = GlobalKey<FormState>();
-
+  final TextEditingController _typeAheadControllerLicensePlate =
+      TextEditingController();
   final TextEditingController _typeAheadControllerTourBegin =
       TextEditingController();
   final TextEditingController _typeAheadControllerTourEnd =
@@ -42,8 +43,10 @@ class _TourScreenState extends State<TourScreen> {
   TextEditingController _distance = TextEditingController();
   List<String> _attendants = [];
   List<String> _locations = [];
+  List<String> _licensePlates = [];
   String suggestedAttendant = "";
   String suggestedRoadCondition = "trocken";
+  String suggestedLicensePlate = "";
   bool _initializeArguments = true;
   bool _initializeVehicles = true;
   bool _initializeSuggestions = true;
@@ -54,7 +57,6 @@ class _TourScreenState extends State<TourScreen> {
   StreamSubscription<QuerySnapshot> streamRefVehicles;
   List<Vehicle> vehicles = [];
   List<DropdownMenuItem<String>> vehicleDropdown = [];
-  String _selectedVehicle;
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -71,6 +73,7 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   void dispose() {
+    _typeAheadControllerLicensePlate.dispose();
     _typeAheadControllerTourBegin.dispose();
     _typeAheadControllerTourEnd.dispose();
     _typeAheadControllerAttendant.dispose();
@@ -100,6 +103,7 @@ class _TourScreenState extends State<TourScreen> {
       _typeAheadControllerTourEnd.text = tourObject.tour.tourEnd;
       _typeAheadControllerAttendant.text = tourObject.tour.attendant;
       _editedProduct.timestamp = tourObject.tour.timestamp;
+      _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _initialDate.text =
           DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
       _mileageEnd.text = tourObject.tour.mileageEnd == 0
@@ -108,7 +112,6 @@ class _TourScreenState extends State<TourScreen> {
       _mileageBegin.text = tourObject.tour.mileageBegin == 0
           ? ""
           : tourObject.tour.mileageBegin.toString();
-      _selectedVehicle = tourObject.tour.licensePlate;
       _initializeArguments = false;
     }
 
@@ -125,6 +128,8 @@ class _TourScreenState extends State<TourScreen> {
           final toursDocs = event.docs;
           if (toursDocs.isNotEmpty) {
             for (int i = 0; i < toursDocs.length; i++) {
+              if (toursDocs[i]['licensePlate'] != "")
+                _licensePlates.add(toursDocs[i]['licensePlate']);
               if (toursDocs[i]['attendant'] != "")
                 _attendants.add(toursDocs[i]['attendant']);
               if (toursDocs[i]['tourBegin'] != "")
@@ -133,15 +138,18 @@ class _TourScreenState extends State<TourScreen> {
                 _locations.add(toursDocs[i]['tourEnd']);
               if (i == 0) {
                 suggestedAttendant = toursDocs[i]['attendant'];
+                suggestedLicensePlate = toursDocs[i]['licensePlate'];
               }
             }
             _locations = _locations.toSet().toList();
             _attendants = _attendants.toSet().toList();
+            _licensePlates = _licensePlates.toSet().toList();
 
             if (tourObject.id == "") {
               if (mounted) {
                 setState(() {
                   _typeAheadControllerAttendant.text = suggestedAttendant;
+                  _typeAheadControllerLicensePlate.text = suggestedLicensePlate;
                 });
               }
             }
@@ -162,40 +170,12 @@ class _TourScreenState extends State<TourScreen> {
         vehicles = [];
         final toursDocs = event.docs;
         for (int i = 0; i < toursDocs.length; i++) {
+          // _licensePlates.add(toursDocs[i]['licensePlate']);
           vehicles.add(Vehicle(toursDocs[i]['name'],
               toursDocs[i]['licensePlate'], toursDocs[i].id));
         }
-        vehicleDropdown =
-            vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
-          return DropdownMenuItem<String>(
-            value: vehicle.id,
-            child: SizedBox(
-              // width: 300,
-              child: Text(
-                vehicle.name,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          );
-        }).toList();
-        String licensePlate = "";
-        for (int i = 0; i < vehicles.length; i++) {
-          if (vehicles[i].id == _selectedVehicle)
-            licensePlate = vehicles[i].licensePlate;
-        }
-        _editedProduct = Tour(
-          timestamp: _editedProduct.timestamp,
-          distance: 0,
-          mileageBegin: 0,
-          mileageEnd: 0,
-          licensePlate: licensePlate,
-          tourBegin: "",
-          tourEnd: "",
-          roadCondition: "",
-          attendant: "",
-          daytime: "",
-        );
+        // _licensePlates = _licensePlates.toSet().toList();
+        // print(_licensePlates.length);
 
         _initializeVehicles = false;
         setState(() {});
@@ -252,7 +232,7 @@ class _TourScreenState extends State<TourScreen> {
           'daytime': _editedProduct.daytime,
         });
       }
-    } else {
+    } else if (_selectedDriver == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -278,6 +258,11 @@ class _TourScreenState extends State<TourScreen> {
           possibleSuggestions = _attendants;
         }
         break;
+      case LifeSearch.licensePlates:
+        {
+          possibleSuggestions = _licensePlates;
+        }
+        break;
       case LifeSearch.locations:
         {
           possibleSuggestions = _locations;
@@ -289,6 +274,12 @@ class _TourScreenState extends State<TourScreen> {
         suggestions.add(str);
       }
     }
+    if (lifeSearchType == LifeSearch.licensePlates) {
+      for (int i = 0; i < vehicles.length; i++) {
+        suggestions.add(vehicles[i].licensePlate);
+      }
+    }
+    suggestions = suggestions.toSet().toList();
     return suggestions;
   }
 
@@ -355,6 +346,9 @@ class _TourScreenState extends State<TourScreen> {
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerTourBegin,
                     ),
+                    noItemsFoundBuilder: (context) {
+                      return SizedBox();
+                    },
                     onSaved: (value) {
                       _editedProduct = Tour(
                           timestamp: _editedProduct.timestamp,
@@ -413,10 +407,8 @@ class _TourScreenState extends State<TourScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.camera_alt,
-                        // color: Colors.black,
                       ),
                       onPressed: () {
-                        // Navigator.pop(context);
                         _pickImage(true);
                       },
                     ),
@@ -427,6 +419,9 @@ class _TourScreenState extends State<TourScreen> {
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerTourEnd,
                     ),
+                    noItemsFoundBuilder: (context) {
+                      return SizedBox();
+                    },
                     onSaved: (value) {
                       _editedProduct = Tour(
                           timestamp: _editedProduct.timestamp,
@@ -519,63 +514,87 @@ class _TourScreenState extends State<TourScreen> {
                           daytime: _editedProduct.daytime);
                     },
                   ),
-                  vehicles.length != 1
-                      ? DropdownButtonFormField<String>(
-                          iconDisabledColor: Colors.white,
-                          // hint: SizedBox(
-                          //     width: widget.width * 0.75,
-                          //     child: Text(
-                          //       '',
-                          //       style: TextStyle(
-                          //           fontWeight: FontWeight.bold, color: Colors.black),
-                          //       textAlign: TextAlign.center,
-                          //       overflow: TextOverflow.ellipsis,
-                          //     )),
-                          disabledHint: SizedBox(
-                            // width: widget.width * 0.75,
-                            child: Text(
-                              'Sie haben noch kein Fahrzeug angelegt.',
-                              style:
-                                  TextStyle(fontSize: 12, color: Colors.black),
-                              textAlign: TextAlign.justify,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          decoration: _selectedVehicle != ""
-                              ? InputDecoration(
-                                  labelText: 'Fahrzeug',
-                                )
-                              : InputDecoration(labelText: ''),
-                          items: vehicleDropdown,
-                          onChanged: _selectedVehicle != ""
-                              ? (value) {
-                                  setState(() {
-                                    _selectedVehicle = value;
-                                  });
-                                }
-                              : null,
-                          value:
-                              _selectedVehicle != "" ? _selectedVehicle : null,
-                          onSaved: (value) {
-                            String licensePlate;
-                            for (int i = 0; i < vehicles.length; i++) {
-                              if (vehicles[i].id == value)
-                                licensePlate = vehicles[i].licensePlate;
-                            }
-                            _editedProduct = Tour(
-                                timestamp: _editedProduct.timestamp,
-                                distance: _editedProduct.distance,
-                                mileageBegin: _editedProduct.mileageBegin,
-                                mileageEnd: _editedProduct.mileageEnd,
-                                licensePlate: licensePlate,
-                                tourBegin: _editedProduct.tourBegin,
-                                tourEnd: _editedProduct.tourEnd,
-                                roadCondition: _editedProduct.roadCondition,
-                                attendant: _editedProduct.attendant,
-                                daytime: _editedProduct.daytime);
-                          },
-                        )
-                      : Container(),
+                  // DropdownButtonFormField<String>(
+                  //   iconDisabledColor: Colors.white,
+                  //   disabledHint: SizedBox(
+                  //     child: Text(
+                  //       'Sie haben noch kein Fahrzeug angelegt.',
+                  //       style: TextStyle(fontSize: 12, color: Colors.black),
+                  //       textAlign: TextAlign.justify,
+                  //       overflow: TextOverflow.ellipsis,
+                  //     ),
+                  //   ),
+                  //   decoration: _selectedVehicle != ""
+                  //       ? InputDecoration(
+                  //           labelText: 'Fahrzeug',
+                  //         )
+                  //       : InputDecoration(labelText: ''),
+                  //   items: vehicleDropdown,
+                  //   onChanged: _selectedVehicle != ""
+                  //       ? (value) {
+                  //           setState(() {
+                  //             _selectedVehicle = value;
+                  //           });
+                  //         }
+                  //       : null,
+                  //   value: _selectedVehicle != "" ? _selectedVehicle : null,
+                  //   onSaved: (value) {
+                  //     String licensePlate = "";
+                  //     for (int i = 0; i < vehicles.length; i++) {
+                  //       if (vehicles[i].id == value)
+                  //         licensePlate = vehicles[i].licensePlate;
+                  //     }
+
+                  //     _editedProduct = Tour(
+                  //         timestamp: _editedProduct.timestamp,
+                  //         distance: _editedProduct.distance,
+                  //         mileageBegin: _editedProduct.mileageBegin,
+                  //         mileageEnd: _editedProduct.mileageEnd,
+                  //         licensePlate: licensePlate,
+                  //         tourBegin: _editedProduct.tourBegin,
+                  //         tourEnd: _editedProduct.tourEnd,
+                  //         roadCondition: _editedProduct.roadCondition,
+                  //         attendant: _editedProduct.attendant,
+                  //         daytime: _editedProduct.daytime);
+                  //   },
+                  // ),
+                  TypeAheadFormField(
+                    textFieldConfiguration: TextFieldConfiguration(
+                      decoration: InputDecoration(labelText: 'Kennzeichen'),
+                      keyboardType: TextInputType.text,
+                      controller: _typeAheadControllerLicensePlate,
+                    ),
+                    noItemsFoundBuilder: (context) {
+                      return SizedBox();
+                    },
+                    onSaved: (value) {
+                      _editedProduct = Tour(
+                          timestamp: _editedProduct.timestamp,
+                          distance: _editedProduct.distance,
+                          mileageBegin: _editedProduct.mileageBegin,
+                          mileageEnd: _editedProduct.mileageEnd,
+                          licensePlate: value,
+                          tourBegin: _editedProduct.tourBegin,
+                          tourEnd: _editedProduct.tourEnd,
+                          roadCondition: _editedProduct.roadCondition,
+                          attendant: _editedProduct.attendant,
+                          daytime: _editedProduct.daytime);
+                    },
+                    suggestionsCallback: (pattern) {
+                      return getSuggestions(pattern, LifeSearch.licensePlates);
+                    },
+                    itemBuilder: (context, suggestion) {
+                      return ListTile(
+                        title: Text(suggestion),
+                      );
+                    },
+                    transitionBuilder: (context, suggestionsBox, controller) {
+                      return suggestionsBox;
+                    },
+                    onSuggestionSelected: (suggestion) {
+                      this._typeAheadControllerLicensePlate.text = suggestion;
+                    },
+                  ),
                   InkWell(
                     onTap: () async {
                       await _selectDate().then((value) {
@@ -658,6 +677,9 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Begleiter'),
                       controller: _typeAheadControllerAttendant,
                     ),
+                    noItemsFoundBuilder: (context) {
+                      return SizedBox();
+                    },
                     onSaved: (value) {
                       _editedProduct = Tour(
                           timestamp: _editedProduct.timestamp,
