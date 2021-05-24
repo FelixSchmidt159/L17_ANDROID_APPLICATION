@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:l17/providers/vehicle.dart';
@@ -13,8 +14,7 @@ class VehicleListItem extends StatefulWidget {
 }
 
 class _VehicleListItemState extends State<VehicleListItem> {
-  @override
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -35,30 +35,16 @@ class _VehicleListItemState extends State<VehicleListItem> {
             ),
             color: Theme.of(context).errorColor,
             onPressed: () async {
-              // if (_selectedDriver == widget.applicant.id) {
-              //   WidgetsBinding.instance.addPostFrameCallback((_) {
-              //     Provider.of<Applicants>(context, listen: false)
-              //         .selectedDriverId = null;
-              //   });
-              // }
-              // var instance = FirebaseFirestore.instance
-              //     .collection('users')
-              //     .doc(currentUser.uid)
-              //     .collection('drivers')
-              //     .doc(widget.applicant.id);
-
-              // await instance.collection('tours').get().then((value) {
-              //   final toursDocs = value.docs;
-              //   for (int i = 0; i < toursDocs.length; i++) {
-              //     instance.collection('tours').doc(toursDocs[i].id).delete();
-              //   }
-              //   instance.delete();
-              // });
+              var instance = FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(_currentUser.uid)
+                  .collection('vehicles')
+                  .doc(widget.vehicle.id);
+              instance.delete();
             },
           ),
         ),
       ),
     );
-    // Divider();
   }
 }

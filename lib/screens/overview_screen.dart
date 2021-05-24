@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
+import 'package:l17/providers/vehicle.dart';
 
 import 'package:l17/screens/tour_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
@@ -31,27 +32,35 @@ class _OverviewScreenState extends State<OverviewScreen> {
   int lastMileageEnd;
   TextEditingController _textFieldController = TextEditingController();
   String _selectedDriver;
-  Stream<QuerySnapshot> reference;
-  StreamSubscription<QuerySnapshot> streamRef;
+  Stream<QuerySnapshot> referenceTours;
+  StreamSubscription<QuerySnapshot> streamRefTours;
+  Stream<QuerySnapshot> referenceVehicles;
+  StreamSubscription<QuerySnapshot> streamRefVehicles;
+  List<Vehicle> vehicles = [];
+  List<DropdownMenuItem<String>> vehicleDropdown = [];
+  String _selectedVehicle;
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     lastMileageEnd = 0;
+    bool licensePlateExists = false;
     if (_selectedDriver != null) {
-      reference = FirebaseFirestore.instance
+      referenceTours = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
           .snapshots();
-      streamRef = reference.listen((event) {
+      streamRefTours = referenceTours.listen((event) {
         final toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < 1; i++) {
             lastMileageEnd = toursDocs[i]['mileageEnd'];
             _textFieldController.text = toursDocs[i]['mileageEnd'].toString();
+            if (toursDocs[i]['licensePlate'] != "")
+              _selectedVehicle = toursDocs[i]['licensePlate'];
           }
           if (lastMileageEnd == 0) {
             _textFieldController.text = "";
@@ -59,13 +68,62 @@ class _OverviewScreenState extends State<OverviewScreen> {
         }
       });
     }
+
+    referenceVehicles = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('vehicles')
+        .snapshots();
+    streamRefVehicles = referenceVehicles.listen((event) {
+      vehicleDropdown = [];
+      vehicles = [];
+      final toursDocs = event.docs;
+      for (int i = 0; i < toursDocs.length; i++) {
+        vehicles.add(Vehicle(toursDocs[i]['name'], toursDocs[i]['licensePlate'],
+            toursDocs[i].id));
+        if (_selectedVehicle != null &&
+            toursDocs[i]['licensePlate'] == _selectedVehicle) {
+          _selectedVehicle = toursDocs[i].id;
+          licensePlateExists = true;
+        }
+      }
+      if (!licensePlateExists) _selectedVehicle = null;
+      vehicleDropdown =
+          vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
+        return DropdownMenuItem<String>(
+          value: vehicle.id,
+          child: SizedBox(
+            // width: 300,
+            child: Text(
+              vehicle.name,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        );
+      }).toList();
+      if (_selectedVehicle == null) {
+        if (vehicleDropdown.isEmpty)
+          _selectedVehicle = "";
+        else
+          _selectedVehicle = vehicleDropdown[0].value;
+        setState(() {});
+      }
+    });
+
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    if (streamRef != null) {
-      streamRef.cancel();
+    if (streamRefTours != null) {
+      streamRefTours.cancel();
+    }
+    if (streamRefVehicles != null) {
+      streamRefVehicles.cancel();
     }
     _textFieldController.dispose();
     super.dispose();
@@ -166,37 +224,67 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   Future<void> _displayTextInputDialog(BuildContext context) async {
+    var height = MediaQuery.of(context).size.height;
+
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text('Fahrt hinzufügen'),
-            content: Stack(
-              alignment: AlignmentDirectional.centerEnd,
-              children: <Widget>[
-                TextField(
-                  onChanged: (value) {
-                    if (num.tryParse(value) != null)
-                      lastMileageEnd = int.parse(value);
-                    else
-                      lastMileageEnd = 0;
-                  },
-                  controller: _textFieldController,
-                  decoration:
-                      InputDecoration(hintText: "Kilometerstand (Beginn)"),
-                  keyboardType: TextInputType.number,
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.camera_alt,
-                    color: Colors.black,
+            content: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Container(
+                  height:
+                      vehicleDropdown.length > 1 ? height * 0.15 : height * 0.1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      vehicleDropdown.length > 1
+                          ? DropdownButton<String>(
+                              iconDisabledColor: Colors.grey.shade200,
+                              underline: Container(),
+                              value: _selectedVehicle,
+                              onChanged: (String value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _selectedVehicle = value;
+                                  });
+                                }
+                              },
+                              items: vehicleDropdown,
+                            )
+                          : Container(),
+                      Stack(
+                        alignment: AlignmentDirectional.centerEnd,
+                        children: <Widget>[
+                          TextField(
+                            onChanged: (value) {
+                              if (num.tryParse(value) != null)
+                                lastMileageEnd = int.parse(value);
+                              else
+                                lastMileageEnd = 0;
+                            },
+                            controller: _textFieldController,
+                            decoration: InputDecoration(
+                                hintText: "Kilometerstand (Beginn)"),
+                            keyboardType: TextInputType.number,
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.camera_alt,
+                              color: Colors.black,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _pickImage();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _pickImage();
-                  },
-                ),
-              ],
+                );
+              },
             ),
             actions: <Widget>[
               TextButton(
@@ -214,27 +302,24 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     backgroundColor: Colors.green, primary: Colors.white),
                 child: Text('Weiter'),
                 onPressed: () {
-                  setState(() {
-                    var daytime =
-                        dateTimeToOffset(offset: 2.0, datetime: DateTime.now());
-                    Navigator.pop(context);
-                    Navigator.of(context).pushNamed(
-                      TourScreen.routeName,
-                      arguments: TourScreenArguments(
-                          Tour(
-                              timestamp: daytime,
-                              mileageBegin: lastMileageEnd,
-                              mileageEnd: 0,
-                              attendant: "",
-                              distance: 0,
-                              licensePlate: "",
-                              tourBegin: "",
-                              tourEnd: "",
-                              roadCondition: "",
-                              daytime: DateFormat.Hm('de_DE').format(daytime)),
-                          ""),
-                    );
-                  });
+                  var daytime = DateTime.now();
+                  Navigator.pop(context);
+                  Navigator.of(context).pushNamed(
+                    TourScreen.routeName,
+                    arguments: TourScreenArguments(
+                        Tour(
+                            timestamp: daytime,
+                            mileageBegin: lastMileageEnd,
+                            mileageEnd: 0,
+                            attendant: "",
+                            distance: 0,
+                            licensePlate: _selectedVehicle,
+                            tourBegin: "",
+                            tourEnd: "",
+                            roadCondition: "",
+                            daytime: DateFormat.Hm('de_DE').format(daytime)),
+                        ""),
+                  );
                 },
               ),
             ],
@@ -261,7 +346,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     mileageEnd: 0,
                     attendant: "",
                     distance: 0,
-                    licensePlate: "",
+                    licensePlate: _selectedVehicle,
                     tourBegin: "",
                     tourEnd: "",
                     roadCondition: "",

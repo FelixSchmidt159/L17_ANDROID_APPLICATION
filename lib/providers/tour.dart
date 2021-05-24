@@ -24,7 +24,7 @@ class Tour with ChangeNotifier {
       this.tourEnd,
       this.roadCondition,
       this.attendant,
-      @required this.daytime});
+      this.daytime});
 
   // void _setFavValue(bool newValue) {
   //   isFavorite = newValue;

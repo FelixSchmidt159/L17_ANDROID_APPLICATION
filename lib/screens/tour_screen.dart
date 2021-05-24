@@ -12,6 +12,7 @@ import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:l17/providers/vehicle.dart';
 import 'package:provider/provider.dart';
 
 class TourScreen extends StatefulWidget {
@@ -21,15 +22,14 @@ class TourScreen extends StatefulWidget {
   _TourScreenState createState() => _TourScreenState();
 }
 
-enum LifeSearch { attendants, locations, licensePlates }
+enum LifeSearch { attendants, locations }
 
 class _TourScreenState extends State<TourScreen> {
   final currentUser = FirebaseAuth.instance.currentUser;
   TourScreenArguments tourObject;
 
   final _form = GlobalKey<FormState>();
-  final TextEditingController _typeAheadControllerLicensePlate =
-      TextEditingController();
+
   final TextEditingController _typeAheadControllerTourBegin =
       TextEditingController();
   final TextEditingController _typeAheadControllerTourEnd =
@@ -40,16 +40,21 @@ class _TourScreenState extends State<TourScreen> {
   final TextEditingController _mileageEnd = TextEditingController();
   TextEditingController _initialDate = TextEditingController();
   TextEditingController _distance = TextEditingController();
-  List<String> _licensePlates = [];
   List<String> _attendants = [];
   List<String> _locations = [];
-  String suggestedLicensePlate = "";
   String suggestedAttendant = "";
   String suggestedRoadCondition = "trocken";
-  bool _initialize = true;
+  bool _initializeArguments = true;
+  bool _initializeVehicles = true;
+  bool _initializeSuggestions = true;
   String _selectedDriver;
   Stream<QuerySnapshot> reference;
   StreamSubscription<QuerySnapshot> streamRef;
+  Stream<QuerySnapshot> referenceVehicles;
+  StreamSubscription<QuerySnapshot> streamRefVehicles;
+  List<Vehicle> vehicles = [];
+  List<DropdownMenuItem<String>> vehicleDropdown = [];
+  String _selectedVehicle;
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -66,7 +71,6 @@ class _TourScreenState extends State<TourScreen> {
 
   @override
   void dispose() {
-    _typeAheadControllerLicensePlate.dispose();
     _typeAheadControllerTourBegin.dispose();
     _typeAheadControllerTourEnd.dispose();
     _typeAheadControllerAttendant.dispose();
@@ -74,9 +78,8 @@ class _TourScreenState extends State<TourScreen> {
     _mileageBegin.dispose();
     _mileageEnd.dispose();
     _distance.dispose();
-    if (streamRef != null) {
-      streamRef.cancel();
-    }
+    if (streamRef != null) streamRef.cancel();
+    if (streamRefVehicles != null) streamRefVehicles.cancel();
 
     super.dispose();
   }
@@ -89,13 +92,12 @@ class _TourScreenState extends State<TourScreen> {
           ModalRoute.of(context).settings.arguments as TourScreenArguments;
     }
 
-    if (_initialize) {
+    if (_initializeArguments) {
       suggestedRoadCondition = tourObject.tour.roadCondition == ""
           ? "trocken"
           : tourObject.tour.roadCondition;
       _typeAheadControllerTourBegin.text = tourObject.tour.tourBegin;
       _typeAheadControllerTourEnd.text = tourObject.tour.tourEnd;
-      _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _typeAheadControllerAttendant.text = tourObject.tour.attendant;
       _editedProduct.timestamp = tourObject.tour.timestamp;
       _initialDate.text =
@@ -106,9 +108,11 @@ class _TourScreenState extends State<TourScreen> {
       _mileageBegin.text = tourObject.tour.mileageBegin == 0
           ? ""
           : tourObject.tour.mileageBegin.toString();
+      _selectedVehicle = tourObject.tour.licensePlate;
+      _initializeArguments = false;
     }
 
-    if (_selectedDriver != null) {
+    if (_selectedDriver != null && _initializeSuggestions) {
       reference = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -119,10 +123,8 @@ class _TourScreenState extends State<TourScreen> {
       streamRef = reference.listen(
         (event) {
           final toursDocs = event.docs;
-          if (toursDocs.isNotEmpty && _initialize) {
+          if (toursDocs.isNotEmpty) {
             for (int i = 0; i < toursDocs.length; i++) {
-              if (toursDocs[i]['licensePlate'] != "")
-                _licensePlates.add(toursDocs[i]['licensePlate']);
               if (toursDocs[i]['attendant'] != "")
                 _attendants.add(toursDocs[i]['attendant']);
               if (toursDocs[i]['tourBegin'] != "")
@@ -131,25 +133,73 @@ class _TourScreenState extends State<TourScreen> {
                 _locations.add(toursDocs[i]['tourEnd']);
               if (i == 0) {
                 suggestedAttendant = toursDocs[i]['attendant'];
-                suggestedLicensePlate = toursDocs[i]['licensePlate'];
               }
             }
-            _licensePlates = _licensePlates.toSet().toList();
             _locations = _locations.toSet().toList();
             _attendants = _attendants.toSet().toList();
 
             if (tourObject.id == "") {
               if (mounted) {
                 setState(() {
-                  _typeAheadControllerLicensePlate.text = suggestedLicensePlate;
                   _typeAheadControllerAttendant.text = suggestedAttendant;
                 });
               }
             }
-            _initialize = false;
           }
+          _initializeSuggestions = false;
+          setState(() {});
         },
       );
+    }
+    if (_initializeVehicles) {
+      referenceVehicles = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('vehicles')
+          .snapshots();
+      streamRefVehicles = referenceVehicles.listen((event) {
+        vehicleDropdown = [];
+        vehicles = [];
+        final toursDocs = event.docs;
+        for (int i = 0; i < toursDocs.length; i++) {
+          vehicles.add(Vehicle(toursDocs[i]['name'],
+              toursDocs[i]['licensePlate'], toursDocs[i].id));
+        }
+        vehicleDropdown =
+            vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
+          return DropdownMenuItem<String>(
+            value: vehicle.id,
+            child: SizedBox(
+              // width: 300,
+              child: Text(
+                vehicle.name,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          );
+        }).toList();
+        String licensePlate = "";
+        for (int i = 0; i < vehicles.length; i++) {
+          if (vehicles[i].id == _selectedVehicle)
+            licensePlate = vehicles[i].licensePlate;
+        }
+        _editedProduct = Tour(
+          timestamp: _editedProduct.timestamp,
+          distance: 0,
+          mileageBegin: 0,
+          mileageEnd: 0,
+          licensePlate: licensePlate,
+          tourBegin: "",
+          tourEnd: "",
+          roadCondition: "",
+          attendant: "",
+          daytime: "",
+        );
+
+        _initializeVehicles = false;
+        setState(() {});
+      });
     }
 
     super.didChangeDependencies();
@@ -226,11 +276,6 @@ class _TourScreenState extends State<TourScreen> {
       case LifeSearch.attendants:
         {
           possibleSuggestions = _attendants;
-        }
-        break;
-      case LifeSearch.licensePlates:
-        {
-          possibleSuggestions = _licensePlates;
         }
         break;
       case LifeSearch.locations:
@@ -474,40 +519,63 @@ class _TourScreenState extends State<TourScreen> {
                           daytime: _editedProduct.daytime);
                     },
                   ),
-                  TypeAheadFormField(
-                    textFieldConfiguration: TextFieldConfiguration(
-                      decoration: InputDecoration(labelText: 'Kennzeichen'),
-                      keyboardType: TextInputType.text,
-                      controller: _typeAheadControllerLicensePlate,
-                    ),
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                          timestamp: _editedProduct.timestamp,
-                          distance: _editedProduct.distance,
-                          mileageBegin: _editedProduct.mileageBegin,
-                          mileageEnd: _editedProduct.mileageEnd,
-                          licensePlate: value,
-                          tourBegin: _editedProduct.tourBegin,
-                          tourEnd: _editedProduct.tourEnd,
-                          roadCondition: _editedProduct.roadCondition,
-                          attendant: _editedProduct.attendant,
-                          daytime: _editedProduct.daytime);
-                    },
-                    suggestionsCallback: (pattern) {
-                      return getSuggestions(pattern, LifeSearch.licensePlates);
-                    },
-                    itemBuilder: (context, suggestion) {
-                      return ListTile(
-                        title: Text(suggestion),
-                      );
-                    },
-                    transitionBuilder: (context, suggestionsBox, controller) {
-                      return suggestionsBox;
-                    },
-                    onSuggestionSelected: (suggestion) {
-                      this._typeAheadControllerLicensePlate.text = suggestion;
-                    },
-                  ),
+                  vehicles.length != 1
+                      ? DropdownButtonFormField<String>(
+                          iconDisabledColor: Colors.white,
+                          // hint: SizedBox(
+                          //     width: widget.width * 0.75,
+                          //     child: Text(
+                          //       '',
+                          //       style: TextStyle(
+                          //           fontWeight: FontWeight.bold, color: Colors.black),
+                          //       textAlign: TextAlign.center,
+                          //       overflow: TextOverflow.ellipsis,
+                          //     )),
+                          disabledHint: SizedBox(
+                            // width: widget.width * 0.75,
+                            child: Text(
+                              'Sie haben noch kein Fahrzeug angelegt.',
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.black),
+                              textAlign: TextAlign.justify,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          decoration: _selectedVehicle != ""
+                              ? InputDecoration(
+                                  labelText: 'Fahrzeug',
+                                )
+                              : InputDecoration(labelText: ''),
+                          items: vehicleDropdown,
+                          onChanged: _selectedVehicle != ""
+                              ? (value) {
+                                  setState(() {
+                                    _selectedVehicle = value;
+                                  });
+                                }
+                              : null,
+                          value:
+                              _selectedVehicle != "" ? _selectedVehicle : null,
+                          onSaved: (value) {
+                            String licensePlate;
+                            for (int i = 0; i < vehicles.length; i++) {
+                              if (vehicles[i].id == value)
+                                licensePlate = vehicles[i].licensePlate;
+                            }
+                            _editedProduct = Tour(
+                                timestamp: _editedProduct.timestamp,
+                                distance: _editedProduct.distance,
+                                mileageBegin: _editedProduct.mileageBegin,
+                                mileageEnd: _editedProduct.mileageEnd,
+                                licensePlate: licensePlate,
+                                tourBegin: _editedProduct.tourBegin,
+                                tourEnd: _editedProduct.tourEnd,
+                                roadCondition: _editedProduct.roadCondition,
+                                attendant: _editedProduct.attendant,
+                                daytime: _editedProduct.daytime);
+                          },
+                        )
+                      : Container(),
                   InkWell(
                     onTap: () async {
                       await _selectDate().then((value) {

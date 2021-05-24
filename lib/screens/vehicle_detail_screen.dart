@@ -74,13 +74,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               TextFormField(
                 initialValue: _editedVehicle.name,
                 validator: (value) {
-                  if (value == null)
-                    return 'Geben Sie ein Kennzeichen im Format XX-XXXXX an';
-
-                  if (value.length >= 15) return 'Das Kennzeichen ist zu lange';
-                  if (!value.contains('-'))
-                    return 'Geben Sie ein Kennzeichen im Format XX-XXXXX an';
-
+                  if (value.length >= 20) return 'Der Name ist zu lange';
                   return null;
                 },
                 onSaved: (value) {
@@ -96,7 +90,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               TextFormField(
                 initialValue: _editedVehicle.licensePlate,
                 validator: (value) {
-                  if (value.length >= 20) return 'Der Name ist zu lange';
+                  if (value == null)
+                    return 'Geben Sie ein Kennzeichen im Format XX-XXXXX an';
+
+                  if (value.length >= 15) return 'Das Kennzeichen ist zu lange';
+                  if (!value.contains('-'))
+                    return 'Geben Sie ein Kennzeichen im Format XX-XXXXX an';
+
                   return null;
                 },
                 onSaved: (value) {
