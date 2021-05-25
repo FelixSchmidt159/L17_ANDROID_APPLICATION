@@ -17,7 +17,7 @@ class AppDrawer extends StatelessWidget {
           // Divider(),
           ListTile(
             leading: Icon(Icons.people),
-            title: Text('Bewerber'),
+            title: Text('Fahrer'),
             onTap: () {
               Navigator.of(context).pushNamed(
                 ApplicantScreen.routeName,

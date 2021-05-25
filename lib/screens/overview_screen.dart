@@ -19,7 +19,6 @@ import 'package:provider/provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/tour_list.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:instant/instant.dart';
 
 class OverviewScreen extends StatefulWidget {
   @override

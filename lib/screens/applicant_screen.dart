@@ -14,7 +14,7 @@ class ApplicantScreen extends StatefulWidget {
 class _ApplicantScreenState extends State<ApplicantScreen> {
   final currentUser = FirebaseAuth.instance.currentUser;
   final appBar = AppBar(
-    title: Text('Bewerber'),
+    title: Text('Fahrer'),
   );
   @override
   Widget build(BuildContext context) {
