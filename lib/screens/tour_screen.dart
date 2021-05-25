@@ -113,6 +113,8 @@ class _TourScreenState extends State<TourScreen> {
           ? ""
           : tourObject.tour.mileageBegin.toString();
       _initializeArguments = false;
+      _distance.text = tourObject.tour.distance.toString();
+      print(tourObject.tour.licensePlate);
     }
 
     if (_selectedDriver != null && _initializeSuggestions) {
@@ -345,6 +347,7 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Startort'),
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerTourBegin,
+                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
@@ -361,6 +364,11 @@ class _TourScreenState extends State<TourScreen> {
                           roadCondition: _editedProduct.roadCondition,
                           attendant: _editedProduct.attendant,
                           daytime: _editedProduct.daytime);
+                    },
+                    validator: (value) {
+                      if (value != null && value.length > 20)
+                        return 'Geben Sie maximal 20 Zeichen ein.';
+                      return null;
                     },
                     suggestionsCallback: (pattern) {
                       return getSuggestions(pattern, LifeSearch.locations);
@@ -390,6 +398,19 @@ class _TourScreenState extends State<TourScreen> {
                         }
                         return null;
                       },
+                      onChanged: (value) {
+                        if (value.isNotEmpty &&
+                            num.tryParse(value) != null &&
+                            num.tryParse(_mileageEnd.text) != null) {
+                          if (int.parse(_mileageEnd.text) >= int.parse(value)) {
+                            setState(() {
+                              var test = int.parse(_mileageEnd.text) -
+                                  int.parse(value);
+                              _distance.text = test.toString();
+                            });
+                          }
+                        }
+                      },
                       onSaved: (value) {
                         _editedProduct = Tour(
                             timestamp: _editedProduct.timestamp,
@@ -418,6 +439,7 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Zielort'),
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerTourEnd,
+                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
@@ -434,6 +456,11 @@ class _TourScreenState extends State<TourScreen> {
                           roadCondition: _editedProduct.roadCondition,
                           attendant: _editedProduct.attendant,
                           daytime: _editedProduct.daytime);
+                    },
+                    validator: (value) {
+                      if (value != null && value.length > 20)
+                        return 'Geben Sie maximal 20 Zeichen ein.';
+                      return null;
                     },
                     suggestionsCallback: (pattern) {
                       return getSuggestions(pattern, LifeSearch.locations);
@@ -463,6 +490,20 @@ class _TourScreenState extends State<TourScreen> {
                         }
                         return null;
                       },
+                      onChanged: (value) {
+                        if (value.isNotEmpty &&
+                            num.tryParse(value) != null &&
+                            num.tryParse(_mileageBegin.text) != null) {
+                          if (int.parse(value) >=
+                              int.parse(_mileageBegin.text)) {
+                            setState(() {
+                              var test = int.parse(value) -
+                                  int.parse(_mileageBegin.text);
+                              _distance.text = test.abs().toString();
+                            });
+                          }
+                        }
+                      },
                       onSaved: (value) {
                         _editedProduct = Tour(
                             timestamp: _editedProduct.timestamp,
@@ -488,31 +529,31 @@ class _TourScreenState extends State<TourScreen> {
                       },
                     ),
                   ]),
-                  TextFormField(
-                    initialValue: tourObject.tour.distance == 0
-                        ? ""
-                        : tourObject.tour.distance.toString(),
-                    decoration: InputDecoration(labelText: 'Distanz'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value.isNotEmpty && num.tryParse(value) == null) {
-                        return 'Geben Sie bitte eine ganze Zahl ein.';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                          timestamp: _editedProduct.timestamp,
-                          distance: value.isEmpty ? 0 : int.parse(value),
-                          mileageBegin: _editedProduct.mileageBegin,
-                          mileageEnd: _editedProduct.mileageEnd,
-                          licensePlate: _editedProduct.licensePlate,
-                          tourBegin: _editedProduct.tourBegin,
-                          tourEnd: _editedProduct.tourEnd,
-                          roadCondition: _editedProduct.roadCondition,
-                          attendant: _editedProduct.attendant,
-                          daytime: _editedProduct.daytime);
-                    },
+                  IgnorePointer(
+                    child: TextFormField(
+                      decoration: InputDecoration(labelText: 'Distanz'),
+                      keyboardType: TextInputType.number,
+                      controller: _distance,
+                      // validator: (value) {
+                      //   if (value.isNotEmpty && num.tryParse(value) == null) {
+                      //     return 'Geben Sie bitte eine ganze Zahl ein.';
+                      //   }
+                      //   return null;
+                      // },
+                      onSaved: (value) {
+                        _editedProduct = Tour(
+                            timestamp: _editedProduct.timestamp,
+                            distance: value.isEmpty ? 0 : int.parse(value),
+                            mileageBegin: _editedProduct.mileageBegin,
+                            mileageEnd: _editedProduct.mileageEnd,
+                            licensePlate: _editedProduct.licensePlate,
+                            tourBegin: _editedProduct.tourBegin,
+                            tourEnd: _editedProduct.tourEnd,
+                            roadCondition: _editedProduct.roadCondition,
+                            attendant: _editedProduct.attendant,
+                            daytime: _editedProduct.daytime);
+                      },
+                    ),
                   ),
                   // DropdownButtonFormField<String>(
                   //   iconDisabledColor: Colors.white,
@@ -563,6 +604,7 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Kennzeichen'),
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerLicensePlate,
+                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
@@ -676,6 +718,7 @@ class _TourScreenState extends State<TourScreen> {
                     textFieldConfiguration: TextFieldConfiguration(
                       decoration: InputDecoration(labelText: 'Begleiter'),
                       controller: _typeAheadControllerAttendant,
+                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();

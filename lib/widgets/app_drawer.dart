@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:l17/screens/applicant_screen.dart';
+import 'package:l17/screens/chart_bar_screen.dart';
 import 'package:l17/screens/goal_screen.dart';
 import 'package:l17/screens/vehicle_screen.dart';
 
@@ -36,10 +37,20 @@ class AppDrawer extends StatelessWidget {
           Divider(),
           ListTile(
             leading: Icon(Icons.bar_chart_sharp),
-            title: Text('Ziel'),
+            title: Text('Statistik'),
             onTap: () {
               Navigator.of(context).pushNamed(
                 GoalScreen.routeName,
+              );
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.show_chart_rounded),
+            title: Text('Ziel'),
+            onTap: () {
+              Navigator.of(context).pushNamed(
+                ChartBarScreen.routeName,
               );
             },
           ),

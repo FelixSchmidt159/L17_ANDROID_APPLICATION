@@ -38,13 +38,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
   StreamSubscription<QuerySnapshot> streamRefVehicles;
   List<Vehicle> vehicles = [];
   List<DropdownMenuItem<String>> vehicleDropdown = [];
+  String _selectedVehicleId;
   String _selectedVehicle;
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     lastMileageEnd = 0;
-    bool licensePlateExists = false;
     if (_selectedDriver != null) {
       referenceTours = FirebaseFirestore.instance
           .collection('users')
@@ -81,35 +81,31 @@ class _OverviewScreenState extends State<OverviewScreen> {
       for (int i = 0; i < toursDocs.length; i++) {
         vehicles.add(Vehicle(toursDocs[i]['name'], toursDocs[i]['licensePlate'],
             toursDocs[i].id));
-        if (_selectedVehicle != null &&
-            toursDocs[i]['licensePlate'] == _selectedVehicle) {
-          _selectedVehicle = toursDocs[i].id;
-          licensePlateExists = true;
-        }
       }
-      if (!licensePlateExists) _selectedVehicle = null;
+
       vehicleDropdown =
           vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
         return DropdownMenuItem<String>(
           value: vehicle.id,
           child: SizedBox(
-            // width: 300,
+            width: 195,
             child: Text(
               vehicle.name,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
-              textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
             ),
           ),
         );
       }).toList();
+      if (vehicleDropdown.isNotEmpty)
+        _selectedVehicleId = vehicleDropdown[0].value;
       if (_selectedVehicle == null) {
-        if (vehicleDropdown.isEmpty)
+        if (vehicles.isEmpty)
           _selectedVehicle = "";
         else
-          _selectedVehicle = vehicleDropdown[0].value;
+          _selectedVehicle = vehicles[0].licensePlate;
         setState(() {});
       }
     });
@@ -243,11 +239,16 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           ? DropdownButton<String>(
                               iconDisabledColor: Colors.grey.shade200,
                               underline: Container(),
-                              value: _selectedVehicle,
+                              value: _selectedVehicleId,
                               onChanged: (String value) {
                                 if (value != null) {
                                   setState(() {
-                                    _selectedVehicle = value;
+                                    _selectedVehicleId = value;
+                                    for (int i = 0; i < vehicles.length; i++) {
+                                      if (vehicles[i].id == _selectedVehicleId)
+                                        _selectedVehicle =
+                                            vehicles[i].licensePlate;
+                                    }
                                   });
                                 }
                               },

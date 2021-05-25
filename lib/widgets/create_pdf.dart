@@ -10,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -92,34 +91,44 @@ class _CreatePdfState extends State<CreatePdf> {
       height: widget.height,
       width: widget.width,
       padding: EdgeInsets.all(8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: <Widget>[
-          IconButton(icon: Icon(Icons.file_download), onPressed: () {}),
-          pdfFile != null
-              ? Expanded(
+      child: Builder(
+        builder: (context) {
+          if (pdfFile != null) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                IconButton(
+                    icon: Icon(Icons.file_download),
+                    onPressed: () {
+                      openFile(pdfFile);
+                    }),
+                Expanded(
                   child: RotatedBox(
                     child: SfPdfViewer.file(
                       pdfFile,
                     ),
                     quarterTurns: 3,
                   ),
-                )
-              : Container(),
-        ],
+                ),
+              ],
+            );
+          } else {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_road,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 50,
+                ),
+                Text('Fügen Sie eine neue Fahrt hinzu.'),
+              ],
+            );
+          }
+        },
       ),
-
-      // TextButton(
-      //   child: Text('Image PDF extern öffnen'),
-      //   onPressed: () async {
-      //     if (data.length > 1) {
-      //       final pdfFile =
-      //           await generateDocument(PdfPageFormat.a4, data);
-      //       openFile(pdfFile);
-      //     }
-      //   },
-      // ),
     );
   }
 }
@@ -182,22 +191,6 @@ Future<File> generateDocument(
       pageFormat: format.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
       orientation: pw.PageOrientation.landscape,
       crossAxisAlignment: pw.CrossAxisAlignment.start,
-      // header: (pw.Context context) {
-      //   if (context.pageNumber == 1) {
-      //     return pw.SizedBox();
-      //   }
-      //   return pw.Container(
-      //       alignment: pw.Alignment.centerRight,
-      //       margin: const pw.EdgeInsets.only(bottom: 3.0 * PdfPageFormat.mm),
-      //       padding: const pw.EdgeInsets.only(bottom: 3.0 * PdfPageFormat.mm),
-      //       decoration: const pw.BoxDecoration(
-      //           border: pw.Border(
-      //               bottom: pw.BorderSide(width: 0.5, color: PdfColors.grey))),
-      //       child: pw.Text('Portable Document Format',
-      //           style: pw.Theme.of(context)
-      //               .defaultTextStyle
-      //               .copyWith(color: PdfColors.grey)));
-      // },
       footer: (pw.Context context) {
         return pw.Container(
             alignment: pw.Alignment.centerRight,

@@ -89,7 +89,6 @@ class _LineChartWidgetState extends State<LineChartWidget> {
 
   LineChartData mainData(dynamic data) {
     List<FlSpot> graphData = [];
-    // var hi = DateTime.now();
 
     var arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     for (int i = 0; i < data.length; i++) {

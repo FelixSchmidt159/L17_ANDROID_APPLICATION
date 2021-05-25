@@ -80,7 +80,8 @@ class _TourListState extends State<TourList> {
               SizedBox(
                 width: widget.width * 0.05,
               ),
-              ChartBar(_overallDistance, 3000, widget.height * 0.10),
+              ChartBar(_overallDistance, 3000, widget.height * 0.10 * 0.25,
+                  widget.width * 0.30),
               SizedBox(
                 width: widget.width * 0.05,
               ),

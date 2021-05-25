@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:l17/screens/auth_screen.dart';
+import 'package:l17/screens/chart_bar_screen.dart';
 import 'package:l17/screens/goal_screen.dart';
 import 'package:l17/screens/photo_screen.dart';
 import 'package:l17/screens/vehicle_detail_screen.dart';
 import 'package:l17/screens/vehicle_screen.dart';
+import 'package:l17/widgets/chart_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 import 'providers/applicants.dart';
 import 'models/mat_color.dart';
@@ -19,8 +22,9 @@ import 'package:firebase_core/firebase_core.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   await Firebase.initializeApp();
-  // initializeDateFormatting('de');
   runApp(MyApp());
 }
 
@@ -35,11 +39,8 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-          title: 'MyShop',
+          title: 'Fahrtenbuch-L17',
           theme: ThemeData(
-            // primarySwatch: Colors.green,
-            // accentColor: Colors.deepOrange,
-            // fontFamily: 'Lato',
             primarySwatch: mc,
             backgroundColor: mc.shade700,
             accentColor: mc.shade400,
@@ -78,6 +79,7 @@ class MyApp extends StatelessWidget {
             GoalScreen.routeName: (ctx) => GoalScreen(),
             VehicleScreen.routeName: (ctx) => VehicleScreen(),
             VehicleDetailScreen.routeName: (ctx) => VehicleDetailScreen(),
+            ChartBarScreen.routeName: (ctx) => ChartBarScreen(),
           }),
     );
   }

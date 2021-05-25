@@ -4,19 +4,19 @@ class ChartBar extends StatelessWidget {
   final int distanceDriven;
   final int distanceGoal;
   final double height;
+  final double width;
 
-  ChartBar(this.distanceDriven, this.distanceGoal, this.height);
+  ChartBar(this.distanceDriven, this.distanceGoal, this.height, this.width);
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
     return distanceDriven != 0
         ? Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-                height: height * 0.25,
-                width: width * 0.3,
+                height: height,
+                width: width,
                 child: Stack(
                   children: <Widget>[
                     Container(
