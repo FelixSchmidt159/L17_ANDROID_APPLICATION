@@ -49,27 +49,27 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         }
         final toursDocs = toursSnapshot.data.docs;
         return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).backgroundColor.withOpacity(0.6),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
-              ),
-            ],
-          ),
-          width: width * 0.8,
+          // decoration: BoxDecoration(
+          //   borderRadius: BorderRadius.circular(10),
+          //   boxShadow: [
+          //     BoxShadow(
+          //       color: Theme.of(context).backgroundColor,
+          //       spreadRadius: 5,
+          //       blurRadius: 7,
+          //       offset: Offset(0, 3), // changes position of shadow
+          //     ),
+          //   ],
+          // ),
+          width: width,
           child: Stack(
             children: <Widget>[
               AspectRatio(
                 aspectRatio: 1.40,
                 child: Container(
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(18),
-                      ),
+                      // borderRadius: BorderRadius.all(
+                      //   Radius.circular(18),
+                      // ),
                       color: Theme.of(context).accentColor),
                   child: Padding(
                     padding: const EdgeInsets.only(
@@ -89,13 +89,13 @@ class _LineChartWidgetState extends State<LineChartWidget> {
 
   LineChartData mainData(dynamic data) {
     List<FlSpot> graphData = [];
+    var currentYear = DateTime.now().year;
 
     var arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     for (int i = 0; i < data.length; i++) {
-      arr[DateTime.fromMicrosecondsSinceEpoch(
-                  data[i]['timestamp'].microsecondsSinceEpoch)
-              .month -
-          1] += data[i]['distance'];
+      var obj = DateTime.fromMicrosecondsSinceEpoch(
+          data[i]['timestamp'].microsecondsSinceEpoch);
+      if (currentYear == obj.year) arr[obj.month - 1] += data[i]['distance'];
     }
     for (int i = 1; i < 12; i++) {
       arr[i] += arr[i - 1];
@@ -141,6 +141,8 @@ class _LineChartWidgetState extends State<LineChartWidget> {
                 return 'Sep';
               case 10:
                 return 'Nov';
+              case 12:
+                return 'Dez';
             }
             return '';
           },

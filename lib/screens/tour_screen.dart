@@ -278,7 +278,7 @@ class _TourScreenState extends State<TourScreen> {
     }
     if (lifeSearchType == LifeSearch.licensePlates) {
       for (int i = 0; i < vehicles.length; i++) {
-        suggestions.add(vehicles[i].licensePlate);
+        suggestions.add(vehicles[i].name + ', ' + vehicles[i].licensePlate);
       }
     }
     suggestions = suggestions.toSet().toList();
@@ -396,6 +396,8 @@ class _TourScreenState extends State<TourScreen> {
                         if (value.isNotEmpty && num.tryParse(value) == null) {
                           return 'Geben Sie bitte eine ganze Zahl ein.';
                         }
+                        if (num.tryParse(value) != null && int.parse(value) < 0)
+                          return 'Sie können nur positive Zahlen als Ziel definieren.';
                         return null;
                       },
                       onChanged: (value) {
@@ -409,6 +411,9 @@ class _TourScreenState extends State<TourScreen> {
                               _distance.text = test.toString();
                             });
                           }
+                        }
+                        if (value.isEmpty || _mileageBegin.text.isEmpty) {
+                          _distance.text = "";
                         }
                       },
                       onSaved: (value) {
@@ -488,6 +493,8 @@ class _TourScreenState extends State<TourScreen> {
                         if (value.isNotEmpty && num.tryParse(value) == null) {
                           return 'Geben Sie bitte eine ganze Zahl ein.';
                         }
+                        if (num.tryParse(value) != null && int.parse(value) < 0)
+                          return 'Sie können nur positive Zahlen als Ziel definieren.';
                         return null;
                       },
                       onChanged: (value) {
@@ -502,6 +509,9 @@ class _TourScreenState extends State<TourScreen> {
                               _distance.text = test.abs().toString();
                             });
                           }
+                        }
+                        if (value.isEmpty || _mileageBegin.text.isEmpty) {
+                          _distance.text = "";
                         }
                       },
                       onSaved: (value) {
@@ -521,10 +531,8 @@ class _TourScreenState extends State<TourScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.camera_alt,
-                        // color: Colors.black,
                       ),
                       onPressed: () {
-                        // Navigator.pop(context);
                         _pickImage(false);
                       },
                     ),
@@ -534,12 +542,6 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Distanz'),
                       keyboardType: TextInputType.number,
                       controller: _distance,
-                      // validator: (value) {
-                      //   if (value.isNotEmpty && num.tryParse(value) == null) {
-                      //     return 'Geben Sie bitte eine ganze Zahl ein.';
-                      //   }
-                      //   return null;
-                      // },
                       onSaved: (value) {
                         _editedProduct = Tour(
                             timestamp: _editedProduct.timestamp,
@@ -555,50 +557,6 @@ class _TourScreenState extends State<TourScreen> {
                       },
                     ),
                   ),
-                  // DropdownButtonFormField<String>(
-                  //   iconDisabledColor: Colors.white,
-                  //   disabledHint: SizedBox(
-                  //     child: Text(
-                  //       'Sie haben noch kein Fahrzeug angelegt.',
-                  //       style: TextStyle(fontSize: 12, color: Colors.black),
-                  //       textAlign: TextAlign.justify,
-                  //       overflow: TextOverflow.ellipsis,
-                  //     ),
-                  //   ),
-                  //   decoration: _selectedVehicle != ""
-                  //       ? InputDecoration(
-                  //           labelText: 'Fahrzeug',
-                  //         )
-                  //       : InputDecoration(labelText: ''),
-                  //   items: vehicleDropdown,
-                  //   onChanged: _selectedVehicle != ""
-                  //       ? (value) {
-                  //           setState(() {
-                  //             _selectedVehicle = value;
-                  //           });
-                  //         }
-                  //       : null,
-                  //   value: _selectedVehicle != "" ? _selectedVehicle : null,
-                  //   onSaved: (value) {
-                  //     String licensePlate = "";
-                  //     for (int i = 0; i < vehicles.length; i++) {
-                  //       if (vehicles[i].id == value)
-                  //         licensePlate = vehicles[i].licensePlate;
-                  //     }
-
-                  //     _editedProduct = Tour(
-                  //         timestamp: _editedProduct.timestamp,
-                  //         distance: _editedProduct.distance,
-                  //         mileageBegin: _editedProduct.mileageBegin,
-                  //         mileageEnd: _editedProduct.mileageEnd,
-                  //         licensePlate: licensePlate,
-                  //         tourBegin: _editedProduct.tourBegin,
-                  //         tourEnd: _editedProduct.tourEnd,
-                  //         roadCondition: _editedProduct.roadCondition,
-                  //         attendant: _editedProduct.attendant,
-                  //         daytime: _editedProduct.daytime);
-                  //   },
-                  // ),
                   TypeAheadFormField(
                     textFieldConfiguration: TextFieldConfiguration(
                       decoration: InputDecoration(labelText: 'Kennzeichen'),

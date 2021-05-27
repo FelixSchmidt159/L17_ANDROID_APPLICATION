@@ -41,19 +41,22 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
           title: 'Fahrtenbuch-L17',
           theme: ThemeData(
-            primarySwatch: mc,
-            backgroundColor: mc.shade700,
-            accentColor: mc.shade400,
-            iconTheme: IconThemeData(color: mc),
-            accentColorBrightness: Brightness.dark,
-            buttonTheme: ButtonTheme.of(context).copyWith(
-              buttonColor: mc,
-              textTheme: ButtonTextTheme.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+              primarySwatch: mc,
+              backgroundColor: mc.shade700,
+              accentColor: mc.shade500,
+              iconTheme: IconThemeData(color: mc),
+              accentColorBrightness: Brightness.dark,
+              buttonTheme: ButtonTheme.of(context).copyWith(
+                buttonColor: mc,
+                textTheme: ButtonTextTheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
-            ),
-          ),
+              appBarTheme: AppBarTheme(
+                shadowColor: mc.shade500,
+                backgroundColor: mc.shade500,
+              )),
           localizationsDelegates: [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

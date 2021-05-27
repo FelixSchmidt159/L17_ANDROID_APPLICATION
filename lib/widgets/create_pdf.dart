@@ -30,58 +30,56 @@ class _CreatePdfState extends State<CreatePdf> {
   File pdfFile;
   String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
-  Stream<QuerySnapshot> reference;
-  StreamSubscription<QuerySnapshot> streamRef;
+  PdfViewerController _pdfViewerController;
 
   @override
-  void dispose() {
-    if (streamRef != null) {
-      streamRef.cancel();
-    }
-    // TODO: implement dispose
-    super.dispose();
+  void initState() {
+    _pdfViewerController = PdfViewerController();
+    super.initState();
   }
 
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     List<Tour> tours = [];
-    reference = FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .collection('drivers')
-        .doc(_selectedDriver)
-        .collection('tours')
-        .orderBy('timestamp', descending: false)
-        .snapshots();
-    streamRef = reference.listen((event) {
-      final toursDocs = event.docs;
-      if (toursDocs.isNotEmpty) {
-        for (int i = 0; i < toursDocs.length; i++) {
-          tours.add(Tour(
-            attendant: toursDocs[i]['attendant'],
-            distance: toursDocs[i]['distance'],
-            licensePlate: toursDocs[i]['licensePlate'],
-            mileageBegin: toursDocs[i]['mileageBegin'],
-            mileageEnd: toursDocs[i]['mileageEnd'],
-            roadCondition: toursDocs[i]['roadCondition'],
-            timestamp: DateTime.fromMicrosecondsSinceEpoch(
-                toursDocs[i]['timestamp'].microsecondsSinceEpoch),
-            tourBegin: toursDocs[i]['tourBegin'],
-            tourEnd: toursDocs[i]['tourEnd'],
-            daytime: toursDocs[i]['daytime'],
-          ));
-        }
-
-        data = generatePdfData(tours);
-        generateDocument(PdfPageFormat.a4, data).then((value) {
-          if (mounted) {
-            setState(() {
-              pdfFile = value;
-            });
+    if (_selectedDriver != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('tours')
+          .orderBy('timestamp', descending: false)
+          .get()
+          .then((value) {
+        final toursDocs = value.docs;
+        if (toursDocs.isNotEmpty) {
+          for (int i = 0; i < toursDocs.length; i++) {
+            tours.add(Tour(
+              attendant: toursDocs[i]['attendant'],
+              distance: toursDocs[i]['distance'],
+              licensePlate: toursDocs[i]['licensePlate'],
+              mileageBegin: toursDocs[i]['mileageBegin'],
+              mileageEnd: toursDocs[i]['mileageEnd'],
+              roadCondition: toursDocs[i]['roadCondition'],
+              timestamp: DateTime.fromMicrosecondsSinceEpoch(
+                  toursDocs[i]['timestamp'].microsecondsSinceEpoch),
+              tourBegin: toursDocs[i]['tourBegin'],
+              tourEnd: toursDocs[i]['tourEnd'],
+              daytime: toursDocs[i]['daytime'],
+            ));
           }
-        });
-      }
-    });
+
+          data = generatePdfData(tours);
+          generateDocument(PdfPageFormat.a4, data).then((value) {
+            if (mounted) {
+              setState(() {
+                pdfFile = value;
+              });
+            }
+          });
+        }
+      });
+    }
     super.didChangeDependencies();
   }
 
@@ -107,6 +105,7 @@ class _CreatePdfState extends State<CreatePdf> {
                   child: RotatedBox(
                     child: SfPdfViewer.file(
                       pdfFile,
+                      controller: _pdfViewerController,
                     ),
                     quarterTurns: 3,
                   ),
@@ -151,9 +150,9 @@ List<List<String>> generatePdfData(List<Tour> items) {
   for (Tour tour in items) {
     pdfData.add(<String>[
       DateFormat.yMd('de_DE').format(tour.timestamp),
-      tour.distance.toString(),
-      tour.mileageBegin.toString(),
-      tour.mileageEnd.toString(),
+      tour.distance.toString() == "0" ? "" : tour.distance.toString(),
+      tour.mileageBegin.toString() == "0" ? "" : tour.mileageBegin.toString(),
+      tour.mileageEnd.toString() == "0" ? "" : tour.mileageEnd.toString(),
       tour.licensePlate,
       tour.daytime,
       tour.tourBegin + ' - ' + tour.tourEnd,

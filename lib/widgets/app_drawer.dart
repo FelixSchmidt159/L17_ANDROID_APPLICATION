@@ -16,26 +16,6 @@ class AppDrawer extends StatelessWidget {
           ),
           // Divider(),
           ListTile(
-            leading: Icon(Icons.people),
-            title: Text('Fahrer'),
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                ApplicantScreen.routeName,
-              );
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.directions_car),
-            title: Text('Fahrzeuge'),
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                VehicleScreen.routeName,
-              );
-            },
-          ),
-          Divider(),
-          ListTile(
             leading: Icon(Icons.bar_chart_sharp),
             title: Text('Statistik'),
             onTap: () {
@@ -51,6 +31,26 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.of(context).pushNamed(
                 ChartBarScreen.routeName,
+              );
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.people),
+            title: Text('Fahrer'),
+            onTap: () {
+              Navigator.of(context).pushNamed(
+                ApplicantScreen.routeName,
+              );
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.directions_car),
+            title: Text('Fahrzeuge'),
+            onTap: () {
+              Navigator.of(context).pushNamed(
+                VehicleScreen.routeName,
               );
             },
           ),

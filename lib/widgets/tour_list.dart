@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
+import 'package:l17/screens/chart_bar_screen.dart';
 import 'package:l17/widgets/chart_bar.dart';
 import 'package:l17/widgets/dropdown_menue.dart';
 import 'package:l17/widgets/tour_list_item.dart';
@@ -22,32 +23,25 @@ class TourList extends StatefulWidget {
 
 class _TourListState extends State<TourList> {
   int _overallDistance;
-  var currentUser = FirebaseAuth.instance.currentUser;
+  var _currentUser = FirebaseAuth.instance.currentUser;
   String _selectedDriver;
-  Stream<QuerySnapshot> reference;
-  StreamSubscription<QuerySnapshot> streamRef;
-  @override
-  void dispose() {
-    if (streamRef != null) {
-      streamRef.cancel();
-    }
-    // TODO: implement dispose
-    super.dispose();
-  }
+  int _distanceGoal = 0;
+  StreamSubscription<QuerySnapshot> _streamSubscriptionGoals;
+  StreamSubscription<QuerySnapshot> _streamSubscriptionTours;
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     _overallDistance = 0;
     if (_selectedDriver != null) {
-      reference = FirebaseFirestore.instance
+      _streamSubscriptionTours = FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
-          .snapshots();
-      streamRef = reference.listen((event) {
+          .snapshots()
+          .listen((event) {
         final toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
           _overallDistance = 0;
@@ -55,14 +49,39 @@ class _TourListState extends State<TourList> {
             _overallDistance += toursDocs[i]['distance'];
           }
           if (mounted) {
+            setState(() {});
+          }
+        }
+      });
+
+      _streamSubscriptionGoals = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('goals')
+          .snapshots()
+          .listen((event) {
+        var docs = event.docs;
+        if (docs.length >= 1) {
+          if (mounted) {
             setState(() {
-              _overallDistance = _overallDistance;
+              _distanceGoal = docs[0]['goal'];
             });
           }
         }
       });
     }
     super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    if (_streamSubscriptionTours != null) _streamSubscriptionTours.cancel();
+    if (_streamSubscriptionGoals != null) _streamSubscriptionGoals.cancel();
+
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
@@ -80,8 +99,15 @@ class _TourListState extends State<TourList> {
               SizedBox(
                 width: widget.width * 0.05,
               ),
-              ChartBar(_overallDistance, 3000, widget.height * 0.10 * 0.25,
-                  widget.width * 0.30),
+              GestureDetector(
+                child: ChartBar(_overallDistance, _distanceGoal,
+                    widget.height * 0.10 * 0.25, widget.width * 0.30),
+                onTap: () {
+                  Navigator.of(context).pushNamed(
+                    ChartBarScreen.routeName,
+                  );
+                },
+              ),
               SizedBox(
                 width: widget.width * 0.05,
               ),
@@ -104,7 +130,7 @@ class _TourListState extends State<TourList> {
             ? StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection('users')
-                    .doc(currentUser.uid)
+                    .doc(_currentUser.uid)
                     .collection('drivers')
                     .doc(_selectedDriver)
                     .collection('tours')
