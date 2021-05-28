@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/widgets/line_chart.dart';
 import 'package:provider/provider.dart';
 
 import 'package:l17/providers/applicants.dart';
@@ -22,6 +21,13 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
   bool _init = true;
   String _distanceGoalId;
   int _distanceGoal = 0;
+
+  @override
+  void dispose() {
+    _distanceController.dispose();
+    // TODO: implement dispose
+    super.dispose();
+  }
 
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;

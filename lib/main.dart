@@ -5,10 +5,8 @@ import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:l17/screens/auth_screen.dart';
 import 'package:l17/screens/chart_bar_screen.dart';
 import 'package:l17/screens/goal_screen.dart';
-import 'package:l17/screens/photo_screen.dart';
 import 'package:l17/screens/vehicle_detail_screen.dart';
 import 'package:l17/screens/vehicle_screen.dart';
-import 'package:l17/widgets/chart_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 
@@ -39,7 +37,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-          title: 'Fahrtenbuch-L17',
+          title: 'Fahrtenbuch',
           theme: ThemeData(
               primarySwatch: mc,
               backgroundColor: mc.shade700,
@@ -75,7 +73,6 @@ class MyApp extends StatelessWidget {
             },
           ),
           routes: {
-            PhotoScreen.routeName: (ctx) => PhotoScreen(),
             TourScreen.routeName: (ctx) => TourScreen(),
             ApplicantScreen.routeName: (ctx) => ApplicantScreen(),
             ApplicantDetailScreen.routeName: (ctx) => ApplicantDetailScreen(),

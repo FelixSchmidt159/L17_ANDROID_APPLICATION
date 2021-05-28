@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:l17/providers/tour.dart';
+import 'package:l17/providers/vehicle.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -31,6 +32,7 @@ class _CreatePdfState extends State<CreatePdf> {
   String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
   PdfViewerController _pdfViewerController;
+  List<Vehicle> vehicles = [];
 
   @override
   void initState() {
@@ -77,6 +79,21 @@ class _CreatePdfState extends State<CreatePdf> {
               });
             }
           });
+        }
+      });
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('vehicles')
+          .get()
+          .then((value) {
+        var docs = value.docs;
+        if (docs.length > 0) {
+          for (int i = 0; i < docs.length; i++) {
+            vehicles.add(
+                Vehicle(docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
+          }
+          setState(() {});
         }
       });
     }
@@ -130,98 +147,146 @@ class _CreatePdfState extends State<CreatePdf> {
       ),
     );
   }
-}
 
-List<List<String>> generatePdfData(List<Tour> items) {
-  List<List<String>> pdfData = [
-    <String>[
-      'Datum',
-      'Gefahrene KM',
-      'Kilometerstand (Start)',
-      'Kilometerstand (Ziel)',
-      'Kfz-Kennzeichen',
-      'Tageszeit',
-      'Fahrstrecke / -ziel',
-      'Straßenzustand',
-      'Unterschrift Begleiter',
-      'Unterschrift Bewerber'
-    ]
-  ];
-  for (Tour tour in items) {
-    pdfData.add(<String>[
-      DateFormat.yMd('de_DE').format(tour.timestamp),
-      tour.distance.toString() == "0" ? "" : tour.distance.toString(),
-      tour.mileageBegin.toString() == "0" ? "" : tour.mileageBegin.toString(),
-      tour.mileageEnd.toString() == "0" ? "" : tour.mileageEnd.toString(),
-      tour.licensePlate,
-      tour.daytime,
-      tour.tourBegin + ' - ' + tour.tourEnd,
-      tour.roadCondition,
-      '',
-      '',
-    ]);
+  List<List<String>> generatePdfData(List<Tour> items) {
+    List<String> header = [];
+    int distanceDriven = 0;
+    bool match = false;
+    header.add('Datum');
+    header.add('Gef. KM');
+    header.add('KMS Start');
+    header.add('KMS Ziel');
+
+    for (int i = 0; i < vehicles.length; i++) {
+      header.add('priv. KM' +
+          '\n' +
+          vehicles[i].name +
+          '\n' +
+          vehicles[i].licensePlate);
+    }
+    header.add('Kfz \n Kennzeichen');
+    header.add('Tageszeit');
+    header.add('Fahrstrecke / -ziel');
+    header.add('Straßenzustand');
+    header.add('Unterschrift \n Begleiter');
+    header.add('Unterschrift \n Fahrer');
+    List<List<String>> pdfData = [header];
+    List<String> row = [];
+    for (int w = 0; w < items.length; w++) {
+      match = false;
+      row = [];
+      row.add(DateFormat.yMd('de_DE').format(items[w].timestamp));
+      row.add(items[w].distance.toString() == "0"
+          ? ""
+          : items[w].distance.toString());
+      distanceDriven += items[w].distance;
+      row.add(items[w].mileageBegin.toString() == "0"
+          ? ""
+          : items[w].mileageBegin.toString());
+      row.add(items[w].mileageEnd.toString() == "0"
+          ? ""
+          : items[w].mileageEnd.toString());
+      for (int i = 0; i < vehicles.length; i++) {
+        if (vehicles[i].licensePlate == items[w].licensePlate) {
+          if ((w + 1) < items.length) {
+            for (int j = w + 1; j < items.length; j++) {
+              if (items[j].licensePlate == items[w].licensePlate) {
+                var diff = items[j].mileageBegin - items[w].mileageEnd;
+                row.add(diff < 0 ? '' : diff.toString());
+                match = true;
+                break;
+              }
+            }
+            if (!match) row.add('');
+          } else {
+            row.add('');
+          }
+        } else {
+          row.add('');
+        }
+      }
+      row.add(items[w].licensePlate);
+      row.add(items[w].daytime);
+      row.add(items[w].tourBegin + ' - ' + items[w].tourEnd);
+      row.add(items[w].roadCondition);
+      row.add('');
+      row.add('');
+      pdfData.add(row);
+    }
+    row = [];
+    for (int i = 0; i < 10 + vehicles.length; i++) {
+      if (i == 1) {
+        row.add('Gesamt: $distanceDriven km');
+      } else
+        row.add('');
+    }
+    pdfData.add(row);
+    return pdfData;
   }
-  return pdfData;
-}
 
-Future openFile(File file) async {
-  final url = file.path;
-  await OpenFile.open(url);
-}
+  Future openFile(File file) async {
+    final url = file.path;
+    await OpenFile.open(url);
+  }
 
-Future<File> mySaveDocument({
-  @required String name,
-  @required pw.Document pdf,
-}) async {
-  final bytes = await pdf.save();
+  Future<File> mySaveDocument({
+    @required String name,
+    @required pw.Document pdf,
+  }) async {
+    final bytes = await pdf.save();
 
-  final dir = await getApplicationDocumentsDirectory();
-  final file = File('${dir.path}/$name');
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/$name');
 
-  await file.writeAsBytes(bytes);
-  return file;
-}
+    await file.writeAsBytes(bytes);
+    return file;
+  }
 
-Future<File> generateDocument(
-    PdfPageFormat format, List<List<String>> data) async {
-  final doc = pw.Document(pageMode: PdfPageMode.outlines);
+  Future<File> generateDocument(
+      PdfPageFormat format, List<List<String>> data) async {
+    final doc = pw.Document(pageMode: PdfPageMode.outlines);
 
-  doc.addPage(pw.MultiPage(
-      pageFormat: format.copyWith(marginBottom: 1.5 * PdfPageFormat.cm),
-      orientation: pw.PageOrientation.landscape,
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      footer: (pw.Context context) {
-        return pw.Container(
-            alignment: pw.Alignment.centerRight,
-            margin: const pw.EdgeInsets.only(top: 1.0 * PdfPageFormat.cm),
-            child: pw.Text(
-                'Seite ${context.pageNumber} von ${context.pagesCount}',
-                style: pw.Theme.of(context)
-                    .defaultTextStyle
-                    .copyWith(color: PdfColors.grey)));
-      },
-      build: (pw.Context context) => <pw.Widget>[
-            pw.Header(
-                level: 0,
-                title: 'Fahrtenprotokoll',
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: <pw.Widget>[
-                    pw.Text('Fahrtenprotokoll', textScaleFactor: 1),
-                  ],
-                )),
-            pw.Table.fromTextArray(
-              context: context,
-              data: data,
-              oddCellStyle: pw.TextStyle(fontSize: 7),
-              cellStyle: pw.TextStyle(fontSize: 7),
-              headerStyle: pw.TextStyle(
-                fontSize: 7,
-                fontWeight: pw.FontWeight.bold,
+    doc.addPage(pw.MultiPage(
+        pageFormat: format.copyWith(
+            marginBottom: 0.5 * PdfPageFormat.cm,
+            marginTop: 0.5 * PdfPageFormat.cm,
+            marginLeft: 0.5 * PdfPageFormat.cm,
+            marginRight: 0.5 * PdfPageFormat.cm),
+        orientation: pw.PageOrientation.landscape,
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        footer: (pw.Context context) {
+          return pw.Container(
+              alignment: pw.Alignment.centerRight,
+              margin: const pw.EdgeInsets.only(top: 1.0 * PdfPageFormat.cm),
+              child: pw.Text(
+                  'Seite ${context.pageNumber} von ${context.pagesCount}',
+                  style: pw.Theme.of(context)
+                      .defaultTextStyle
+                      .copyWith(color: PdfColors.grey)));
+        },
+        build: (pw.Context context) => <pw.Widget>[
+              pw.Header(
+                  level: 0,
+                  title: 'Fahrtenprotokoll',
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: <pw.Widget>[
+                      pw.Text('Fahrtenprotokoll', textScaleFactor: 1),
+                    ],
+                  )),
+              pw.Table.fromTextArray(
+                context: context,
+                data: data,
+                oddCellStyle: pw.TextStyle(fontSize: 7),
+                cellStyle: pw.TextStyle(fontSize: 7),
+                headerStyle: pw.TextStyle(
+                  fontSize: 7,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
-            ),
-            pw.Padding(padding: const pw.EdgeInsets.all(0)),
-          ]));
+              pw.Padding(padding: const pw.EdgeInsets.all(0)),
+            ]));
 
-  return mySaveDocument(pdf: doc, name: 'Fahrtenbuch');
+    return mySaveDocument(pdf: doc, name: 'Fahrtenbuch');
+  }
 }

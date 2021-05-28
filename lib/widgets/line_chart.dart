@@ -174,7 +174,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
             }
             return '';
           },
-          reservedSize: 28,
+          reservedSize: 7,
           margin: 12,
         ),
       ),

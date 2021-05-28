@@ -36,14 +36,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     _form.currentState.save();
     if (_editedVehicle.id == "") {
       FirebaseFirestore.instance
-          .collection('/users/' + currentUser.uid + '/vehicles')
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('vehicles')
           .add({
         'name': _editedVehicle.name,
         'licensePlate': _editedVehicle.licensePlate,
       });
     } else {
       FirebaseFirestore.instance
-          .collection('/users/' + currentUser.uid + '/vehicles')
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('vehicles')
           .doc(_editedVehicle.id)
           .update({
         'name': _editedVehicle.name,

@@ -54,6 +54,12 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
                 for (int i = 0; i < toursDocs.length; i++) {
                   instance.collection('tours').doc(toursDocs[i].id).delete();
                 }
+                instance.collection('goals').get().then((value) {
+                  final toursDocs = value.docs;
+                  for (int i = 0; i < toursDocs.length; i++) {
+                    instance.collection('goals').doc(toursDocs[i].id).delete();
+                  }
+                });
                 instance.delete();
               });
             },

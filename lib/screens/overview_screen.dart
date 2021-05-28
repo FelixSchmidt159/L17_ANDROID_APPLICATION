@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
@@ -28,83 +29,66 @@ class OverviewScreen extends StatefulWidget {
 class _OverviewScreenState extends State<OverviewScreen> {
   int _selectedIndex = 1;
   var currentUser = FirebaseAuth.instance.currentUser;
-  int lastMileageEnd;
-  TextEditingController _textFieldController = TextEditingController();
+  final TextEditingController _textFieldController = TextEditingController();
+  final TextEditingController _typeAheadControllerLicensePlate =
+      TextEditingController();
   String _selectedDriver;
-  Stream<QuerySnapshot> referenceTours;
-  StreamSubscription<QuerySnapshot> streamRefTours;
-  Stream<QuerySnapshot> referenceVehicles;
-  StreamSubscription<QuerySnapshot> streamRefVehicles;
   List<Vehicle> vehicles = [];
-  List<DropdownMenuItem<String>> vehicleDropdown = [];
-  String _selectedVehicleId;
-  String _selectedVehicle;
+  List<String> _licensePlates = [];
+  Map lastMileageMap = Map();
 
   @override
   void didChangeDependencies() {
+    lastMileageMap = Map();
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-    lastMileageEnd = 0;
     if (_selectedDriver != null) {
-      referenceTours = FirebaseFirestore.instance
+      _licensePlates = [];
+      FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
-          .snapshots();
-      streamRefTours = referenceTours.listen((event) {
-        final toursDocs = event.docs;
+          .orderBy('timestamp', descending: true)
+          .get()
+          .then((value) {
+        var toursDocs = value.docs;
         if (toursDocs.isNotEmpty) {
-          for (int i = 0; i < 1; i++) {
-            lastMileageEnd = toursDocs[i]['mileageEnd'];
-            _textFieldController.text = toursDocs[i]['mileageEnd'].toString();
-            if (toursDocs[i]['licensePlate'] != "")
-              _selectedVehicle = toursDocs[i]['licensePlate'];
+          for (int i = 0; i < toursDocs.length; i++) {
+            _licensePlates.add(toursDocs[i]['licensePlate']);
+            if (lastMileageMap[toursDocs[i]['licensePlate']] == null) {
+              lastMileageMap[toursDocs[i]['licensePlate']] =
+                  toursDocs[i]['mileageEnd'];
+            }
+            if (i == 0) {
+              var dist = lastMileageMap[toursDocs[i]['licensePlate']];
+              _textFieldController.text = dist.toString();
+              _typeAheadControllerLicensePlate.text =
+                  toursDocs[i]['licensePlate'];
+            }
           }
-          if (lastMileageEnd == 0) {
-            _textFieldController.text = "";
-          }
+          setState(() {});
         }
       });
     }
 
-    referenceVehicles = FirebaseFirestore.instance
+    FirebaseFirestore.instance
         .collection('users')
         .doc(currentUser.uid)
         .collection('vehicles')
-        .snapshots();
-    streamRefVehicles = referenceVehicles.listen((event) {
-      vehicleDropdown = [];
+        .get()
+        .then((value) {
       vehicles = [];
-      final toursDocs = event.docs;
-      for (int i = 0; i < toursDocs.length; i++) {
-        vehicles.add(Vehicle(toursDocs[i]['name'], toursDocs[i]['licensePlate'],
-            toursDocs[i].id));
-      }
-
-      vehicleDropdown =
-          vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
-        return DropdownMenuItem<String>(
-          value: vehicle.id,
-          child: SizedBox(
-            width: 195,
-            child: Text(
-              vehicle.name,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        );
-      }).toList();
-      if (vehicleDropdown.isNotEmpty)
-        _selectedVehicleId = vehicleDropdown[0].value;
-      if (_selectedVehicle == null) {
-        if (vehicles.isEmpty)
-          _selectedVehicle = "";
-        else
-          _selectedVehicle = vehicles[0].licensePlate;
+      var toursDocs = value.docs;
+      if (toursDocs.isNotEmpty) {
+        for (int i = 0; i < toursDocs.length; i++) {
+          vehicles.add(Vehicle(toursDocs[i]['name'],
+              toursDocs[i]['licensePlate'], toursDocs[i].id));
+        }
+        if (_typeAheadControllerLicensePlate.text == null ||
+            _typeAheadControllerLicensePlate.text.isEmpty) {
+          _typeAheadControllerLicensePlate.text = vehicles[0].licensePlate;
+        }
         setState(() {});
       }
     });
@@ -114,13 +98,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   void dispose() {
-    if (streamRefTours != null) {
-      streamRefTours.cancel();
-    }
-    if (streamRefVehicles != null) {
-      streamRefVehicles.cancel();
-    }
     _textFieldController.dispose();
+    _typeAheadControllerLicensePlate.dispose();
     super.dispose();
   }
 
@@ -179,9 +158,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
         ),
       ],
       currentIndex: _selectedIndex,
-      selectedItemColor: Colors.black,
+      selectedItemColor: Colors.white,
       backgroundColor: Theme.of(context).backgroundColor,
-      unselectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white38,
       type: BottomNavigationBarType.fixed,
       onTap: _onItemTapped,
     );
@@ -229,44 +208,49 @@ class _OverviewScreenState extends State<OverviewScreen> {
             content: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
                 return Container(
-                  height:
-                      vehicleDropdown.length > 1 ? height * 0.15 : height * 0.1,
+                  height: height * 0.20,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      vehicleDropdown.length > 1
-                          ? DropdownButton<String>(
-                              iconDisabledColor: Colors.grey.shade200,
-                              underline: Container(),
-                              value: _selectedVehicleId,
-                              onChanged: (String value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _selectedVehicleId = value;
-                                    for (int i = 0; i < vehicles.length; i++) {
-                                      if (vehicles[i].id == _selectedVehicleId)
-                                        _selectedVehicle =
-                                            vehicles[i].licensePlate;
-                                    }
-                                  });
-                                }
-                              },
-                              items: vehicleDropdown,
-                            )
-                          : Container(),
+                      TypeAheadFormField(
+                        textFieldConfiguration: TextFieldConfiguration(
+                            decoration:
+                                InputDecoration(labelText: 'Kennzeichen'),
+                            keyboardType: TextInputType.text,
+                            controller: _typeAheadControllerLicensePlate,
+                            onChanged: (value) {
+                              setState(() {
+                                _typeAheadControllerLicensePlate.text = value;
+                              });
+                            }),
+                        noItemsFoundBuilder: (context) {
+                          return SizedBox();
+                        },
+                        suggestionsCallback: (pattern) {
+                          return getSuggestions(pattern);
+                        },
+                        itemBuilder: (context, suggestion) {
+                          return ListTile(
+                            title: Text(suggestion),
+                          );
+                        },
+                        transitionBuilder:
+                            (context, suggestionsBox, controller) {
+                          return suggestionsBox;
+                        },
+                        onSuggestionSelected: (suggestion) {
+                          this._typeAheadControllerLicensePlate.text =
+                              suggestion;
+                        },
+                      ),
                       Stack(
                         alignment: AlignmentDirectional.centerEnd,
                         children: <Widget>[
                           TextField(
-                            onChanged: (value) {
-                              if (num.tryParse(value) != null)
-                                lastMileageEnd = int.parse(value);
-                              else
-                                lastMileageEnd = 0;
-                            },
                             controller: _textFieldController,
                             decoration: InputDecoration(
-                                hintText: "Kilometerstand (Beginn)"),
+                              labelText: "Kilometerstand (Beginn)",
+                            ),
                             keyboardType: TextInputType.number,
                           ),
                           IconButton(
@@ -309,11 +293,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     arguments: TourScreenArguments(
                         Tour(
                             timestamp: daytime,
-                            mileageBegin: lastMileageEnd,
+                            mileageBegin:
+                                num.tryParse(_textFieldController.text) == null
+                                    ? 0
+                                    : int.parse(_textFieldController.text),
                             mileageEnd: 0,
                             attendant: "",
                             distance: 0,
-                            licensePlate: _selectedVehicle,
+                            licensePlate: _typeAheadControllerLicensePlate.text,
                             tourBegin: "",
                             tourEnd: "",
                             roadCondition: "",
@@ -346,7 +333,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     mileageEnd: 0,
                     attendant: "",
                     distance: 0,
-                    licensePlate: _selectedVehicle,
+                    licensePlate: _typeAheadControllerLicensePlate.text,
                     tourBegin: "",
                     tourEnd: "",
                     roadCondition: "",
@@ -385,5 +372,27 @@ class _OverviewScreenState extends State<OverviewScreen> {
           title: 'Cropper',
         ));
     return croppedImage;
+  }
+
+  List<String> getSuggestions(
+    String pattern,
+  ) {
+    List<String> suggestions = [];
+    List<String> possibleSuggestions = [];
+
+    possibleSuggestions = _licensePlates;
+
+    for (String str in possibleSuggestions) {
+      if (str.toLowerCase().contains(pattern.toLowerCase())) {
+        suggestions.add(str);
+      }
+    }
+
+    for (int i = 0; i < vehicles.length; i++) {
+      suggestions.add(vehicles[i].licensePlate);
+    }
+
+    suggestions = suggestions.toSet().toList();
+    return suggestions;
   }
 }

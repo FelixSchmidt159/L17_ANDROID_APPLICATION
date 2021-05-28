@@ -51,12 +51,7 @@ class _TourScreenState extends State<TourScreen> {
   bool _initializeVehicles = true;
   bool _initializeSuggestions = true;
   String _selectedDriver;
-  Stream<QuerySnapshot> reference;
-  StreamSubscription<QuerySnapshot> streamRef;
-  Stream<QuerySnapshot> referenceVehicles;
-  StreamSubscription<QuerySnapshot> streamRefVehicles;
   List<Vehicle> vehicles = [];
-  List<DropdownMenuItem<String>> vehicleDropdown = [];
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -81,8 +76,6 @@ class _TourScreenState extends State<TourScreen> {
     _mileageBegin.dispose();
     _mileageEnd.dispose();
     _distance.dispose();
-    if (streamRef != null) streamRef.cancel();
-    if (streamRefVehicles != null) streamRefVehicles.cancel();
 
     super.dispose();
   }
@@ -112,22 +105,21 @@ class _TourScreenState extends State<TourScreen> {
       _mileageBegin.text = tourObject.tour.mileageBegin == 0
           ? ""
           : tourObject.tour.mileageBegin.toString();
-      _initializeArguments = false;
       _distance.text = tourObject.tour.distance.toString();
-      print(tourObject.tour.licensePlate);
+      _initializeArguments = false;
     }
 
     if (_selectedDriver != null && _initializeSuggestions) {
-      reference = FirebaseFirestore.instance
+      FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
-          .snapshots();
-      streamRef = reference.listen(
-        (event) {
-          final toursDocs = event.docs;
+          .get()
+          .then(
+        (value) {
+          final toursDocs = value.docs;
           if (toursDocs.isNotEmpty) {
             for (int i = 0; i < toursDocs.length; i++) {
               if (toursDocs[i]['licensePlate'] != "")
@@ -155,32 +147,31 @@ class _TourScreenState extends State<TourScreen> {
                 });
               }
             }
+            _initializeSuggestions = false;
           }
-          _initializeSuggestions = false;
-          setState(() {});
         },
       );
     }
     if (_initializeVehicles) {
-      referenceVehicles = FirebaseFirestore.instance
+      FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('vehicles')
-          .snapshots();
-      streamRefVehicles = referenceVehicles.listen((event) {
-        vehicleDropdown = [];
+          .get()
+          .then((value) {
         vehicles = [];
-        final toursDocs = event.docs;
-        for (int i = 0; i < toursDocs.length; i++) {
-          // _licensePlates.add(toursDocs[i]['licensePlate']);
-          vehicles.add(Vehicle(toursDocs[i]['name'],
-              toursDocs[i]['licensePlate'], toursDocs[i].id));
+        final toursDocs = value.docs;
+        if (toursDocs.isNotEmpty) {
+          for (int i = 0; i < toursDocs.length; i++) {
+            vehicles.add(Vehicle(toursDocs[i]['name'],
+                toursDocs[i]['licensePlate'], toursDocs[i].id));
+          }
+          if (mounted) {
+            setState(() {
+              _initializeVehicles = false;
+            });
+          }
         }
-        // _licensePlates = _licensePlates.toSet().toList();
-        // print(_licensePlates.length);
-
-        _initializeVehicles = false;
-        setState(() {});
       });
     }
 
@@ -278,7 +269,7 @@ class _TourScreenState extends State<TourScreen> {
     }
     if (lifeSearchType == LifeSearch.licensePlates) {
       for (int i = 0; i < vehicles.length; i++) {
-        suggestions.add(vehicles[i].name + ', ' + vehicles[i].licensePlate);
+        suggestions.add(vehicles[i].licensePlate);
       }
     }
     suggestions = suggestions.toSet().toList();
@@ -347,7 +338,6 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Startort'),
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerTourBegin,
-                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
@@ -444,7 +434,6 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Zielort'),
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerTourEnd,
-                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
@@ -539,7 +528,11 @@ class _TourScreenState extends State<TourScreen> {
                   ]),
                   IgnorePointer(
                     child: TextFormField(
-                      decoration: InputDecoration(labelText: 'Distanz'),
+                      decoration: InputDecoration(
+                        labelText: 'Distanz',
+                        // fillColor: Colors.grey.shade300,
+                        // filled: true,
+                      ),
                       keyboardType: TextInputType.number,
                       controller: _distance,
                       onSaved: (value) {
@@ -562,7 +555,6 @@ class _TourScreenState extends State<TourScreen> {
                       decoration: InputDecoration(labelText: 'Kennzeichen'),
                       keyboardType: TextInputType.text,
                       controller: _typeAheadControllerLicensePlate,
-                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
@@ -676,7 +668,6 @@ class _TourScreenState extends State<TourScreen> {
                     textFieldConfiguration: TextFieldConfiguration(
                       decoration: InputDecoration(labelText: 'Begleiter'),
                       controller: _typeAheadControllerAttendant,
-                      autofocus: true,
                     ),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();

@@ -29,7 +29,9 @@ class _VehicleScreenState extends State<VehicleScreen> {
       appBar: appBar,
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection('/users/' + currentUser.uid + '/vehicles')
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('vehicles')
             .snapshots(),
         builder: (ctx, toursSnapshot) {
           if (toursSnapshot.connectionState == ConnectionState.waiting) {
