@@ -32,6 +32,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
   final TextEditingController _textFieldController = TextEditingController();
   final TextEditingController _typeAheadControllerLicensePlate =
       TextEditingController();
+  bool initTours = true;
+  bool initVehicles = true;
   String _selectedDriver;
   List<Vehicle> vehicles = [];
   List<String> _licensePlates = [];
@@ -39,9 +41,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   void didChangeDependencies() {
-    lastMileageMap = Map();
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-    if (_selectedDriver != null) {
+    if (_selectedDriver != null && initTours) {
       _licensePlates = [];
       FirebaseFirestore.instance
           .collection('users')
@@ -62,36 +63,52 @@ class _OverviewScreenState extends State<OverviewScreen> {
             }
             if (i == 0) {
               var dist = lastMileageMap[toursDocs[i]['licensePlate']];
-              _textFieldController.text = dist.toString();
-              _typeAheadControllerLicensePlate.text =
-                  toursDocs[i]['licensePlate'];
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _textFieldController.text = dist.toString();
+                _typeAheadControllerLicensePlate.text =
+                    toursDocs[i]['licensePlate'];
+              });
             }
           }
-          setState(() {});
+          if (mounted) setState(() {});
         }
+        initTours = false;
+      });
+    }
+    if (initVehicles) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('vehicles')
+          .get()
+          .then((value) {
+        vehicles = [];
+        var toursDocs = value.docs;
+        if (toursDocs.isNotEmpty) {
+          for (int i = 0; i < toursDocs.length; i++) {
+            vehicles.add(Vehicle(toursDocs[i]['name'],
+                toursDocs[i]['licensePlate'], toursDocs[i].id));
+          }
+          if (_typeAheadControllerLicensePlate.text == null ||
+              _typeAheadControllerLicensePlate.text.isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _typeAheadControllerLicensePlate.text = vehicles[0].licensePlate;
+            });
+          }
+          if (mounted) setState(() {});
+        }
+        initVehicles = false;
       });
     }
 
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .collection('vehicles')
-        .get()
-        .then((value) {
-      vehicles = [];
-      var toursDocs = value.docs;
-      if (toursDocs.isNotEmpty) {
-        for (int i = 0; i < toursDocs.length; i++) {
-          vehicles.add(Vehicle(toursDocs[i]['name'],
-              toursDocs[i]['licensePlate'], toursDocs[i].id));
-        }
-        if (_typeAheadControllerLicensePlate.text == null ||
-            _typeAheadControllerLicensePlate.text.isEmpty) {
-          _typeAheadControllerLicensePlate.text = vehicles[0].licensePlate;
-        }
-        setState(() {});
+    if (_typeAheadControllerLicensePlate.text.isNotEmpty) {
+      if (lastMileageMap[_typeAheadControllerLicensePlate.text] != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _textFieldController.text =
+              lastMileageMap[_typeAheadControllerLicensePlate.text].toString();
+        });
       }
-    });
+    }
 
     super.didChangeDependencies();
   }
@@ -108,39 +125,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
     final appBar = AppBar(
       title: const Text('Fahrtenbuch'),
       centerTitle: true,
-      actions: [
-        DropdownButton(
-          underline: Container(),
-          icon: Icon(
-            Icons.more_vert,
-            color: Theme.of(context).primaryIconTheme.color,
-          ),
-          items: [
-            DropdownMenuItem(
-              child: Container(
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.exit_to_app,
-                      color: Colors.black,
-                    ),
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
-              value: 'logout',
-            )
-          ],
-          onChanged: (itemIdentifier) {
-            if (itemIdentifier == 'logout') {
-              FirebaseAuth.instance.signOut();
-            }
-          },
-        )
-      ],
     );
     final bottomBar = BottomNavigationBar(
       items: <BottomNavigationBarItem>[
@@ -214,15 +198,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     children: [
                       TypeAheadFormField(
                         textFieldConfiguration: TextFieldConfiguration(
-                            decoration:
-                                InputDecoration(labelText: 'Kennzeichen'),
-                            keyboardType: TextInputType.text,
-                            controller: _typeAheadControllerLicensePlate,
-                            onChanged: (value) {
-                              setState(() {
-                                _typeAheadControllerLicensePlate.text = value;
-                              });
-                            }),
+                          decoration: InputDecoration(labelText: 'Kennzeichen'),
+                          keyboardType: TextInputType.text,
+                          controller: _typeAheadControllerLicensePlate,
+                        ),
                         noItemsFoundBuilder: (context) {
                           return SizedBox();
                         },

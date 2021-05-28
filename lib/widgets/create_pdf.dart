@@ -70,30 +70,28 @@ class _CreatePdfState extends State<CreatePdf> {
               daytime: toursDocs[i]['daytime'],
             ));
           }
-
-          data = generatePdfData(tours);
-          generateDocument(PdfPageFormat.a4, data).then((value) {
-            if (mounted) {
-              setState(() {
-                pdfFile = value;
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('vehicles')
+              .get()
+              .then((value) {
+            var docs = value.docs;
+            if (docs.length > 0) {
+              for (int i = 0; i < docs.length; i++) {
+                vehicles.add(Vehicle(
+                    docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
+              }
+              data = generatePdfData(tours);
+              generateDocument(PdfPageFormat.a4, data).then((value) {
+                if (mounted) {
+                  setState(() {
+                    pdfFile = value;
+                  });
+                }
               });
             }
           });
-        }
-      });
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .collection('vehicles')
-          .get()
-          .then((value) {
-        var docs = value.docs;
-        if (docs.length > 0) {
-          for (int i = 0; i < docs.length; i++) {
-            vehicles.add(
-                Vehicle(docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
-          }
-          setState(() {});
         }
       });
     }
@@ -164,6 +162,7 @@ class _CreatePdfState extends State<CreatePdf> {
           '\n' +
           vehicles[i].licensePlate);
     }
+    print(vehicles.length);
     header.add('Kfz \n Kennzeichen');
     header.add('Tageszeit');
     header.add('Fahrstrecke / -ziel');

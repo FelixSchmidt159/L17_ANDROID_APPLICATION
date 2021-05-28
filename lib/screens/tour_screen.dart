@@ -142,8 +142,11 @@ class _TourScreenState extends State<TourScreen> {
             if (tourObject.id == "") {
               if (mounted) {
                 setState(() {
+                  if (tourObject.tour.licensePlate == "") {
+                    _typeAheadControllerLicensePlate.text =
+                        suggestedLicensePlate;
+                  }
                   _typeAheadControllerAttendant.text = suggestedAttendant;
-                  _typeAheadControllerLicensePlate.text = suggestedLicensePlate;
                 });
               }
             }
