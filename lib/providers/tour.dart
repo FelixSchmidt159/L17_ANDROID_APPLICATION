@@ -1,5 +1,3 @@
-// import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 
 class Tour with ChangeNotifier {
@@ -13,6 +11,7 @@ class Tour with ChangeNotifier {
   final String roadCondition;
   final String attendant;
   final String daytime;
+  final String weather;
 
   Tour(
       {this.timestamp,
@@ -24,30 +23,6 @@ class Tour with ChangeNotifier {
       this.tourEnd,
       this.roadCondition,
       this.attendant,
-      this.daytime});
-
-  // void _setFavValue(bool newValue) {
-  //   isFavorite = newValue;
-  //   notifyListeners();
-  // }
-
-  // Future<void> toggleFavoriteStatus() async {
-  //   final oldStatus = isFavorite;
-  //   isFavorite = !isFavorite;
-  //   notifyListeners();
-  //   final url = 'https://flutter-update.firebaseio.com/products/$id.json';
-  //   try {
-  //     final response = await http.patch(
-  //       url,
-  //       body: json.encode({
-  //         'isFavorite': isFavorite,
-  //       }),
-  //     );
-  //     if (response.statusCode >= 400) {
-  //       _setFavValue(oldStatus);
-  //     }
-  //   } catch (error) {
-  //     _setFavValue(oldStatus);
-  //   }
-  // }
+      this.daytime,
+      this.weather});
 }

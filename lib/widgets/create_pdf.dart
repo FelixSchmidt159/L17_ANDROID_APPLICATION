@@ -68,6 +68,7 @@ class _CreatePdfState extends State<CreatePdf> {
               tourBegin: toursDocs[i]['tourBegin'],
               tourEnd: toursDocs[i]['tourEnd'],
               daytime: toursDocs[i]['daytime'],
+              weather: toursDocs[i]['weather'],
             ));
           }
           FirebaseFirestore.instance
@@ -162,11 +163,10 @@ class _CreatePdfState extends State<CreatePdf> {
           '\n' +
           vehicles[i].licensePlate);
     }
-    print(vehicles.length);
     header.add('Kfz \n Kennzeichen');
     header.add('Tageszeit');
     header.add('Fahrstrecke / -ziel');
-    header.add('Straßenzustand');
+    header.add('Straßenzustand, \n Witterung');
     header.add('Unterschrift \n Begleiter');
     header.add('Unterschrift \n Fahrer');
     List<List<String>> pdfData = [header];
@@ -191,7 +191,9 @@ class _CreatePdfState extends State<CreatePdf> {
             for (int j = w + 1; j < items.length; j++) {
               if (items[j].licensePlate == items[w].licensePlate) {
                 var diff = items[j].mileageBegin - items[w].mileageEnd;
-                row.add(diff < 0 ? '' : diff.toString());
+                row.add(diff <= 0 || items[w].mileageEnd == 0
+                    ? ''
+                    : diff.toString());
                 match = true;
                 break;
               }
@@ -207,7 +209,7 @@ class _CreatePdfState extends State<CreatePdf> {
       row.add(items[w].licensePlate);
       row.add(items[w].daytime);
       row.add(items[w].tourBegin + ' - ' + items[w].tourEnd);
-      row.add(items[w].roadCondition);
+      row.add(items[w].roadCondition + ', ' + items[w].weather);
       row.add('');
       row.add('');
       pdfData.add(row);

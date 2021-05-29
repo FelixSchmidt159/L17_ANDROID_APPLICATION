@@ -61,13 +61,15 @@ class _VehicleScreenState extends State<VehicleScreen> {
                     itemCount: toursDocs.length,
                   ),
                 ),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed(
-                          VehicleDetailScreen.routeName,
-                          arguments: Vehicle("", "", ""));
-                    },
-                    child: Text('Fahrzeug hinzufügen'))
+                toursDocs.length < 3
+                    ? ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(
+                              VehicleDetailScreen.routeName,
+                              arguments: Vehicle("", "", ""));
+                        },
+                        child: Text('Fahrzeug hinzufügen'))
+                    : Container()
               ],
             ),
           );

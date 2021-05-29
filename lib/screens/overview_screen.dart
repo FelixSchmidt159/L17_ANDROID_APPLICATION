@@ -38,6 +38,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   List<Vehicle> vehicles = [];
   List<String> _licensePlates = [];
   Map lastMileageMap = Map();
+  StreamSubscription<QuerySnapshot> vehicleListener;
 
   @override
   void didChangeDependencies() {
@@ -56,18 +57,22 @@ class _OverviewScreenState extends State<OverviewScreen> {
         var toursDocs = value.docs;
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < toursDocs.length; i++) {
-            _licensePlates.add(toursDocs[i]['licensePlate']);
-            if (lastMileageMap[toursDocs[i]['licensePlate']] == null) {
-              lastMileageMap[toursDocs[i]['licensePlate']] =
-                  toursDocs[i]['mileageEnd'];
+            if (toursDocs[i]['licensePlate'] != "") {
+              _licensePlates.add(toursDocs[i]['licensePlate']);
+              if (lastMileageMap[toursDocs[i]['licensePlate']] == null) {
+                lastMileageMap[toursDocs[i]['licensePlate']] =
+                    toursDocs[i]['mileageEnd'];
+              }
             }
             if (i == 0) {
-              var dist = lastMileageMap[toursDocs[i]['licensePlate']];
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _textFieldController.text = dist.toString();
-                _typeAheadControllerLicensePlate.text =
-                    toursDocs[i]['licensePlate'];
-              });
+              if (toursDocs[i]['licensePlate'] != "") {
+                var dist = lastMileageMap[toursDocs[i]['licensePlate']];
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _textFieldController.text = dist.toString();
+                  _typeAheadControllerLicensePlate.text =
+                      toursDocs[i]['licensePlate'];
+                });
+              }
             }
           }
           if (mounted) setState(() {});
@@ -76,14 +81,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
       });
     }
     if (initVehicles) {
-      FirebaseFirestore.instance
+      vehicleListener = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('vehicles')
-          .get()
-          .then((value) {
+          .snapshots()
+          .listen((event) {
         vehicles = [];
-        var toursDocs = value.docs;
+        var toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < toursDocs.length; i++) {
             vehicles.add(Vehicle(toursDocs[i]['name'],
@@ -107,6 +112,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
           _textFieldController.text =
               lastMileageMap[_typeAheadControllerLicensePlate.text].toString();
         });
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _textFieldController.text = '';
+        });
       }
     }
 
@@ -115,6 +124,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   void dispose() {
+    if (vehicleListener != null) vehicleListener.cancel();
     _textFieldController.dispose();
     _typeAheadControllerLicensePlate.dispose();
     super.dispose();
@@ -283,7 +293,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                             tourBegin: "",
                             tourEnd: "",
                             roadCondition: "",
-                            daytime: DateFormat.Hm('de_DE').format(daytime)),
+                            daytime: DateFormat.Hm('de_DE').format(daytime),
+                            weather: ""),
                         ""),
                   );
                 },
@@ -318,7 +329,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     roadCondition: "",
                     daytime: DateFormat.Hm('de_DE').format(
                       daytime,
-                    )),
+                    ),
+                    weather: ""),
                 ""),
           );
         });

@@ -47,7 +47,9 @@ class _GoalScreenState extends State<GoalScreen> {
         for (int i = 0; i < docs.length; i++) {
           distLastSevenDays += docs[i]['distance'];
         }
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
       });
       FirebaseFirestore.instance
           .collection('users')
@@ -67,7 +69,9 @@ class _GoalScreenState extends State<GoalScreen> {
                 docs[i]['timestamp'].microsecondsSinceEpoch);
           }
         }
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
       });
 
       FirebaseFirestore.instance
@@ -86,11 +90,12 @@ class _GoalScreenState extends State<GoalScreen> {
         for (int i = 0; i < docs.length; i++) {
           distLastThirtyDays += docs[i]['distance'];
         }
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
       });
     }
 
-    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
   }
 
@@ -98,7 +103,7 @@ class _GoalScreenState extends State<GoalScreen> {
   Widget build(BuildContext context) {
     width = MediaQuery.of(context).size.width;
     var appBar = AppBar(
-      title: Text('Statistik'),
+      title: Text('Statistik ${DateTime.now().year}'),
     );
     var height = MediaQuery.of(context).size.height -
         MediaQuery.of(context).padding.top -

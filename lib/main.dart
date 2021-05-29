@@ -44,6 +44,13 @@ class MyApp extends StatelessWidget {
               accentColor: mc.shade500,
               iconTheme: IconThemeData(color: mc),
               accentColorBrightness: Brightness.dark,
+              textTheme: TextTheme(
+                headline1: TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                  color: mc,
+                ),
+              ),
               buttonTheme: ButtonTheme.of(context).copyWith(
                 buttonColor: mc,
                 textTheme: ButtonTextTheme.primary,

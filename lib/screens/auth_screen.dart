@@ -39,7 +39,7 @@ class _AuthScreenState extends State<AuthScreen> {
         });
       }
     } on PlatformException catch (err) {
-      var message = 'An error occured, please check your credentials!';
+      var message = 'Es ist ein Fehler aufgetreten!';
       setState(() {
         _isLoading = false;
       });
@@ -48,7 +48,7 @@ class _AuthScreenState extends State<AuthScreen> {
         message = err.message;
       }
     } catch (err) {
-      var message = 'An error occured, please check your credentials!';
+      var message = 'Es ist ein Fehler aufgetreten!';
       if (err.message != null) {
         message = err.message;
       }

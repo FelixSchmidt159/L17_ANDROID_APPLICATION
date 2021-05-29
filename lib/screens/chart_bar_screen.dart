@@ -25,7 +25,6 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
   @override
   void dispose() {
     _distanceController.dispose();
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -55,27 +54,28 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
         });
       }
       _init = false;
-    }
-    if (_selectedDriver != null) {
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(_currentUser.uid)
-          .collection('drivers')
-          .doc(_selectedDriver)
-          .collection('goals')
-          .get()
-          .then((value) {
-        var docs = value.docs;
-        if (mounted) {
-          setState(() {
-            if (value.docs.length >= 1) {
-              _distanceController.text = docs[0]['goal'].toString();
-              _distanceGoal = docs[0]['goal'];
-              _distanceGoalId = docs[0].id;
-            }
-          });
-        }
-      });
+
+      if (_selectedDriver != null) {
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUser.uid)
+            .collection('drivers')
+            .doc(_selectedDriver)
+            .collection('goals')
+            .get()
+            .then((value) {
+          var docs = value.docs;
+          if (mounted) {
+            setState(() {
+              if (value.docs.length >= 1) {
+                _distanceController.text = docs[0]['goal'].toString();
+                _distanceGoal = docs[0]['goal'];
+                _distanceGoalId = docs[0].id;
+              }
+            });
+          }
+        });
+      }
     }
 
     super.didChangeDependencies();
@@ -147,7 +147,14 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
                 // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 55, 8, 8),
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      'Setzen Sie sich ein Ziel für das Jahr ${DateTime.now().year}',
+                      style: Theme.of(context).textTheme.headline1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 25, 8, 8),
                     child: ChartBar(_overallDistance, _distanceGoal,
                         height * 0.1 * 0.5, width * 0.9),
                   ),
@@ -160,7 +167,7 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
                         validator: (value) {
                           if (num.tryParse(value) == null)
                             return 'Geben Sie das Ziel als Ganzzahl an.';
-                          if (int.parse(value) >= 100000)
+                          if (int.parse(value) > 64000)
                             return 'Sie können nur Ziele bis 100000 km definieren.';
                           if (int.parse(value) < 0)
                             return 'Sie können nur positive Zahlen als Ziel definieren.';

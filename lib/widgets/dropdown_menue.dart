@@ -28,7 +28,9 @@ class _DropDownMenueState extends State<DropDownMenue> {
 
     return StreamBuilder(
       stream: FirebaseFirestore.instance
-          .collection('/users/' + currentUser.uid + '/drivers')
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('drivers')
           .snapshots(),
       builder: (ctx, toursSnapshot) {
         if (toursSnapshot.connectionState == ConnectionState.waiting) {

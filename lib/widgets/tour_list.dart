@@ -80,7 +80,6 @@ class _TourListState extends State<TourList> {
     if (_streamSubscriptionTours != null) _streamSubscriptionTours.cancel();
     if (_streamSubscriptionGoals != null) _streamSubscriptionGoals.cancel();
 
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -171,7 +170,8 @@ class _TourListState extends State<TourList> {
                                           ['roadCondition'],
                                       tourBegin: toursDocs[index]['tourBegin'],
                                       tourEnd: toursDocs[index]['tourEnd'],
-                                      daytime: toursDocs[index]['daytime']),
+                                      daytime: toursDocs[index]['daytime'],
+                                      weather: toursDocs[index]['weather']),
                                   toursDocs[index].id);
                             },
                             itemCount: toursDocs.length,

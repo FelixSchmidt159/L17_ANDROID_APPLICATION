@@ -8,17 +8,6 @@ import 'package:l17/screens/vehicle_screen.dart';
 class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appBar = AppBar(
-      // title: Text('Hallo!'),
-      automaticallyImplyLeading: false,
-    );
-    var height = MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top -
-        appBar.preferredSize.height -
-        MediaQuery.of(context).viewInsets.bottom;
-    if (MediaQuery.of(context).viewInsets.bottom == 0) {
-      height -= kBottomNavigationBarHeight;
-    }
     return Drawer(
       child: Column(
         children: <Widget>[
@@ -71,7 +60,7 @@ class AppDrawer extends StatelessWidget {
           Divider(),
           ListTile(
             leading: Icon(Icons.exit_to_app),
-            title: Text('Log out'),
+            title: Text('Abmelden'),
             onTap: () {
               FirebaseAuth.instance.signOut();
             },

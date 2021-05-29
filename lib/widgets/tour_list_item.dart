@@ -22,6 +22,22 @@ class TourListItem extends StatefulWidget {
 class _TourListItemState extends State<TourListItem> {
   String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
+
+  bool checkMissingFields() {
+    bool missingFields = false;
+    if (widget.tour.attendant == "") missingFields = true;
+    if (widget.tour.daytime == "") missingFields = true;
+    if (widget.tour.distance == 0) missingFields = true;
+    if (widget.tour.licensePlate == "") missingFields = true;
+    if (widget.tour.mileageBegin == 0) missingFields = true;
+    if (widget.tour.mileageEnd == 0) missingFields = true;
+    if (widget.tour.roadCondition == "") missingFields = true;
+    if (widget.tour.tourBegin == "") missingFields = true;
+    if (widget.tour.tourEnd == "") missingFields = true;
+    if (widget.tour.weather == "") missingFields = true;
+    return missingFields;
+  }
+
   @override
   Widget build(BuildContext context) {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
@@ -53,25 +69,42 @@ class _TourListItemState extends State<TourListItem> {
           subtitle: Text(
             DateFormat.yMMMd('de_DE').format(widget.tour.timestamp),
           ),
-          trailing: IconButton(
-            icon: Icon(
-              Icons.delete,
-              size: 25,
+          trailing: FittedBox(
+            child: Row(
+              children: [
+                checkMissingFields()
+                    ? Icon(
+                        Icons.check_box_outline_blank,
+                        size: 25,
+                        color: Theme.of(context).errorColor,
+                      )
+                    : Icon(
+                        Icons.check_box,
+                        size: 25,
+                        color: Colors.green,
+                      ),
+                IconButton(
+                  icon: Icon(
+                    Icons.delete,
+                    size: 25,
+                  ),
+                  color: Theme.of(context).errorColor,
+                  onPressed: () {
+                    if (_selectedDriver != null) {
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(currentUser.uid)
+                          .collection('drivers')
+                          .doc(_selectedDriver)
+                          .collection('tours')
+                          .doc(widget.id)
+                          .delete();
+                      setState(() {});
+                    }
+                  },
+                ),
+              ],
             ),
-            color: Theme.of(context).errorColor,
-            onPressed: () {
-              if (_selectedDriver != null) {
-                FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(currentUser.uid)
-                    .collection('drivers')
-                    .doc(_selectedDriver)
-                    .collection('tours')
-                    .doc(widget.id)
-                    .delete();
-                setState(() {});
-              }
-            },
           ),
         ),
       ),
