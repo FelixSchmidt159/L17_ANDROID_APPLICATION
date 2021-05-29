@@ -62,27 +62,46 @@ class _TourListItemState extends State<TourListItem> {
               ),
             ),
           ),
-          title: Text(
-            widget.tour.tourBegin + " - " + widget.tour.tourEnd,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+          title: checkMissingFields()
+              ? Row(
+                  children: [
+                    Text(
+                      'Daten fehlen  ',
+                      style: TextStyle(
+                          fontSize: 18,
+                          // fontWeight: FontWeight.bold,
+                          color: Theme.of(context).errorColor),
+                    ),
+                    CircleAvatar(
+                      backgroundColor: Theme.of(context).errorColor,
+                      radius: 10,
+                      child: Padding(
+                        padding: EdgeInsets.all(2),
+                        child: FittedBox(
+                          child: Text(
+                            '!',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                )
+              : Text(
+                  widget.tour.tourBegin + " - " + widget.tour.tourEnd,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
           subtitle: Text(
             DateFormat.yMMMd('de_DE').format(widget.tour.timestamp),
           ),
           trailing: FittedBox(
             child: Row(
               children: [
-                checkMissingFields()
-                    ? Icon(
-                        Icons.check_box_outline_blank,
-                        size: 25,
-                        color: Theme.of(context).errorColor,
-                      )
-                    : Icon(
-                        Icons.check_box,
-                        size: 25,
-                        color: Colors.green,
-                      ),
                 IconButton(
                   icon: Icon(
                     Icons.delete,

@@ -39,8 +39,10 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
             onPressed: () async {
               if (_selectedDriver == widget.applicant.id) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Provider.of<Applicants>(context, listen: false)
-                      .selectedDriverId = null;
+                  if (mounted) {
+                    Provider.of<Applicants>(context, listen: false)
+                        .selectedDriverId = null;
+                  }
                 });
               }
               var instance = FirebaseFirestore.instance

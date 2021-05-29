@@ -51,6 +51,12 @@ class _TourListState extends State<TourList> {
           if (mounted) {
             setState(() {});
           }
+        } else {
+          if (mounted) {
+            setState(() {
+              _overallDistance = 0;
+            });
+          }
         }
       });
 

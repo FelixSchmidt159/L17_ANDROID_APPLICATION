@@ -31,12 +31,10 @@ class _CreatePdfState extends State<CreatePdf> {
   File pdfFile;
   String _selectedDriver;
   final currentUser = FirebaseAuth.instance.currentUser;
-  PdfViewerController _pdfViewerController;
   List<Vehicle> vehicles = [];
 
   @override
   void initState() {
-    _pdfViewerController = PdfViewerController();
     super.initState();
   }
 
@@ -121,7 +119,6 @@ class _CreatePdfState extends State<CreatePdf> {
                   child: RotatedBox(
                     child: SfPdfViewer.file(
                       pdfFile,
-                      controller: _pdfViewerController,
                     ),
                     quarterTurns: 3,
                   ),

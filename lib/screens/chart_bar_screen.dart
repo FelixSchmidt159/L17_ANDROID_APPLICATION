@@ -147,14 +147,24 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
                 // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.fromLTRB(10, 40, 10, 5),
                     child: Text(
-                      'Setzen Sie sich ein Ziel für das Jahr ${DateTime.now().year}',
+                      'Zielkilometerstand festlegen',
                       style: Theme.of(context).textTheme.headline1,
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 25, 8, 8),
+                    padding: const EdgeInsets.fromLTRB(100, 5, 100, 20),
+                    child: Text(
+                      'Setzen Sie den Kilometerstand fest, den Sie erreichen möchten',
+                      style: TextStyle(
+                        color: Colors.grey,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 15, 8, 8),
                     child: ChartBar(_overallDistance, _distanceGoal,
                         height * 0.1 * 0.5, width * 0.9),
                   ),

@@ -38,9 +38,6 @@ class _DropDownMenueState extends State<DropDownMenue> {
             alignment: Alignment.center,
             width: widget.width,
             height: widget.height,
-            // child: Center(
-            //   child: CircularProgressIndicator(),
-            // ),
           );
         }
         _items = [];
