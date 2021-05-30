@@ -140,13 +140,13 @@ class _GoalScreenState extends State<GoalScreen> {
                                 children: [
                                   SizedBox(
                                     width: width * 0.44 * 0.8,
-                                    height: height * 0.15 * 0.4,
+                                    height: height * 0.15 * 0.35,
                                   ),
                                   Icon(Icons.directions_car)
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 8),
+                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 2),
                                 child: Text(
                                   'Letzten 7 Tage',
                                   style: TextStyle(
@@ -155,7 +155,8 @@ class _GoalScreenState extends State<GoalScreen> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                                padding:
+                                    const EdgeInsets.fromLTRB(14, 0, 0, 10),
                                 child: Text(
                                   distLastSevenDays.toString() + ' km',
                                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -182,7 +183,7 @@ class _GoalScreenState extends State<GoalScreen> {
                                 children: [
                                   SizedBox(
                                     width: width * 0.44 * 0.8,
-                                    height: height * 0.15 * 0.4,
+                                    height: height * 0.15 * 0.35,
                                   ),
                                   Icon(
                                     Icons.directions_car,
@@ -190,7 +191,7 @@ class _GoalScreenState extends State<GoalScreen> {
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 8),
+                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 2),
                                 child: Text(
                                   'Letzten 30 Tage',
                                   style: TextStyle(
@@ -199,7 +200,7 @@ class _GoalScreenState extends State<GoalScreen> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                                padding: const EdgeInsets.fromLTRB(14, 0, 0, 2),
                                 child: Text(
                                   distLastThirtyDays.toString() + ' km',
                                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -228,7 +229,7 @@ class _GoalScreenState extends State<GoalScreen> {
                             children: [
                               SizedBox(
                                 width: width * 0.83,
-                                height: height * 0.15 * 0.4,
+                                height: height * 0.15 * 0.35,
                               ),
                               Icon(
                                 Icons.directions_car,
@@ -236,7 +237,7 @@ class _GoalScreenState extends State<GoalScreen> {
                             ],
                           ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 0, 0, 8),
+                            padding: const EdgeInsets.fromLTRB(14, 0, 0, 2),
                             child: Text(
                               'Am ${DateFormat.Md('de_DE').format(day)} bist du am meisten gefahren',
                               style: TextStyle(
@@ -245,7 +246,7 @@ class _GoalScreenState extends State<GoalScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                            padding: const EdgeInsets.fromLTRB(14, 0, 0, 10),
                             child: Text(
                               maxDistance.toString() + ' km',
                               style: TextStyle(fontWeight: FontWeight.bold),

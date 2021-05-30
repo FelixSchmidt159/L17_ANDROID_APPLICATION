@@ -18,6 +18,71 @@ class ApplicantListItem extends StatefulWidget {
 class _ApplicantListItemState extends State<ApplicantListItem> {
   final currentUser = FirebaseAuth.instance.currentUser;
   String _selectedDriver;
+
+  void _showDialog() {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Fahrer löschen"),
+          content: new Text("Wollen Sie wirklich diesen Fahrer löschen?"),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: Colors.green, primary: Colors.white),
+              child: Text('Ja'),
+              onPressed: () async {
+                Navigator.pop(context);
+                if (_selectedDriver == widget.applicant.id) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      Provider.of<Applicants>(context, listen: false)
+                          .selectedDriverId = null;
+                    }
+                  });
+                }
+                var instance = FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('drivers')
+                    .doc(widget.applicant.id);
+
+                await instance.collection('tours').get().then((value) {
+                  final toursDocs = value.docs;
+                  for (int i = 0; i < toursDocs.length; i++) {
+                    instance.collection('tours').doc(toursDocs[i].id).delete();
+                  }
+                  instance.collection('goals').get().then((value) {
+                    final toursDocs = value.docs;
+                    for (int i = 0; i < toursDocs.length; i++) {
+                      instance
+                          .collection('goals')
+                          .doc(toursDocs[i].id)
+                          .delete();
+                    }
+                  });
+                  instance.delete();
+                });
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: Colors.red, primary: Colors.white),
+              child: Text('Nein'),
+              onPressed: () {
+                setState(() {
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
@@ -37,33 +102,7 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
             ),
             color: Theme.of(context).errorColor,
             onPressed: () async {
-              if (_selectedDriver == widget.applicant.id) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    Provider.of<Applicants>(context, listen: false)
-                        .selectedDriverId = null;
-                  }
-                });
-              }
-              var instance = FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(currentUser.uid)
-                  .collection('drivers')
-                  .doc(widget.applicant.id);
-
-              await instance.collection('tours').get().then((value) {
-                final toursDocs = value.docs;
-                for (int i = 0; i < toursDocs.length; i++) {
-                  instance.collection('tours').doc(toursDocs[i].id).delete();
-                }
-                instance.collection('goals').get().then((value) {
-                  final toursDocs = value.docs;
-                  for (int i = 0; i < toursDocs.length; i++) {
-                    instance.collection('goals').doc(toursDocs[i].id).delete();
-                  }
-                });
-                instance.delete();
-              });
+              _showDialog();
             },
           ),
         ),

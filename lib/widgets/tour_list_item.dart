@@ -38,6 +38,49 @@ class _TourListItemState extends State<TourListItem> {
     return missingFields;
   }
 
+  void _showDialog() {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Fahrt löschen"),
+          content: new Text("Wollen Sie wirklich diese Fahrt löschen?"),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: Colors.green, primary: Colors.white),
+              child: Text('Ja'),
+              onPressed: () {
+                Navigator.pop(context);
+                FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('drivers')
+                    .doc(_selectedDriver)
+                    .collection('tours')
+                    .doc(widget.id)
+                    .delete();
+                setState(() {});
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: Colors.red, primary: Colors.white),
+              child: Text('Nein'),
+              onPressed: () {
+                setState(() {
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
@@ -110,15 +153,7 @@ class _TourListItemState extends State<TourListItem> {
                   color: Theme.of(context).errorColor,
                   onPressed: () {
                     if (_selectedDriver != null) {
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(currentUser.uid)
-                          .collection('drivers')
-                          .doc(_selectedDriver)
-                          .collection('tours')
-                          .doc(widget.id)
-                          .delete();
-                      setState(() {});
+                      _showDialog();
                     }
                   },
                 ),

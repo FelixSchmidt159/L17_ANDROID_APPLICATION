@@ -16,6 +16,46 @@ class VehicleListItem extends StatefulWidget {
 class _VehicleListItemState extends State<VehicleListItem> {
   final _currentUser = FirebaseAuth.instance.currentUser;
 
+  void _showDialog() {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Fahrzeug löschen"),
+          content: new Text("Wollen Sie wirklich dieses Fahrzeug löschen?"),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: Colors.green, primary: Colors.white),
+              child: Text('Ja'),
+              onPressed: () {
+                Navigator.pop(context);
+                var instance = FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(_currentUser.uid)
+                    .collection('vehicles')
+                    .doc(widget.vehicle.id);
+                instance.delete();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                  backgroundColor: Colors.red, primary: Colors.white),
+              child: Text('Nein'),
+              onPressed: () {
+                setState(() {
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -35,12 +75,7 @@ class _VehicleListItemState extends State<VehicleListItem> {
             ),
             color: Theme.of(context).errorColor,
             onPressed: () async {
-              var instance = FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(_currentUser.uid)
-                  .collection('vehicles')
-                  .doc(widget.vehicle.id);
-              instance.delete();
+              _showDialog();
             },
           ),
         ),

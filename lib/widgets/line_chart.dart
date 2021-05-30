@@ -253,8 +253,12 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         ),
       ),
       borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: Theme.of(context).accentColor, width: 1)),
+        show: true,
+        border: Border.all(color: Theme.of(context).accentColor, width: 1),
+      ),
+      lineTouchData: LineTouchData(
+        enabled: false,
+      ),
       minX: 0,
       maxX: 13,
       minY: 0,

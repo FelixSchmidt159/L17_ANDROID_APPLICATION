@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   final _form = GlobalKey<FormState>();
   Vehicle vehicle;
   bool initialize = true;
+  StreamSubscription<QuerySnapshot> vehicleListener;
+  List<Vehicle> vehicles = [];
 
   var _editedVehicle = Vehicle("", "", "");
 
@@ -23,9 +27,31 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       vehicle = ModalRoute.of(context).settings.arguments as Vehicle;
       _editedVehicle = Vehicle(vehicle.name, vehicle.licensePlate, vehicle.id);
       initialize = false;
+      vehicleListener = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('vehicles')
+          .snapshots()
+          .listen((event) {
+        var docs = event.docs;
+        if (docs.isNotEmpty) {
+          for (int i = 0; i < docs.length; i++) {
+            vehicles.add(
+                Vehicle(docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
+          }
+          setState(() {});
+        }
+      });
     }
 
     super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    if (vehicleListener != null) vehicleListener.cancel();
+    // TODO: implement dispose
+    super.dispose();
   }
 
   void _saveForm() {
@@ -78,7 +104,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               TextFormField(
                 initialValue: _editedVehicle.name,
                 validator: (value) {
-                  if (value.length >= 20) return 'Der Name ist zu lange';
+                  if (value.length > 20)
+                    return 'Der Name darf nicht länger als 20 Zeichen sein';
+                  if (value.isEmpty) return 'Geben Sie einen Namen ein';
+                  for (int i = 0; i < vehicles.length; i++) {
+                    if (value.toLowerCase() == vehicles[i].name.toLowerCase())
+                      return 'Dieser Namer existiert bereits';
+                  }
                   return null;
                 },
                 onSaved: (value) {
@@ -94,12 +126,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               TextFormField(
                 initialValue: _editedVehicle.licensePlate,
                 validator: (value) {
-                  if (value == null)
-                    return 'Geben Sie ein Kennzeichen im Format XX-XXXXX an';
-
+                  if (value.isEmpty) return 'Geben Sie das Kennzeichen ein';
                   if (value.length >= 15) return 'Das Kennzeichen ist zu lange';
-                  if (!value.contains('-'))
-                    return 'Geben Sie ein Kennzeichen im Format XX-XXXXX an';
 
                   return null;
                 },

@@ -108,18 +108,18 @@ class _OverviewScreenState extends State<OverviewScreen> {
       });
     }
 
-    if (_typeAheadControllerLicensePlate.text.isNotEmpty) {
-      if (lastMileageMap[_typeAheadControllerLicensePlate.text] != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _textFieldController.text =
-              lastMileageMap[_typeAheadControllerLicensePlate.text].toString();
-        });
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _textFieldController.text = '';
-        });
-      }
-    }
+    // if (_typeAheadControllerLicensePlate.text.isNotEmpty) {
+    //   if (lastMileageMap[_typeAheadControllerLicensePlate.text] != null) {
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {
+    //       _textFieldController.text =
+    //           lastMileageMap[_typeAheadControllerLicensePlate.text].toString();
+    //     });
+    //   } else {
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {
+    //       _textFieldController.text = '';
+    //     });
+    //   }
+    // }
 
     super.didChangeDependencies();
   }
@@ -233,6 +233,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
                         onSuggestionSelected: (suggestion) {
                           this._typeAheadControllerLicensePlate.text =
                               suggestion;
+                          if (lastMileageMap[
+                                  _typeAheadControllerLicensePlate.text] !=
+                              null)
+                            _textFieldController.text = lastMileageMap[
+                                    _typeAheadControllerLicensePlate.text]
+                                .toString();
+                          else
+                            _textFieldController.text = "";
                         },
                       ),
                       Stack(
@@ -251,7 +259,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
                               color: Colors.black,
                             ),
                             onPressed: () {
-                              Navigator.pop(context);
                               _pickImage();
                             },
                           ),
@@ -314,28 +321,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
       final croppedImage = await _cropImage(pickedImage.path);
       if (croppedImage != null) {
         textRecognizer(croppedImage).then((value) {
-          var daytime = DateTime.now();
-          Navigator.of(context).pushNamed(
-            TourScreen.routeName,
-            arguments: TourScreenArguments(
-                Tour(
-                    timestamp: daytime,
-                    mileageBegin: num.tryParse(value.text) == null
-                        ? 0
-                        : int.parse(value.text),
-                    mileageEnd: 0,
-                    attendant: "",
-                    distance: 0,
-                    licensePlate: _typeAheadControllerLicensePlate.text,
-                    tourBegin: "",
-                    tourEnd: "",
-                    roadCondition: "",
-                    daytime: DateFormat.Hm('de_DE').format(
-                      daytime,
-                    ),
-                    weather: ""),
-                ""),
-          );
+          _textFieldController.text =
+              num.tryParse(value.text) == null ? "" : value.text;
         });
       }
     }
