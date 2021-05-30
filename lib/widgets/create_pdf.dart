@@ -81,15 +81,15 @@ class _CreatePdfState extends State<CreatePdf> {
                 vehicles.add(Vehicle(
                     docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
               }
-              data = generatePdfData(tours);
-              generateDocument(PdfPageFormat.a4, data).then((value) {
-                if (mounted) {
-                  setState(() {
-                    pdfFile = value;
-                  });
-                }
-              });
             }
+            data = generatePdfData(tours);
+            generateDocument(PdfPageFormat.a4, data).then((value) {
+              if (mounted) {
+                setState(() {
+                  pdfFile = value;
+                });
+              }
+            });
           });
         }
       });

@@ -39,22 +39,24 @@ class _OverviewScreenState extends State<OverviewScreen> {
   List<String> _licensePlates = [];
   Map lastMileageMap = Map();
   StreamSubscription<QuerySnapshot> vehicleListener;
+  StreamSubscription<QuerySnapshot> licensePlateListener;
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     if (_selectedDriver != null && initTours) {
       _licensePlates = [];
-      FirebaseFirestore.instance
+      licensePlateListener = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
           .orderBy('timestamp', descending: true)
-          .get()
-          .then((value) {
-        var toursDocs = value.docs;
+          .snapshots()
+          .listen((event) {
+        var toursDocs = event.docs;
+        lastMileageMap = Map();
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < toursDocs.length; i++) {
             if (toursDocs[i]['licensePlate'] != "") {
@@ -125,6 +127,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   @override
   void dispose() {
     if (vehicleListener != null) vehicleListener.cancel();
+    if (licensePlateListener != null) licensePlateListener.cancel();
     _textFieldController.dispose();
     _typeAheadControllerLicensePlate.dispose();
     super.dispose();

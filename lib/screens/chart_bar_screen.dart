@@ -30,52 +30,50 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
 
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-    if (_init) {
-      _overallDistance = 0;
-      if (_selectedDriver != null) {
-        FirebaseFirestore.instance
-            .collection('users')
-            .doc(_currentUser.uid)
-            .collection('drivers')
-            .doc(_selectedDriver)
-            .collection('tours')
-            .get()
-            .then((value) {
-          final toursDocs = value.docs;
-          if (toursDocs.isNotEmpty) {
-            _overallDistance = 0;
-            for (int i = 0; i < toursDocs.length; i++) {
-              _overallDistance += toursDocs[i]['distance'];
-            }
-            if (mounted) {
-              setState(() {});
-            }
-          }
-        });
-      }
-      _init = false;
 
-      if (_selectedDriver != null) {
-        FirebaseFirestore.instance
-            .collection('users')
-            .doc(_currentUser.uid)
-            .collection('drivers')
-            .doc(_selectedDriver)
-            .collection('goals')
-            .get()
-            .then((value) {
-          var docs = value.docs;
-          if (mounted) {
-            setState(() {
-              if (value.docs.length >= 1) {
-                _distanceController.text = docs[0]['goal'].toString();
-                _distanceGoal = docs[0]['goal'];
-                _distanceGoalId = docs[0].id;
-              }
-            });
+    _overallDistance = 0;
+    if (_selectedDriver != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('tours')
+          .get()
+          .then((value) {
+        final toursDocs = value.docs;
+        if (toursDocs.isNotEmpty) {
+          _overallDistance = 0;
+          for (int i = 0; i < toursDocs.length; i++) {
+            _overallDistance += toursDocs[i]['distance'];
           }
-        });
-      }
+          if (mounted) {
+            setState(() {});
+          }
+        }
+      });
+    }
+
+    if (_selectedDriver != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser.uid)
+          .collection('drivers')
+          .doc(_selectedDriver)
+          .collection('goals')
+          .get()
+          .then((value) {
+        var docs = value.docs;
+        if (mounted) {
+          setState(() {
+            if (value.docs.length >= 1) {
+              _distanceController.text = docs[0]['goal'].toString();
+              _distanceGoal = docs[0]['goal'];
+              _distanceGoalId = docs[0].id;
+            }
+          });
+        }
+      });
     }
 
     super.didChangeDependencies();

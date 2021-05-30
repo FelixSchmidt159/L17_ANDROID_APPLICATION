@@ -43,7 +43,6 @@ class _GoalScreenState extends State<GoalScreen> {
         distLastSevenDays = 0;
         var docs = value.docs;
 
-        print(docs.length);
         for (int i = 0; i < docs.length; i++) {
           distLastSevenDays += docs[i]['distance'];
         }
@@ -59,7 +58,6 @@ class _GoalScreenState extends State<GoalScreen> {
           .collection('tours')
           .get()
           .then((value) {
-        distLastSevenDays = 0;
         var docs = value.docs;
         maxDistance = 0;
         for (int i = 0; i < docs.length; i++) {

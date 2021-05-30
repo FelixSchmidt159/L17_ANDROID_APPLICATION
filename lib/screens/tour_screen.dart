@@ -204,6 +204,7 @@ class _TourScreenState extends State<TourScreen> {
     if (!isValid) {
       return;
     }
+    print(_typeAheadControllerTourBegin.text);
     _form.currentState.save();
     if (_selectedDriver != null) {
       if (tourObject.id == "") {
