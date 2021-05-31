@@ -12,6 +12,7 @@ class Tour with ChangeNotifier {
   final String attendant;
   final String daytime;
   final String weather;
+  final String carName;
 
   Tour(
       {this.timestamp,
@@ -24,5 +25,6 @@ class Tour with ChangeNotifier {
       this.roadCondition,
       this.attendant,
       this.daytime,
-      this.weather});
+      this.weather,
+      @required this.carName});
 }

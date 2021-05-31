@@ -160,24 +160,25 @@ class _TourListState extends State<TourList> {
                             itemBuilder: (context, index) {
                               return TourListItem(
                                   Tour(
-                                      timestamp:
-                                          DateTime.fromMicrosecondsSinceEpoch(
-                                              toursDocs[index]['timestamp']
-                                                  .microsecondsSinceEpoch),
-                                      attendant: toursDocs[index]['attendant'],
-                                      distance: toursDocs[index]['distance'],
-                                      licensePlate: toursDocs[index]
-                                          ['licensePlate'],
-                                      mileageBegin: toursDocs[index]
-                                          ['mileageBegin'],
-                                      mileageEnd: toursDocs[index]
-                                          ['mileageEnd'],
-                                      roadCondition: toursDocs[index]
-                                          ['roadCondition'],
-                                      tourBegin: toursDocs[index]['tourBegin'],
-                                      tourEnd: toursDocs[index]['tourEnd'],
-                                      daytime: toursDocs[index]['daytime'],
-                                      weather: toursDocs[index]['weather']),
+                                    timestamp:
+                                        DateTime.fromMicrosecondsSinceEpoch(
+                                            toursDocs[index]['timestamp']
+                                                .microsecondsSinceEpoch),
+                                    attendant: toursDocs[index]['attendant'],
+                                    distance: toursDocs[index]['distance'],
+                                    licensePlate: toursDocs[index]
+                                        ['licensePlate'],
+                                    mileageBegin: toursDocs[index]
+                                        ['mileageBegin'],
+                                    mileageEnd: toursDocs[index]['mileageEnd'],
+                                    roadCondition: toursDocs[index]
+                                        ['roadCondition'],
+                                    tourBegin: toursDocs[index]['tourBegin'],
+                                    tourEnd: toursDocs[index]['tourEnd'],
+                                    daytime: toursDocs[index]['daytime'],
+                                    weather: toursDocs[index]['weather'],
+                                    carName: toursDocs[index]['carName'],
+                                  ),
                                   toursDocs[index].id);
                             },
                             itemCount: toursDocs.length,

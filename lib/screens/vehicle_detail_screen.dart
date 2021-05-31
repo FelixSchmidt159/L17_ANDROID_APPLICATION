@@ -68,6 +68,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           .add({
         'name': _editedVehicle.name,
         'licensePlate': _editedVehicle.licensePlate,
+        'lastMileage': 0,
       });
     } else {
       FirebaseFirestore.instance
@@ -78,6 +79,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           .update({
         'name': _editedVehicle.name,
         'licensePlate': _editedVehicle.licensePlate,
+        'lastMileage': 0,
       });
     }
     Navigator.of(context).pop();
@@ -108,7 +110,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     return 'Der Name darf nicht länger als 20 Zeichen sein';
                   if (value.isEmpty) return 'Geben Sie einen Namen ein';
                   for (int i = 0; i < vehicles.length; i++) {
-                    if (value.toLowerCase() == vehicles[i].name.toLowerCase())
+                    if (value.toLowerCase() == vehicles[i].name.toLowerCase() &&
+                        vehicle.id == "")
                       return 'Dieser Namer existiert bereits';
                   }
                   return null;

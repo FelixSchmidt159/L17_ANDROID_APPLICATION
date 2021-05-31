@@ -67,6 +67,7 @@ class _CreatePdfState extends State<CreatePdf> {
               tourEnd: toursDocs[i]['tourEnd'],
               daytime: toursDocs[i]['daytime'],
               weather: toursDocs[i]['weather'],
+              carName: toursDocs[i]['carName'],
             ));
           }
           FirebaseFirestore.instance
@@ -183,10 +184,12 @@ class _CreatePdfState extends State<CreatePdf> {
           ? ""
           : items[w].mileageEnd.toString());
       for (int i = 0; i < vehicles.length; i++) {
-        if (vehicles[i].licensePlate == items[w].licensePlate) {
+        if (vehicles[i].licensePlate == items[w].licensePlate &&
+            vehicles[i].name == items[w].carName) {
           if ((w + 1) < items.length) {
             for (int j = w + 1; j < items.length; j++) {
-              if (items[j].licensePlate == items[w].licensePlate) {
+              if (items[j].licensePlate == items[w].licensePlate &&
+                  items[j].carName == items[w].carName) {
                 var diff = items[j].mileageBegin - items[w].mileageEnd;
                 row.add(diff <= 0 || items[w].mileageEnd == 0
                     ? ''

@@ -30,22 +30,23 @@ class _OverviewScreenState extends State<OverviewScreen> {
   int _selectedIndex = 1;
   var currentUser = FirebaseAuth.instance.currentUser;
   final TextEditingController _textFieldController = TextEditingController();
-  final TextEditingController _typeAheadControllerLicensePlate =
+  final TextEditingController _typeAheadControllerVehicle =
       TextEditingController();
   bool initTours = true;
   bool initVehicles = true;
   String _selectedDriver;
   List<Vehicle> vehicles = [];
-  List<String> _licensePlates = [];
+  String licensePlate = "";
   Map lastMileageMap = Map();
   StreamSubscription<QuerySnapshot> vehicleListener;
   StreamSubscription<QuerySnapshot> licensePlateListener;
+  List<String> possibleCarNames = [];
+  List<DropdownMenuItem<String>> dropdownMenuItemList = [];
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     if (_selectedDriver != null && initTours) {
-      _licensePlates = [];
       licensePlateListener = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -56,57 +57,122 @@ class _OverviewScreenState extends State<OverviewScreen> {
           .snapshots()
           .listen((event) {
         var toursDocs = event.docs;
-        lastMileageMap = Map();
+        possibleCarNames = [];
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < toursDocs.length; i++) {
-            if (toursDocs[i]['licensePlate'] != "") {
-              _licensePlates.add(toursDocs[i]['licensePlate']);
-              if (lastMileageMap[toursDocs[i]['licensePlate']] == null) {
-                lastMileageMap[toursDocs[i]['licensePlate']] =
-                    toursDocs[i]['mileageEnd'];
-              }
+            if (toursDocs[i]['carName'] != "") {
+              possibleCarNames.add(toursDocs[i]['carName']);
             }
-            if (i == 0) {
-              if (toursDocs[i]['licensePlate'] != "") {
-                var dist = lastMileageMap[toursDocs[i]['licensePlate']];
+            // if (i == 0) {
+            //   if (toursDocs[i]['carName'] != "") {
+            //     var dist = lastMileageMap[toursDocs[i]['carName']];
+            //     WidgetsBinding.instance.addPostFrameCallback((_) {
+            //       _textFieldController.text = dist.toString();
+            //       _typeAheadControllerVehicle.text =
+            //           toursDocs[i]['carName'];
+            //     });
+            //   }
+            // }
+          }
+          possibleCarNames = possibleCarNames.toSet().toList();
+        }
+        if (initVehicles) {
+          vehicleListener = FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('vehicles')
+              .snapshots()
+              .listen((event) {
+            vehicles = [];
+            var toursDocs = event.docs;
+            dropdownMenuItemList = [];
+            lastMileageMap = Map();
+            _typeAheadControllerVehicle.text = "";
+            licensePlate = "";
+            if (toursDocs.isNotEmpty) {
+              for (int i = 0; i < toursDocs.length; i++) {
+                vehicles.add(Vehicle(toursDocs[i]['name'],
+                    toursDocs[i]['licensePlate'], toursDocs[i].id));
+                lastMileageMap[toursDocs[i]['name']] =
+                    toursDocs[i]['lastMileage'];
+              }
+              dropdownMenuItemList =
+                  vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
+                return DropdownMenuItem<String>(
+                  value: vehicle.name,
+                  child: SizedBox(
+                    child: Text(
+                      vehicle.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                );
+              }).toList();
+              for (int i = 0; i < possibleCarNames.length; i++) {
+                if (lastMileageMap[possibleCarNames[i]] != null) {
+                  _typeAheadControllerVehicle.text = possibleCarNames[i];
+                  _textFieldController.text =
+                      lastMileageMap[possibleCarNames[i]] == 0
+                          ? ""
+                          : lastMileageMap[possibleCarNames[i]].toString();
+                  for (int j = 0; j < vehicles.length; j++) {
+                    if (vehicles[j].name == possibleCarNames[i]) {
+                      licensePlate = vehicles[j].licensePlate;
+                      j = vehicles.length;
+                    }
+                  }
+                  i = possibleCarNames.length;
+                }
+              }
+              if (_typeAheadControllerVehicle.text == null ||
+                  _typeAheadControllerVehicle.text.isEmpty) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _textFieldController.text = dist.toString();
-                  _typeAheadControllerLicensePlate.text =
-                      toursDocs[i]['licensePlate'];
+                  _typeAheadControllerVehicle.text = vehicles[0].name;
+                  _textFieldController.text =
+                      lastMileageMap[vehicles[0].name] == 0
+                          ? ""
+                          : lastMileageMap[vehicles[0].name].toString();
+
+                  licensePlate = vehicles[0].licensePlate;
                 });
               }
+              if (mounted) setState(() {});
             }
-          }
-          if (mounted) setState(() {});
+            initVehicles = false;
+          });
         }
         initTours = false;
       });
     }
-    if (initVehicles) {
-      vehicleListener = FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .collection('vehicles')
-          .snapshots()
-          .listen((event) {
-        vehicles = [];
-        var toursDocs = event.docs;
-        if (toursDocs.isNotEmpty) {
-          for (int i = 0; i < toursDocs.length; i++) {
-            vehicles.add(Vehicle(toursDocs[i]['name'],
-                toursDocs[i]['licensePlate'], toursDocs[i].id));
-          }
-          if (_typeAheadControllerLicensePlate.text == null ||
-              _typeAheadControllerLicensePlate.text.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _typeAheadControllerLicensePlate.text = vehicles[0].licensePlate;
-            });
-          }
-          if (mounted) setState(() {});
-        }
-        initVehicles = false;
-      });
-    }
+    // if (initVehicles) {
+    //   vehicleListener = FirebaseFirestore.instance
+    //       .collection('users')
+    //       .doc(currentUser.uid)
+    //       .collection('vehicles')
+    //       .snapshots()
+    //       .listen((event) {
+    //     vehicles = [];
+    //     var toursDocs = event.docs;
+    //     if (toursDocs.isNotEmpty) {
+    //       for (int i = 0; i < toursDocs.length; i++) {
+    //         vehicles.add(Vehicle(toursDocs[i]['name'],
+    //             toursDocs[i]['licensePlate'], toursDocs[i].id));
+    //       }
+    //       if (_typeAheadControllerVehicle.text == null ||
+    //           _typeAheadControllerVehicle.text.isEmpty) {
+    //         WidgetsBinding.instance.addPostFrameCallback((_) {
+    //           _typeAheadControllerVehicle.text = vehicles[0].name;
+    //         });
+    //       }
+    //       if (mounted) setState(() {});
+    //     }
+    //     initVehicles = false;
+    //   });
+    // }
 
     // if (_typeAheadControllerLicensePlate.text.isNotEmpty) {
     //   if (lastMileageMap[_typeAheadControllerLicensePlate.text] != null) {
@@ -129,7 +195,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     if (vehicleListener != null) vehicleListener.cancel();
     if (licensePlateListener != null) licensePlateListener.cancel();
     _textFieldController.dispose();
-    _typeAheadControllerLicensePlate.dispose();
+    _typeAheadControllerVehicle.dispose();
     super.dispose();
   }
 
@@ -189,7 +255,19 @@ class _OverviewScreenState extends State<OverviewScreen> {
       if (index != 2)
         _selectedIndex = index;
       else {
-        _displayTextInputDialog(context);
+        if (dropdownMenuItemList.length > 0)
+          _displayTextInputDialog(context);
+        else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Fügen Sie vorerst ein neues Fahrzeug im Side-Menü hinzu.',
+                textAlign: TextAlign.center,
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     });
   }
@@ -209,39 +287,42 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TypeAheadFormField(
-                        textFieldConfiguration: TextFieldConfiguration(
-                          decoration: InputDecoration(labelText: 'Kennzeichen'),
-                          keyboardType: TextInputType.text,
-                          controller: _typeAheadControllerLicensePlate,
+                      DropdownButton<String>(
+                        iconDisabledColor: Colors.grey.shade200,
+                        underline: Container(),
+                        disabledHint: SizedBox(
+                          // width: width * 0.75,
+                          child: Text(
+                            _typeAheadControllerVehicle.text,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        noItemsFoundBuilder: (context) {
-                          return SizedBox();
-                        },
-                        suggestionsCallback: (pattern) {
-                          return getSuggestions(pattern);
-                        },
-                        itemBuilder: (context, suggestion) {
-                          return ListTile(
-                            title: Text(suggestion),
-                          );
-                        },
-                        transitionBuilder:
-                            (context, suggestionsBox, controller) {
-                          return suggestionsBox;
-                        },
-                        onSuggestionSelected: (suggestion) {
-                          this._typeAheadControllerLicensePlate.text =
-                              suggestion;
-                          if (lastMileageMap[
-                                  _typeAheadControllerLicensePlate.text] !=
-                              null)
-                            _textFieldController.text = lastMileageMap[
-                                    _typeAheadControllerLicensePlate.text]
-                                .toString();
-                          else
-                            _textFieldController.text = "";
-                        },
+                        value: _typeAheadControllerVehicle.text,
+                        onChanged: dropdownMenuItemList.length > 0
+                            ? (String value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _typeAheadControllerVehicle.text = value;
+                                    _textFieldController.text =
+                                        lastMileageMap[value] == 0
+                                            ? ""
+                                            : lastMileageMap[value].toString();
+                                    licensePlate = "";
+                                    for (int i = 0; i < vehicles.length; i++) {
+                                      if (vehicles[i].name == value)
+                                        licensePlate = vehicles[i].licensePlate;
+                                    }
+                                  });
+                                }
+                              }
+                            : null,
+                        items: dropdownMenuItemList.length > 0
+                            ? dropdownMenuItemList
+                            : null,
                       ),
                       Stack(
                         alignment: AlignmentDirectional.centerEnd,
@@ -299,12 +380,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
                             mileageEnd: 0,
                             attendant: "",
                             distance: 0,
-                            licensePlate: _typeAheadControllerLicensePlate.text,
+                            licensePlate: licensePlate,
                             tourBegin: "",
                             tourEnd: "",
                             roadCondition: "",
                             daytime: DateFormat.Hm('de_DE').format(daytime),
-                            weather: ""),
+                            weather: "",
+                            carName: _typeAheadControllerVehicle.text),
                         ""),
                   );
                 },
@@ -353,27 +435,5 @@ class _OverviewScreenState extends State<OverviewScreen> {
           title: 'Cropper',
         ));
     return croppedImage;
-  }
-
-  List<String> getSuggestions(
-    String pattern,
-  ) {
-    List<String> suggestions = [];
-    List<String> possibleSuggestions = [];
-
-    possibleSuggestions = _licensePlates;
-
-    for (String str in possibleSuggestions) {
-      if (str.toLowerCase().contains(pattern.toLowerCase())) {
-        suggestions.add(str);
-      }
-    }
-
-    for (int i = 0; i < vehicles.length; i++) {
-      suggestions.add(vehicles[i].licensePlate);
-    }
-
-    suggestions = suggestions.toSet().toList();
-    return suggestions;
   }
 }

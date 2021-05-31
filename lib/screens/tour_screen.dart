@@ -55,6 +55,10 @@ class _TourScreenState extends State<TourScreen> {
   String _selectedDriver;
   List<Vehicle> vehicles = [];
   bool fieldsHaveChanged = false;
+  List<DropdownMenuItem<String>> _dropdownMenuItemList = [];
+  StreamSubscription<QuerySnapshot> _vehicleListener;
+  String _vehicleName = "";
+  DateTime dateTime = DateTime.now();
 
   var _editedProduct = Tour(
     timestamp: DateTime.now(),
@@ -68,10 +72,12 @@ class _TourScreenState extends State<TourScreen> {
     attendant: "",
     daytime: "",
     weather: "",
+    carName: "",
   );
 
   @override
   void dispose() {
+    if (_vehicleListener != null) _vehicleListener.cancel();
     _dayTime.dispose();
     _typeAheadControllerLicensePlate.dispose();
     _typeAheadControllerTourBegin.dispose();
@@ -103,6 +109,7 @@ class _TourScreenState extends State<TourScreen> {
       _typeAheadControllerTourEnd.text = tourObject.tour.tourEnd;
       _typeAheadControllerAttendant.text = tourObject.tour.attendant;
       _dayTime.text = tourObject.tour.daytime;
+      _vehicleName = tourObject.tour.carName;
       _editedProduct = Tour(
         timestamp: tourObject.tour.timestamp,
         distance: 0,
@@ -115,17 +122,21 @@ class _TourScreenState extends State<TourScreen> {
         attendant: "",
         daytime: "",
         weather: suggestedWeather,
+        carName: "",
       );
       _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _initialDate.text =
           DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
+      dateTime = tourObject.tour.timestamp;
       _mileageEnd.text = tourObject.tour.mileageEnd == 0
           ? ""
           : tourObject.tour.mileageEnd.toString();
       _mileageBegin.text = tourObject.tour.mileageBegin == 0
           ? ""
           : tourObject.tour.mileageBegin.toString();
-      _distance.text = tourObject.tour.distance.toString();
+      _distance.text = tourObject.tour.distance == 0
+          ? ""
+          : tourObject.tour.distance.toString();
       _initializeArguments = false;
     }
 
@@ -171,43 +182,83 @@ class _TourScreenState extends State<TourScreen> {
                 });
               }
             }
-            _initializeSuggestions = false;
           }
         },
       );
+      _initializeSuggestions = false;
     }
     if (_initializeVehicles) {
-      FirebaseFirestore.instance
+      bool found = true;
+      _vehicleListener = FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .collection('vehicles')
-          .get()
-          .then((value) {
+          .snapshots()
+          .listen((event) {
         vehicles = [];
-        final toursDocs = value.docs;
+        _dropdownMenuItemList = [];
+        final toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
+          found = false;
           for (int i = 0; i < toursDocs.length; i++) {
             vehicles.add(Vehicle(toursDocs[i]['name'],
                 toursDocs[i]['licensePlate'], toursDocs[i].id));
+            if (_vehicleName == toursDocs[i]['name']) found = true;
           }
+          _dropdownMenuItemList =
+              vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
+            return DropdownMenuItem<String>(
+              value: vehicle.name,
+              child: SizedBox(
+                child: Text(
+                  vehicle.name,
+                  style: TextStyle(
+                      // fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            );
+          }).toList();
+
           if (mounted) {
-            setState(() {
-              _initializeVehicles = false;
-            });
+            setState(() {});
           }
         }
+        if (!found)
+          _dropdownMenuItemList.add(DropdownMenuItem<String>(
+            value: _vehicleName,
+            child: SizedBox(
+              child: Text(
+                _vehicleName,
+                style: TextStyle(
+                    // fontWeight: FontWeight.bold,
+                    ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ));
       });
+      _initializeVehicles = false;
     }
 
     super.didChangeDependencies();
   }
 
   void _saveForm() {
+    int vehicleIdIndex = 0;
     final isValid = _form.currentState.validate();
     if (!isValid) {
       return;
     }
-    _form.currentState.save();
+    for (int i = 0; i < vehicles.length; i++) {
+      if (vehicles[i].name.toLowerCase() == _vehicleName.toLowerCase()) {
+        vehicleIdIndex = i;
+        break;
+      }
+    }
     if (_selectedDriver != null) {
       if (tourObject.id == "") {
         FirebaseFirestore.instance
@@ -217,17 +268,24 @@ class _TourScreenState extends State<TourScreen> {
             .doc(_selectedDriver)
             .collection('tours')
             .add({
-          'timestamp': _editedProduct.timestamp,
-          'distance': _editedProduct.distance,
-          'mileageBegin': _editedProduct.mileageBegin,
-          'mileageEnd': _editedProduct.mileageEnd,
-          'licensePlate': _editedProduct.licensePlate,
-          'tourBegin': _editedProduct.tourBegin,
-          'tourEnd': _editedProduct.tourEnd,
-          'roadCondition': _editedProduct.roadCondition,
-          'attendant': _editedProduct.attendant,
-          'daytime': _editedProduct.daytime,
-          'weather': _editedProduct.weather,
+          'timestamp': dateTime,
+          'distance': num.tryParse(_distance.text) == null
+              ? 0
+              : int.parse(_distance.text),
+          'mileageBegin': num.tryParse(_mileageBegin.text) == null
+              ? 0
+              : int.parse(_mileageBegin.text),
+          'mileageEnd': num.tryParse(_mileageEnd.text) == null
+              ? 0
+              : int.parse(_mileageEnd.text),
+          'licensePlate': _typeAheadControllerLicensePlate.text,
+          'tourBegin': _typeAheadControllerTourBegin.text,
+          'tourEnd': _typeAheadControllerTourEnd.text,
+          'roadCondition': suggestedRoadCondition,
+          'attendant': _typeAheadControllerAttendant.text,
+          'daytime': _dayTime.text,
+          'weather': suggestedWeather,
+          'carName': _vehicleName,
         });
       } else {
         FirebaseFirestore.instance
@@ -238,17 +296,49 @@ class _TourScreenState extends State<TourScreen> {
             .collection('tours')
             .doc(tourObject.id)
             .update({
-          'timestamp': _editedProduct.timestamp,
-          'distance': _editedProduct.distance,
-          'mileageBegin': _editedProduct.mileageBegin,
-          'mileageEnd': _editedProduct.mileageEnd,
-          'licensePlate': _editedProduct.licensePlate,
-          'tourBegin': _editedProduct.tourBegin,
-          'tourEnd': _editedProduct.tourEnd,
-          'roadCondition': _editedProduct.roadCondition,
-          'attendant': _editedProduct.attendant,
-          'daytime': _editedProduct.daytime,
-          'weather': _editedProduct.weather,
+          'timestamp': dateTime,
+          'distance': num.tryParse(_distance.text) == null
+              ? 0
+              : int.parse(_distance.text),
+          'mileageBegin': num.tryParse(_mileageBegin.text) == null
+              ? 0
+              : int.parse(_mileageBegin.text),
+          'mileageEnd': num.tryParse(_mileageEnd.text) == null
+              ? 0
+              : int.parse(_mileageEnd.text),
+          'licensePlate': _typeAheadControllerLicensePlate.text,
+          'tourBegin': _typeAheadControllerTourBegin.text,
+          'tourEnd': _typeAheadControllerTourEnd.text,
+          'roadCondition': suggestedRoadCondition,
+          'attendant': _typeAheadControllerAttendant.text,
+          'daytime': _dayTime.text,
+          'weather': suggestedWeather,
+          'carName': _vehicleName,
+        });
+      }
+      print(vehicleIdIndex < vehicles.length &&
+          vehicles[vehicleIdIndex].name.toLowerCase() ==
+              _vehicleName.toLowerCase() &&
+          vehicles[vehicleIdIndex].licensePlate.toLowerCase() ==
+              _typeAheadControllerLicensePlate.text.toLowerCase());
+      print(vehicles[vehicleIdIndex].name.toLowerCase());
+      print(_vehicleName.toLowerCase());
+      if (vehicleIdIndex < vehicles.length &&
+          vehicles[vehicleIdIndex].name.toLowerCase() ==
+              _vehicleName.toLowerCase() &&
+          vehicles[vehicleIdIndex].licensePlate.toLowerCase() ==
+              _typeAheadControllerLicensePlate.text.toLowerCase()) {
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('vehicles')
+            .doc(vehicles[vehicleIdIndex].id)
+            .update({
+          'lastMileage': num.tryParse(_mileageEnd.text) == null
+              ? 0
+              : int.parse(_mileageEnd.text),
+          'name': vehicles[vehicleIdIndex].name,
+          'licensePlate': vehicles[vehicleIdIndex].licensePlate,
         });
       }
     } else if (_selectedDriver == null) {
@@ -377,6 +467,7 @@ class _TourScreenState extends State<TourScreen> {
               child: ListView(
                 children: <Widget>[
                   TypeAheadFormField(
+                    key: Key('Startort'),
                     textFieldConfiguration: TextFieldConfiguration(
                         decoration: InputDecoration(labelText: 'Startort'),
                         keyboardType: TextInputType.text,
@@ -386,21 +477,6 @@ class _TourScreenState extends State<TourScreen> {
                         }),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
-                    },
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                        timestamp: _editedProduct.timestamp,
-                        distance: _editedProduct.distance,
-                        mileageBegin: _editedProduct.mileageBegin,
-                        mileageEnd: _editedProduct.mileageEnd,
-                        licensePlate: _editedProduct.licensePlate,
-                        tourBegin: value,
-                        tourEnd: _editedProduct.tourEnd,
-                        roadCondition: _editedProduct.roadCondition,
-                        attendant: _editedProduct.attendant,
-                        daytime: _editedProduct.daytime,
-                        weather: _editedProduct.weather,
-                      );
                     },
                     validator: (value) {
                       if (value != null && value.length > 20)
@@ -450,6 +526,8 @@ class _TourScreenState extends State<TourScreen> {
                                   int.parse(value);
                               _distance.text = test.toString();
                             });
+                          } else {
+                            _distance.text = "";
                           }
                         }
                         if (value.isEmpty || _mileageBegin.text.isEmpty) {
@@ -457,21 +535,6 @@ class _TourScreenState extends State<TourScreen> {
                         }
 
                         fieldsHaveChanged = true;
-                      },
-                      onSaved: (value) {
-                        _editedProduct = Tour(
-                          timestamp: _editedProduct.timestamp,
-                          distance: _editedProduct.distance,
-                          mileageBegin: value.isEmpty ? 0 : int.parse(value),
-                          mileageEnd: _editedProduct.mileageEnd,
-                          licensePlate: _editedProduct.licensePlate,
-                          tourBegin: _editedProduct.tourBegin,
-                          tourEnd: _editedProduct.tourEnd,
-                          roadCondition: _editedProduct.roadCondition,
-                          attendant: _editedProduct.attendant,
-                          daytime: _editedProduct.daytime,
-                          weather: _editedProduct.weather,
-                        );
                       },
                     ),
                     IconButton(
@@ -484,6 +547,7 @@ class _TourScreenState extends State<TourScreen> {
                     ),
                   ]),
                   TypeAheadFormField(
+                    key: Key('Zielort'),
                     textFieldConfiguration: TextFieldConfiguration(
                         decoration: InputDecoration(labelText: 'Zielort'),
                         keyboardType: TextInputType.text,
@@ -493,21 +557,6 @@ class _TourScreenState extends State<TourScreen> {
                         }),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
-                    },
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                        timestamp: _editedProduct.timestamp,
-                        distance: _editedProduct.distance,
-                        mileageBegin: _editedProduct.mileageBegin,
-                        mileageEnd: _editedProduct.mileageEnd,
-                        licensePlate: _editedProduct.licensePlate,
-                        tourBegin: _editedProduct.tourBegin,
-                        tourEnd: value,
-                        roadCondition: _editedProduct.roadCondition,
-                        attendant: _editedProduct.attendant,
-                        daytime: _editedProduct.daytime,
-                        weather: _editedProduct.weather,
-                      );
                     },
                     validator: (value) {
                       if (value != null && value.length > 20)
@@ -557,6 +606,8 @@ class _TourScreenState extends State<TourScreen> {
                                   int.parse(_mileageBegin.text);
                               _distance.text = test.abs().toString();
                             });
+                          } else {
+                            _distance.text = "";
                           }
                         }
                         if (value.isEmpty || _mileageBegin.text.isEmpty) {
@@ -564,21 +615,6 @@ class _TourScreenState extends State<TourScreen> {
                         }
 
                         fieldsHaveChanged = true;
-                      },
-                      onSaved: (value) {
-                        _editedProduct = Tour(
-                          timestamp: _editedProduct.timestamp,
-                          distance: _editedProduct.distance,
-                          mileageBegin: _editedProduct.mileageBegin,
-                          mileageEnd: value.isEmpty ? 0 : int.parse(value),
-                          licensePlate: _editedProduct.licensePlate,
-                          tourBegin: _editedProduct.tourBegin,
-                          tourEnd: _editedProduct.tourEnd,
-                          roadCondition: _editedProduct.roadCondition,
-                          attendant: _editedProduct.attendant,
-                          daytime: _editedProduct.daytime,
-                          weather: _editedProduct.weather,
-                        );
                       },
                     ),
                     IconButton(
@@ -607,24 +643,42 @@ class _TourScreenState extends State<TourScreen> {
                             return 'Die maximale Distanz beträgt 65000km';
                           return null;
                         },
-                        onSaved: (value) {
-                          _editedProduct = Tour(
-                            timestamp: _editedProduct.timestamp,
-                            distance: value.isEmpty ? 0 : int.parse(value),
-                            mileageBegin: _editedProduct.mileageBegin,
-                            mileageEnd: _editedProduct.mileageEnd,
-                            licensePlate: _editedProduct.licensePlate,
-                            tourBegin: _editedProduct.tourBegin,
-                            tourEnd: _editedProduct.tourEnd,
-                            roadCondition: _editedProduct.roadCondition,
-                            attendant: _editedProduct.attendant,
-                            daytime: _editedProduct.daytime,
-                            weather: _editedProduct.weather,
-                          );
-                        },
                         onChanged: (value) {
                           fieldsHaveChanged = true;
                         }),
+                  ),
+                  DropdownButtonFormField<String>(
+                    iconDisabledColor: Colors.grey.shade200,
+                    decoration: InputDecoration(labelText: 'Fahrzeug'),
+                    disabledHint: SizedBox(
+                      child: Text(
+                        _vehicleName,
+                        style: TextStyle(
+                          // fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    value: _vehicleName,
+                    onChanged: _dropdownMenuItemList.length > 0
+                        ? (String value) {
+                            if (value != null) {
+                              setState(() {
+                                _vehicleName = value;
+                                for (int i = 0; i < vehicles.length; i++) {
+                                  if (vehicles[i].name == _vehicleName)
+                                    _typeAheadControllerLicensePlate.text =
+                                        vehicles[i].licensePlate;
+                                }
+                              });
+                            }
+                          }
+                        : null,
+                    items: _dropdownMenuItemList.length > 0
+                        ? _dropdownMenuItemList
+                        : null,
                   ),
                   TypeAheadFormField(
                     textFieldConfiguration: TextFieldConfiguration(
@@ -641,21 +695,6 @@ class _TourScreenState extends State<TourScreen> {
                       if (value != null && value.length > 12)
                         return 'Geben Sie maximal 12 Zeichen ein.';
                       return null;
-                    },
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                        timestamp: _editedProduct.timestamp,
-                        distance: _editedProduct.distance,
-                        mileageBegin: _editedProduct.mileageBegin,
-                        mileageEnd: _editedProduct.mileageEnd,
-                        licensePlate: value,
-                        tourBegin: _editedProduct.tourBegin,
-                        tourEnd: _editedProduct.tourEnd,
-                        roadCondition: _editedProduct.roadCondition,
-                        attendant: _editedProduct.attendant,
-                        daytime: _editedProduct.daytime,
-                        weather: _editedProduct.weather,
-                      );
                     },
                     suggestionsCallback: (pattern) {
                       return getSuggestions(pattern, LifeSearch.licensePlates);
@@ -678,19 +717,7 @@ class _TourScreenState extends State<TourScreen> {
                         if (value != null) {
                           _initialDate.text =
                               DateFormat.yMMMd('de_DE').format(value);
-                          _editedProduct = Tour(
-                            timestamp: value,
-                            distance: _editedProduct.distance,
-                            mileageBegin: _editedProduct.mileageBegin,
-                            mileageEnd: _editedProduct.mileageEnd,
-                            licensePlate: _editedProduct.licensePlate,
-                            tourBegin: _editedProduct.tourBegin,
-                            tourEnd: _editedProduct.tourEnd,
-                            roadCondition: _editedProduct.roadCondition,
-                            attendant: _editedProduct.attendant,
-                            daytime: _editedProduct.daytime,
-                            weather: _editedProduct.weather,
-                          );
+                          dateTime = value;
                         }
                       });
                     },
@@ -742,6 +769,7 @@ class _TourScreenState extends State<TourScreen> {
                             attendant: _editedProduct.attendant,
                             daytime: _dayTime.text,
                             weather: _editedProduct.weather,
+                            carName: _editedProduct.carName,
                           );
                         }
                       });
@@ -761,21 +789,6 @@ class _TourScreenState extends State<TourScreen> {
                               onChanged: (value) {
                                 fieldsHaveChanged = true;
                               },
-                              onSaved: (value) {
-                                _editedProduct = Tour(
-                                  timestamp: _editedProduct.timestamp,
-                                  distance: _editedProduct.distance,
-                                  mileageBegin: _editedProduct.mileageBegin,
-                                  mileageEnd: _editedProduct.mileageEnd,
-                                  licensePlate: _editedProduct.licensePlate,
-                                  tourBegin: _editedProduct.tourBegin,
-                                  tourEnd: _editedProduct.tourEnd,
-                                  roadCondition: _editedProduct.roadCondition,
-                                  attendant: _editedProduct.attendant,
-                                  daytime: value,
-                                  weather: _editedProduct.weather,
-                                );
-                              },
                             ),
                             Icon(
                               Icons.watch_later_outlined,
@@ -793,21 +806,6 @@ class _TourScreenState extends State<TourScreen> {
                         }),
                     noItemsFoundBuilder: (context) {
                       return SizedBox();
-                    },
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                        timestamp: _editedProduct.timestamp,
-                        distance: _editedProduct.distance,
-                        mileageBegin: _editedProduct.mileageBegin,
-                        mileageEnd: _editedProduct.mileageEnd,
-                        licensePlate: _editedProduct.licensePlate,
-                        tourBegin: _editedProduct.tourBegin,
-                        tourEnd: _editedProduct.tourEnd,
-                        roadCondition: _editedProduct.roadCondition,
-                        attendant: value,
-                        daytime: _editedProduct.daytime,
-                        weather: _editedProduct.weather,
-                      );
                     },
                     suggestionsCallback: (pattern) {
                       return getSuggestions(pattern, LifeSearch.attendants);
@@ -845,21 +843,6 @@ class _TourScreenState extends State<TourScreen> {
                     },
                     key: Key('condition'),
                     value: suggestedRoadCondition,
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                        timestamp: _editedProduct.timestamp,
-                        distance: _editedProduct.distance,
-                        mileageBegin: _editedProduct.mileageBegin,
-                        mileageEnd: _editedProduct.mileageEnd,
-                        licensePlate: _editedProduct.licensePlate,
-                        tourBegin: _editedProduct.tourBegin,
-                        tourEnd: _editedProduct.tourEnd,
-                        roadCondition: value,
-                        attendant: _editedProduct.attendant,
-                        daytime: _editedProduct.daytime,
-                        weather: _editedProduct.weather,
-                      );
-                    },
                   ),
                   DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: 'Witterung'),
@@ -885,22 +868,10 @@ class _TourScreenState extends State<TourScreen> {
                     },
                     key: Key('weather'),
                     value: suggestedWeather,
-                    onSaved: (value) {
-                      _editedProduct = Tour(
-                        timestamp: _editedProduct.timestamp,
-                        distance: _editedProduct.distance,
-                        mileageBegin: _editedProduct.mileageBegin,
-                        mileageEnd: _editedProduct.mileageEnd,
-                        licensePlate: _editedProduct.licensePlate,
-                        tourBegin: _editedProduct.tourBegin,
-                        tourEnd: _editedProduct.tourEnd,
-                        roadCondition: _editedProduct.roadCondition,
-                        attendant: _editedProduct.attendant,
-                        daytime: _editedProduct.daytime,
-                        weather: value,
-                      );
-                    },
                   ),
+                  SizedBox(
+                    height: 50,
+                  )
                 ],
               ),
             ),
