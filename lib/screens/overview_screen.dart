@@ -63,16 +63,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
             if (toursDocs[i]['carName'] != "") {
               possibleCarNames.add(toursDocs[i]['carName']);
             }
-            // if (i == 0) {
-            //   if (toursDocs[i]['carName'] != "") {
-            //     var dist = lastMileageMap[toursDocs[i]['carName']];
-            //     WidgetsBinding.instance.addPostFrameCallback((_) {
-            //       _textFieldController.text = dist.toString();
-            //       _typeAheadControllerVehicle.text =
-            //           toursDocs[i]['carName'];
-            //     });
-            //   }
-            // }
           }
           possibleCarNames = possibleCarNames.toSet().toList();
         }
@@ -148,44 +138,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
         initTours = false;
       });
     }
-    // if (initVehicles) {
-    //   vehicleListener = FirebaseFirestore.instance
-    //       .collection('users')
-    //       .doc(currentUser.uid)
-    //       .collection('vehicles')
-    //       .snapshots()
-    //       .listen((event) {
-    //     vehicles = [];
-    //     var toursDocs = event.docs;
-    //     if (toursDocs.isNotEmpty) {
-    //       for (int i = 0; i < toursDocs.length; i++) {
-    //         vehicles.add(Vehicle(toursDocs[i]['name'],
-    //             toursDocs[i]['licensePlate'], toursDocs[i].id));
-    //       }
-    //       if (_typeAheadControllerVehicle.text == null ||
-    //           _typeAheadControllerVehicle.text.isEmpty) {
-    //         WidgetsBinding.instance.addPostFrameCallback((_) {
-    //           _typeAheadControllerVehicle.text = vehicles[0].name;
-    //         });
-    //       }
-    //       if (mounted) setState(() {});
-    //     }
-    //     initVehicles = false;
-    //   });
-    // }
-
-    // if (_typeAheadControllerLicensePlate.text.isNotEmpty) {
-    //   if (lastMileageMap[_typeAheadControllerLicensePlate.text] != null) {
-    //     WidgetsBinding.instance.addPostFrameCallback((_) {
-    //       _textFieldController.text =
-    //           lastMileageMap[_typeAheadControllerLicensePlate.text].toString();
-    //     });
-    //   } else {
-    //     WidgetsBinding.instance.addPostFrameCallback((_) {
-    //       _textFieldController.text = '';
-    //     });
-    //   }
-    // }
 
     super.didChangeDependencies();
   }
