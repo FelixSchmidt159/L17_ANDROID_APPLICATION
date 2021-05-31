@@ -60,21 +60,6 @@ class _TourScreenState extends State<TourScreen> {
   String _vehicleName = "";
   DateTime dateTime = DateTime.now();
 
-  var _editedProduct = Tour(
-    timestamp: DateTime.now(),
-    distance: 0,
-    mileageBegin: 0,
-    mileageEnd: 0,
-    licensePlate: "",
-    tourBegin: "",
-    tourEnd: "",
-    roadCondition: "",
-    attendant: "",
-    daytime: "",
-    weather: "",
-    carName: "",
-  );
-
   @override
   void dispose() {
     if (_vehicleListener != null) _vehicleListener.cancel();
@@ -110,20 +95,6 @@ class _TourScreenState extends State<TourScreen> {
       _typeAheadControllerAttendant.text = tourObject.tour.attendant;
       _dayTime.text = tourObject.tour.daytime;
       _vehicleName = tourObject.tour.carName;
-      _editedProduct = Tour(
-        timestamp: tourObject.tour.timestamp,
-        distance: 0,
-        mileageBegin: 0,
-        mileageEnd: 0,
-        licensePlate: "",
-        tourBegin: "",
-        tourEnd: "",
-        roadCondition: suggestedRoadCondition,
-        attendant: "",
-        daytime: "",
-        weather: suggestedWeather,
-        carName: "",
-      );
       _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
       _initialDate.text =
           DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
@@ -316,13 +287,6 @@ class _TourScreenState extends State<TourScreen> {
           'carName': _vehicleName,
         });
       }
-      print(vehicleIdIndex < vehicles.length &&
-          vehicles[vehicleIdIndex].name.toLowerCase() ==
-              _vehicleName.toLowerCase() &&
-          vehicles[vehicleIdIndex].licensePlate.toLowerCase() ==
-              _typeAheadControllerLicensePlate.text.toLowerCase());
-      print(vehicles[vehicleIdIndex].name.toLowerCase());
-      print(_vehicleName.toLowerCase());
       if (vehicleIdIndex < vehicles.length &&
           vehicles[vehicleIdIndex].name.toLowerCase() ==
               _vehicleName.toLowerCase() &&
@@ -402,7 +366,7 @@ class _TourScreenState extends State<TourScreen> {
   Future<DateTime> _selectDate() async {
     return await showDatePicker(
       context: context,
-      initialDate: _editedProduct.timestamp,
+      initialDate: dateTime,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
@@ -757,20 +721,6 @@ class _TourScreenState extends State<TourScreen> {
                           _dayTime.text = value.hour.toString() +
                               ':' +
                               value.minute.toString();
-                          _editedProduct = Tour(
-                            timestamp: _editedProduct.timestamp,
-                            distance: _editedProduct.distance,
-                            mileageBegin: _editedProduct.mileageBegin,
-                            mileageEnd: _editedProduct.mileageEnd,
-                            licensePlate: _editedProduct.licensePlate,
-                            tourBegin: _editedProduct.tourBegin,
-                            tourEnd: _editedProduct.tourEnd,
-                            roadCondition: _editedProduct.roadCondition,
-                            attendant: _editedProduct.attendant,
-                            daytime: _dayTime.text,
-                            weather: _editedProduct.weather,
-                            carName: _editedProduct.carName,
-                          );
                         }
                       });
                     },
