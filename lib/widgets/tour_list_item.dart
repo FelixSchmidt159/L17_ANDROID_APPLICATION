@@ -46,7 +46,7 @@ class _TourListItemState extends State<TourListItem> {
         // return object of type Dialog
         return AlertDialog(
           title: new Text("Fahrt löschen"),
-          content: new Text("Wollen Sie wirklich diese Fahrt löschen?"),
+          content: new Text("Wollen Sie diese Fahrt wirklich löschen?"),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(

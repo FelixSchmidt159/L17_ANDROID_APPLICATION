@@ -27,7 +27,7 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
         // return object of type Dialog
         return AlertDialog(
           title: new Text("Fahrer löschen"),
-          content: new Text("Wollen Sie wirklich diesen Fahrer löschen?"),
+          content: new Text("Wollen Sie diesen Fahrer wirklich löschen?"),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(

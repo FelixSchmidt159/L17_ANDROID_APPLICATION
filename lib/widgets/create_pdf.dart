@@ -150,20 +150,20 @@ class _CreatePdfState extends State<CreatePdf> {
     int distanceDriven = 0;
     bool match = false;
     header.add('Datum');
-    header.add('Gef. KM');
-    header.add('KMS Start');
-    header.add('KMS Ziel');
+    header.add('Distanz');
+    header.add('Kilometerstand \n Start');
+    header.add('Kilometerstand \n Ziel');
 
     for (int i = 0; i < vehicles.length; i++) {
-      header.add('priv. KM' +
+      header.add('priv. Kilometer' +
           '\n' +
           vehicles[i].name +
           '\n' +
           vehicles[i].licensePlate);
     }
-    header.add('Kfz \n Kennzeichen');
+    header.add('Kennzeichen');
     header.add('Tageszeit');
-    header.add('Fahrstrecke / -ziel');
+    header.add('Fahrstrecke / \n-ziel');
     header.add('Straßenzustand, \n Witterung');
     header.add('Unterschrift \n Begleiter');
     header.add('Unterschrift \n Fahrer');
@@ -217,7 +217,9 @@ class _CreatePdfState extends State<CreatePdf> {
     row = [];
     for (int i = 0; i < 10 + vehicles.length; i++) {
       if (i == 1) {
-        row.add('Gesamt: $distanceDriven km');
+        row.add(
+          'Gesamt: $distanceDriven km',
+        );
       } else
         row.add('');
     }

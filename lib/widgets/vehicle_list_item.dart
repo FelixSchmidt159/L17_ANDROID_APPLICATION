@@ -24,7 +24,7 @@ class _VehicleListItemState extends State<VehicleListItem> {
         // return object of type Dialog
         return AlertDialog(
           title: new Text("Fahrzeug löschen"),
-          content: new Text("Wollen Sie wirklich dieses Fahrzeug löschen?"),
+          content: new Text("Wollen Sie dieses Fahrzeug wirklich löschen?"),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(

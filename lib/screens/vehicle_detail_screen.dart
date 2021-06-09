@@ -54,10 +54,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     super.dispose();
   }
 
-  void _saveForm() {
+  Future<bool> _saveForm() async {
     final isValid = _form.currentState.validate();
     if (!isValid) {
-      return;
+      return false;
     }
     _form.currentState.save();
     if (_editedVehicle.id == "") {
@@ -70,6 +70,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         'licensePlate': _editedVehicle.licensePlate,
         'lastMileage': 0,
       });
+      return true;
     } else {
       FirebaseFirestore.instance
           .collection('users')
@@ -81,70 +82,79 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         'licensePlate': _editedVehicle.licensePlate,
         'lastMileage': 0,
       });
+      return true;
     }
-    Navigator.of(context).pop();
+  }
+
+  Future<bool> _onWillPop() async {
+    return (_saveForm()) ?? false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Fahrzeuge'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: _saveForm,
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _form,
-          child: ListView(
-            children: <Widget>[
-              TextFormField(
-                initialValue: _editedVehicle.name,
-                validator: (value) {
-                  if (value.length > 20)
-                    return 'Der Name darf nicht länger als 20 Zeichen sein';
-                  if (value.isEmpty) return 'Geben Sie einen Namen ein';
-                  for (int i = 0; i < vehicles.length; i++) {
-                    if (value.toLowerCase() == vehicles[i].name.toLowerCase() &&
-                        vehicle.id == "")
-                      return 'Dieser Namer existiert bereits';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _editedVehicle = Vehicle(
-                    value,
-                    _editedVehicle.licensePlate,
-                    _editedVehicle.id,
-                  );
-                },
-                decoration: InputDecoration(labelText: 'Fahrzeug'),
-                keyboardType: TextInputType.name,
-              ),
-              TextFormField(
-                initialValue: _editedVehicle.licensePlate,
-                validator: (value) {
-                  if (value.isEmpty) return 'Geben Sie das Kennzeichen ein';
-                  if (value.length >= 15) return 'Das Kennzeichen ist zu lange';
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Fahrzeuge'),
+          actions: <Widget>[
+            // IconButton(
+            //   icon: Icon(Icons.save),
+            //   onPressed: _saveForm,
+            // ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _form,
+            child: ListView(
+              children: <Widget>[
+                TextFormField(
+                  initialValue: _editedVehicle.name,
+                  validator: (value) {
+                    if (value.length > 20)
+                      return 'Der Name darf nicht länger als 20 Zeichen sein';
+                    if (value.isEmpty) return 'Geben Sie einen Namen ein';
+                    for (int i = 0; i < vehicles.length; i++) {
+                      if (value.toLowerCase() ==
+                              vehicles[i].name.toLowerCase() &&
+                          vehicle.id == "")
+                        return 'Dieser Namer existiert bereits';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _editedVehicle = Vehicle(
+                      value,
+                      _editedVehicle.licensePlate,
+                      _editedVehicle.id,
+                    );
+                  },
+                  decoration: InputDecoration(labelText: 'Fahrzeug'),
+                  keyboardType: TextInputType.name,
+                ),
+                TextFormField(
+                  initialValue: _editedVehicle.licensePlate,
+                  validator: (value) {
+                    if (value.isEmpty) return 'Geben Sie das Kennzeichen ein';
+                    if (value.length >= 15)
+                      return 'Das Kennzeichen ist zu lange';
 
-                  return null;
-                },
-                onSaved: (value) {
-                  _editedVehicle = Vehicle(
-                    _editedVehicle.name,
-                    value,
-                    _editedVehicle.id,
-                  );
-                },
-                decoration: InputDecoration(labelText: 'Kennzeichen'),
-                keyboardType: TextInputType.name,
-              ),
-            ],
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _editedVehicle = Vehicle(
+                      _editedVehicle.name,
+                      value,
+                      _editedVehicle.id,
+                    );
+                  },
+                  decoration: InputDecoration(labelText: 'Kennzeichen'),
+                  keyboardType: TextInputType.name,
+                ),
+              ],
+            ),
           ),
         ),
       ),

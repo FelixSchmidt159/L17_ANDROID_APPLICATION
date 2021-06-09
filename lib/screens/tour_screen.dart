@@ -149,7 +149,9 @@ class _TourScreenState extends State<TourScreen> {
                     _typeAheadControllerLicensePlate.text =
                         suggestedLicensePlate;
                   }
-                  _typeAheadControllerAttendant.text = suggestedAttendant;
+                  if (_typeAheadControllerAttendant.text == "") {
+                    _typeAheadControllerAttendant.text = suggestedAttendant;
+                  }
                 });
               }
             }
@@ -183,9 +185,7 @@ class _TourScreenState extends State<TourScreen> {
               child: SizedBox(
                 child: Text(
                   vehicle.name,
-                  style: TextStyle(
-                      // fontWeight: FontWeight.bold,
-                      ),
+                  style: TextStyle(),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -218,11 +218,11 @@ class _TourScreenState extends State<TourScreen> {
     super.didChangeDependencies();
   }
 
-  void _saveForm() {
+  Future<bool> _saveForm() async {
     int vehicleIdIndex = 0;
     final isValid = _form.currentState.validate();
     if (!isValid) {
-      return;
+      return false;
     }
     for (int i = 0; i < vehicles.length; i++) {
       if (vehicles[i].name.toLowerCase() == _vehicleName.toLowerCase()) {
@@ -257,7 +257,7 @@ class _TourScreenState extends State<TourScreen> {
           'daytime': _dayTime.text,
           'weather': suggestedWeather,
           'carName': _vehicleName,
-        });
+        }).catchError((e) => print(e));
       } else {
         FirebaseFirestore.instance
             .collection('users')
@@ -285,7 +285,7 @@ class _TourScreenState extends State<TourScreen> {
           'daytime': _dayTime.text,
           'weather': suggestedWeather,
           'carName': _vehicleName,
-        });
+        }).catchError((e) => print(e));
       }
       if (vehicleIdIndex < vehicles.length &&
           vehicles[vehicleIdIndex].name.toLowerCase() ==
@@ -303,7 +303,11 @@ class _TourScreenState extends State<TourScreen> {
               : int.parse(_mileageEnd.text),
           'name': vehicles[vehicleIdIndex].name,
           'licensePlate': vehicles[vehicleIdIndex].licensePlate,
-        });
+        }).catchError((e) => print(e));
+        ;
+        return true;
+      } else {
+        return true;
       }
     } else if (_selectedDriver == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -315,8 +319,10 @@ class _TourScreenState extends State<TourScreen> {
           backgroundColor: Colors.red,
         ),
       );
+      return true;
+    } else {
+      return true;
     }
-    Navigator.of(context).pop();
   }
 
   List<String> getSuggestions(
@@ -381,34 +387,38 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
+  // Future<bool> _onWillPop() async {
+  //   if (!fieldsHaveChanged) return true;
+  //   return (await showDialog(
+  //         context: context,
+  //         builder: (context) => new AlertDialog(
+  //           title: Text(
+  //             'Die Änderungen wurden nicht gespeichert.',
+  //           ),
+  //           content: Text('Wollen Sie die Änderungen verwerfen?'),
+  //           actions: <Widget>[
+  //             TextButton(
+  //               style: TextButton.styleFrom(
+  //                   backgroundColor: Colors.green, primary: Colors.white),
+  //               onPressed: () {
+  //                 Navigator.of(context).pop(true);
+  //               },
+  //               child: new Text('Ja'),
+  //             ),
+  //             TextButton(
+  //               style: TextButton.styleFrom(
+  //                   backgroundColor: Colors.red, primary: Colors.white),
+  //               onPressed: () => Navigator.of(context).pop(false),
+  //               child: new Text('Nein'),
+  //             ),
+  //           ],
+  //         ),
+  //       )) ??
+  //       false;
+  // }
+
   Future<bool> _onWillPop() async {
-    if (!fieldsHaveChanged) return true;
-    return (await showDialog(
-          context: context,
-          builder: (context) => new AlertDialog(
-            title: Text(
-              'Die Änderungen wurden nicht gespeichert.',
-            ),
-            content: Text('Wollen Sie die Änderungen verwerfen?'),
-            actions: <Widget>[
-              TextButton(
-                style: TextButton.styleFrom(
-                    backgroundColor: Colors.green, primary: Colors.white),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-                child: new Text('Ja'),
-              ),
-              TextButton(
-                style: TextButton.styleFrom(
-                    backgroundColor: Colors.red, primary: Colors.white),
-                onPressed: () => Navigator.of(context).pop(false),
-                child: new Text('Nein'),
-              ),
-            ],
-          ),
-        )) ??
-        false;
+    return (_saveForm()) ?? false;
   }
 
   @override
@@ -418,10 +428,10 @@ class _TourScreenState extends State<TourScreen> {
           appBar: AppBar(
             title: Text('Tour'),
             actions: <Widget>[
-              IconButton(
-                icon: Icon(Icons.save),
-                onPressed: _saveForm,
-              ),
+              // IconButton(
+              //   icon: Icon(Icons.save),
+              //   onPressed: _saveForm,
+              // ),
             ],
           ),
           body: Padding(
@@ -430,398 +440,562 @@ class _TourScreenState extends State<TourScreen> {
               key: _form,
               child: ListView(
                 children: <Widget>[
-                  TypeAheadFormField(
-                    key: Key('Startort'),
-                    textFieldConfiguration: TextFieldConfiguration(
-                        decoration: InputDecoration(labelText: 'Startort'),
-                        keyboardType: TextInputType.text,
-                        controller: _typeAheadControllerTourBegin,
-                        onChanged: (value) {
-                          fieldsHaveChanged = true;
-                        }),
-                    noItemsFoundBuilder: (context) {
-                      return SizedBox();
-                    },
-                    validator: (value) {
-                      if (value != null && value.length > 20)
-                        return 'Geben Sie maximal 20 Zeichen ein.';
-                      return null;
-                    },
-                    suggestionsCallback: (pattern) {
-                      return getSuggestions(pattern, LifeSearch.locations);
-                    },
-                    itemBuilder: (context, suggestion) {
-                      return ListTile(
-                        title: Text(suggestion),
-                      );
-                    },
-                    transitionBuilder: (context, suggestionsBox, controller) {
-                      return suggestionsBox;
-                    },
-                    onSuggestionSelected: (suggestion) {
-                      this._typeAheadControllerTourBegin.text = suggestion;
-                    },
-                  ),
-                  Stack(alignment: AlignmentDirectional.centerEnd, children: <
-                      Widget>[
-                    TextFormField(
-                      controller: _mileageBegin,
-                      decoration: InputDecoration(
-                        labelText: 'Kilometerstand (Beginn)',
+                  Container(
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.shade400,
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value.isNotEmpty && num.tryParse(value) == null) {
-                          return 'Geben Sie bitte eine ganze Zahl ein.';
-                        }
-                        if (value != null && value.length > 7)
-                          return 'Geben Sie maximal 7 Zeichen ein.';
-                        if (num.tryParse(value) != null && int.parse(value) < 0)
-                          return 'Sie können nur positive Zahlen als Ziel definieren.';
-                        return null;
-                      },
-                      onChanged: (value) {
-                        if (value.isNotEmpty &&
-                            num.tryParse(value) != null &&
-                            num.tryParse(_mileageEnd.text) != null) {
-                          if (int.parse(_mileageEnd.text) >= int.parse(value)) {
-                            setState(() {
-                              var test = int.parse(_mileageEnd.text) -
-                                  int.parse(value);
-                              _distance.text = test.toString();
-                            });
-                          } else {
-                            _distance.text = "";
-                          }
-                        }
-                        if (value.isEmpty || _mileageBegin.text.isEmpty) {
-                          _distance.text = "";
-                        }
-
-                        fieldsHaveChanged = true;
-                      },
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.camera_alt,
-                      ),
-                      onPressed: () {
-                        _pickImage(true);
-                      },
-                    ),
-                  ]),
-                  TypeAheadFormField(
-                    key: Key('Zielort'),
-                    textFieldConfiguration: TextFieldConfiguration(
-                        decoration: InputDecoration(labelText: 'Zielort'),
-                        keyboardType: TextInputType.text,
-                        controller: _typeAheadControllerTourEnd,
-                        onChanged: (value) {
-                          fieldsHaveChanged = true;
-                        }),
-                    noItemsFoundBuilder: (context) {
-                      return SizedBox();
-                    },
-                    validator: (value) {
-                      if (value != null && value.length > 20)
-                        return 'Geben Sie maximal 20 Zeichen ein.';
-                      return null;
-                    },
-                    suggestionsCallback: (pattern) {
-                      return getSuggestions(pattern, LifeSearch.locations);
-                    },
-                    itemBuilder: (context, suggestion) {
-                      return ListTile(
-                        title: Text(suggestion),
-                      );
-                    },
-                    transitionBuilder: (context, suggestionsBox, controller) {
-                      return suggestionsBox;
-                    },
-                    onSuggestionSelected: (suggestion) {
-                      this._typeAheadControllerTourEnd.text = suggestion;
-                    },
-                  ),
-                  Stack(alignment: AlignmentDirectional.centerEnd, children: <
-                      Widget>[
-                    TextFormField(
-                      controller: _mileageEnd,
-                      decoration:
-                          InputDecoration(labelText: 'Kilometerstand (Ziel)'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value.isNotEmpty && num.tryParse(value) == null) {
-                          return 'Geben Sie bitte eine ganze Zahl ein.';
-                        }
-                        if (value != null && value.length > 7)
-                          return 'Geben Sie maximal 7 Zeichen ein.';
-                        if (num.tryParse(value) != null && int.parse(value) < 0)
-                          return 'Sie können nur positive Zahlen als Ziel definieren.';
-                        return null;
-                      },
-                      onChanged: (value) {
-                        if (value.isNotEmpty &&
-                            num.tryParse(value) != null &&
-                            num.tryParse(_mileageBegin.text) != null) {
-                          if (int.parse(value) >=
-                              int.parse(_mileageBegin.text)) {
-                            setState(() {
-                              var test = int.parse(value) -
-                                  int.parse(_mileageBegin.text);
-                              _distance.text = test.abs().toString();
-                            });
-                          } else {
-                            _distance.text = "";
-                          }
-                        }
-                        if (value.isEmpty || _mileageBegin.text.isEmpty) {
-                          _distance.text = "";
-                        }
-
-                        fieldsHaveChanged = true;
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.camera_alt,
-                      ),
-                      onPressed: () {
-                        _pickImage(false);
-                      },
-                    ),
-                  ]),
-                  IgnorePointer(
-                    child: TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Distanz',
-                          // fillColor: Colors.grey.shade300,
-                          // filled: true,
-                          enabled: false,
+                    child: Column(
+                      children: [
+                        Text(
+                          'Start',
+                          style: TextStyle(
+                              color: Theme.of(context).accentColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold),
                         ),
-                        keyboardType: TextInputType.number,
-                        controller: _distance,
-                        validator: (value) {
-                          if (value != null &&
-                              num.tryParse(value) != null &&
-                              int.parse(value) >= 65000)
-                            return 'Die maximale Distanz beträgt 65000km';
-                          return null;
-                        },
-                        onChanged: (value) {
-                          fieldsHaveChanged = true;
-                        }),
-                  ),
-                  DropdownButtonFormField<String>(
-                    iconDisabledColor: Colors.grey.shade200,
-                    decoration: InputDecoration(labelText: 'Fahrzeug'),
-                    disabledHint: SizedBox(
-                      child: Text(
-                        _vehicleName,
-                        style: TextStyle(
-                          // fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    value: _vehicleName,
-                    onChanged: _dropdownMenuItemList.length > 0
-                        ? (String value) {
-                            if (value != null) {
-                              setState(() {
-                                _vehicleName = value;
-                                for (int i = 0; i < vehicles.length; i++) {
-                                  if (vehicles[i].name == _vehicleName)
-                                    _typeAheadControllerLicensePlate.text =
-                                        vehicles[i].licensePlate;
-                                }
-                              });
-                            }
-                          }
-                        : null,
-                    items: _dropdownMenuItemList.length > 0
-                        ? _dropdownMenuItemList
-                        : null,
-                  ),
-                  TypeAheadFormField(
-                    textFieldConfiguration: TextFieldConfiguration(
-                        decoration: InputDecoration(labelText: 'Kennzeichen'),
-                        keyboardType: TextInputType.text,
-                        controller: _typeAheadControllerLicensePlate,
-                        onChanged: (value) {
-                          fieldsHaveChanged = true;
-                        }),
-                    noItemsFoundBuilder: (context) {
-                      return SizedBox();
-                    },
-                    validator: (value) {
-                      if (value != null && value.length > 12)
-                        return 'Geben Sie maximal 12 Zeichen ein.';
-                      return null;
-                    },
-                    suggestionsCallback: (pattern) {
-                      return getSuggestions(pattern, LifeSearch.licensePlates);
-                    },
-                    itemBuilder: (context, suggestion) {
-                      return ListTile(
-                        title: Text(suggestion),
-                      );
-                    },
-                    transitionBuilder: (context, suggestionsBox, controller) {
-                      return suggestionsBox;
-                    },
-                    onSuggestionSelected: (suggestion) {
-                      this._typeAheadControllerLicensePlate.text = suggestion;
-                    },
-                  ),
-                  InkWell(
-                    onTap: () async {
-                      await _selectDate().then((value) {
-                        if (value != null) {
-                          _initialDate.text =
-                              DateFormat.yMMMd('de_DE').format(value);
-                          dateTime = value;
-                        }
-                      });
-                    },
-                    child: IgnorePointer(
-                      child: Stack(
-                          alignment: AlignmentDirectional.centerEnd,
-                          children: <Widget>[
-                            TextFormField(
-                                maxLines: 1,
-                                validator: (value) {
-                                  if (value.isEmpty || value.length < 1) {
-                                    return 'Wähle ein Datum.';
-                                  }
-                                  return null;
-                                },
-                                controller: _initialDate,
-                                decoration: InputDecoration(
-                                  labelText: 'Datum',
-                                  labelStyle: TextStyle(
-                                    decorationStyle: TextDecorationStyle.solid,
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  fieldsHaveChanged = true;
-                                }),
-                            Icon(
-                              Icons.calendar_today,
-                              // color: Colors.black,
-                            ),
-                          ]),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () async {
-                      await _selectTime().then((value) {
-                        if (value != null) {
-                          _dayTime.text = value.hour.toString() +
-                              ':' +
-                              value.minute.toString();
-                        }
-                      });
-                    },
-                    child: IgnorePointer(
-                      child: Stack(
-                          alignment: AlignmentDirectional.centerEnd,
-                          children: <Widget>[
-                            TextFormField(
-                              controller: _dayTime,
-                              decoration: InputDecoration(
-                                labelText: 'Tageszeit',
-                                labelStyle: TextStyle(
-                                  decorationStyle: TextDecorationStyle.solid,
-                                ),
-                              ),
+                        TypeAheadFormField(
+                          key: Key('Startort'),
+                          textFieldConfiguration: TextFieldConfiguration(
+                              decoration: InputDecoration(labelText: 'Ort'),
+                              keyboardType: TextInputType.text,
+                              controller: _typeAheadControllerTourBegin,
                               onChanged: (value) {
                                 fieldsHaveChanged = true;
-                              },
-                            ),
-                            Icon(
-                              Icons.watch_later_outlined,
-                              // color: Colors.black,
-                            ),
-                          ]),
+                              }),
+                          noItemsFoundBuilder: (context) {
+                            return SizedBox();
+                          },
+                          validator: (value) {
+                            if (value != null && value.length > 20)
+                              return 'Geben Sie maximal 20 Zeichen ein.';
+                            return null;
+                          },
+                          suggestionsCallback: (pattern) {
+                            return getSuggestions(
+                                pattern, LifeSearch.locations);
+                          },
+                          itemBuilder: (context, suggestion) {
+                            return ListTile(
+                              title: Text(suggestion),
+                            );
+                          },
+                          transitionBuilder:
+                              (context, suggestionsBox, controller) {
+                            return suggestionsBox;
+                          },
+                          onSuggestionSelected: (suggestion) {
+                            this._typeAheadControllerTourBegin.text =
+                                suggestion;
+                          },
+                        ),
+                        Stack(
+                            alignment: AlignmentDirectional.centerEnd,
+                            children: <Widget>[
+                              TextFormField(
+                                controller: _mileageBegin,
+                                decoration: InputDecoration(
+                                  labelText: 'Kilometerstand',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value.isNotEmpty &&
+                                      num.tryParse(value) == null) {
+                                    return 'Geben Sie bitte eine ganze Zahl ein.';
+                                  }
+                                  if (value != null && value.length > 7)
+                                    return 'Geben Sie maximal 7 Zeichen ein.';
+                                  if (num.tryParse(value) != null &&
+                                      int.parse(value) < 0)
+                                    return 'Sie können nur positive Zahlen als Ziel definieren.';
+                                  if (_distance.text != null &&
+                                      num.tryParse(_distance.text) != null &&
+                                      int.parse(_distance.text) >= 65000)
+                                    return 'Die maximale Distanz beträgt 65000km';
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  if (value.isNotEmpty &&
+                                      num.tryParse(value) != null &&
+                                      num.tryParse(_mileageEnd.text) != null) {
+                                    if (int.parse(_mileageEnd.text) >=
+                                        int.parse(value)) {
+                                      setState(() {
+                                        var test = int.parse(_mileageEnd.text) -
+                                            int.parse(value);
+                                        _distance.text = test.toString();
+                                      });
+                                    } else {
+                                      _distance.text = "";
+                                    }
+                                  }
+                                  if (value.isEmpty ||
+                                      _mileageBegin.text.isEmpty) {
+                                    _distance.text = "";
+                                  }
+
+                                  fieldsHaveChanged = true;
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.camera_alt,
+                                ),
+                                onPressed: () {
+                                  _pickImage(true);
+                                },
+                              ),
+                            ]),
+                        SizedBox(
+                          height: 10,
+                        ),
+                      ],
                     ),
                   ),
-                  TypeAheadFormField(
-                    textFieldConfiguration: TextFieldConfiguration(
-                        decoration: InputDecoration(labelText: 'Begleiter'),
-                        controller: _typeAheadControllerAttendant,
-                        onChanged: (value) {
-                          fieldsHaveChanged = true;
-                        }),
-                    noItemsFoundBuilder: (context) {
-                      return SizedBox();
-                    },
-                    suggestionsCallback: (pattern) {
-                      return getSuggestions(pattern, LifeSearch.attendants);
-                    },
-                    itemBuilder: (context, suggestion) {
-                      return ListTile(
-                        title: Text(suggestion),
-                      );
-                    },
-                    transitionBuilder: (context, suggestionsBox, controller) {
-                      return suggestionsBox;
-                    },
-                    validator: (value) {
-                      if (value != null && value.length > 20)
-                        return 'Geben Sie maximal 20 Zeichen ein.';
-                      return null;
-                    },
-                    onSuggestionSelected: (suggestion) {
-                      this._typeAheadControllerAttendant.text = suggestion;
-                    },
+                  SizedBox(
+                    height: 20,
                   ),
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(labelText: 'Straßenzustand'),
-                    items: ['nass', 'trocken', 'eisig', 'schneebedeckt']
-                        .map((label) => DropdownMenuItem(
-                              child: Text(label),
-                              value: label,
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        fieldsHaveChanged = true;
-                        suggestedRoadCondition = value;
-                      });
-                    },
-                    key: Key('condition'),
-                    value: suggestedRoadCondition,
+                  Container(
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.shade400,
+                      ),
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Ziel',
+                          style: TextStyle(
+                              color: Theme.of(context).accentColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        TypeAheadFormField(
+                          key: Key('ZielOrt'),
+                          textFieldConfiguration: TextFieldConfiguration(
+                              decoration: InputDecoration(labelText: 'Ort'),
+                              keyboardType: TextInputType.text,
+                              controller: _typeAheadControllerTourEnd,
+                              onChanged: (value) {
+                                fieldsHaveChanged = true;
+                              }),
+                          noItemsFoundBuilder: (context) {
+                            return SizedBox();
+                          },
+                          validator: (value) {
+                            if (value != null && value.length > 20)
+                              return 'Geben Sie maximal 20 Zeichen ein.';
+                            return null;
+                          },
+                          suggestionsCallback: (pattern) {
+                            return getSuggestions(
+                                pattern, LifeSearch.locations);
+                          },
+                          itemBuilder: (context, suggestion) {
+                            return ListTile(
+                              title: Text(suggestion),
+                            );
+                          },
+                          transitionBuilder:
+                              (context, suggestionsBox, controller) {
+                            return suggestionsBox;
+                          },
+                          onSuggestionSelected: (suggestion) {
+                            this._typeAheadControllerTourEnd.text = suggestion;
+                          },
+                        ),
+                        Stack(
+                            alignment: AlignmentDirectional.centerEnd,
+                            children: <Widget>[
+                              TextFormField(
+                                controller: _mileageEnd,
+                                decoration: InputDecoration(
+                                    labelText: 'Kilometerstand'),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value.isNotEmpty &&
+                                      num.tryParse(value) == null) {
+                                    return 'Geben Sie bitte eine ganze Zahl ein.';
+                                  }
+                                  if (value != null && value.length > 7)
+                                    return 'Geben Sie maximal 7 Zeichen ein.';
+                                  if (num.tryParse(value) != null &&
+                                      int.parse(value) < 0)
+                                    return 'Sie können nur positive Zahlen als Ziel definieren.';
+                                  if (_distance.text != null &&
+                                      num.tryParse(_distance.text) != null &&
+                                      int.parse(_distance.text) >= 65000)
+                                    return 'Die maximale Distanz beträgt 65000km';
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  if (value.isNotEmpty &&
+                                      num.tryParse(value) != null &&
+                                      num.tryParse(_mileageBegin.text) !=
+                                          null) {
+                                    if (int.parse(value) >=
+                                        int.parse(_mileageBegin.text)) {
+                                      setState(() {
+                                        var test = int.parse(value) -
+                                            int.parse(_mileageBegin.text);
+                                        _distance.text = test.abs().toString();
+                                      });
+                                    } else {
+                                      _distance.text = "";
+                                    }
+                                  }
+                                  if (value.isEmpty ||
+                                      _mileageBegin.text.isEmpty) {
+                                    _distance.text = "";
+                                  }
+
+                                  fieldsHaveChanged = true;
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.camera_alt,
+                                ),
+                                onPressed: () {
+                                  _pickImage(false);
+                                },
+                              ),
+                            ]),
+                        IgnorePointer(
+                          child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Distanz',
+                                // fillColor: Colors.grey.shade300,
+                                // filled: true,
+                                enabled: false,
+                              ),
+                              keyboardType: TextInputType.number,
+                              controller: _distance,
+                              validator: (value) {
+                                if (value != null &&
+                                    num.tryParse(value) != null &&
+                                    int.parse(value) >= 65000)
+                                  return 'Die maximale Distanz beträgt 65000km';
+                                return null;
+                              },
+                              onChanged: (value) {
+                                fieldsHaveChanged = true;
+                              }),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                      ],
+                    ),
                   ),
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(labelText: 'Witterung'),
-                    items: [
-                      'wechselhaft',
-                      'wolkenfrei',
-                      'bewölkt',
-                      'regnerisch',
-                      'stürmisch',
-                      'nebelig',
-                      'heiter'
-                    ]
-                        .map((label) => DropdownMenuItem(
-                              child: Text(label),
-                              value: label,
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        fieldsHaveChanged = true;
-                        suggestedWeather = value;
-                      });
-                    },
-                    key: Key('weather'),
-                    value: suggestedWeather,
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.shade400,
+                      ),
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Wetter',
+                          style: TextStyle(
+                              color: Theme.of(context).accentColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        DropdownButtonFormField<String>(
+                          decoration:
+                              InputDecoration(labelText: 'Straßenzustand'),
+                          items: ['nass', 'trocken', 'eisig', 'schneebedeckt']
+                              .map((label) => DropdownMenuItem(
+                                    child: Text(label),
+                                    value: label,
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              fieldsHaveChanged = true;
+                              suggestedRoadCondition = value;
+                            });
+                          },
+                          key: Key('condition'),
+                          value: suggestedRoadCondition,
+                        ),
+                        DropdownButtonFormField<String>(
+                          decoration: InputDecoration(labelText: 'Witterung'),
+                          items: [
+                            'wechselhaft',
+                            'wolkenfrei',
+                            'bewölkt',
+                            'regnerisch',
+                            'stürmisch',
+                            'nebelig',
+                            'heiter'
+                          ]
+                              .map((label) => DropdownMenuItem(
+                                    child: Text(label),
+                                    value: label,
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              fieldsHaveChanged = true;
+                              suggestedWeather = value;
+                            });
+                          },
+                          key: Key('weather'),
+                          value: suggestedWeather,
+                        ),
+                        SizedBox(
+                          height: 10,
+                        )
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.shade400,
+                      ),
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Fahrzeug',
+                          style: TextStyle(
+                              color: Theme.of(context).accentColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        TypeAheadFormField(
+                          textFieldConfiguration: TextFieldConfiguration(
+                              decoration:
+                                  InputDecoration(labelText: 'Begleiter'),
+                              controller: _typeAheadControllerAttendant,
+                              onChanged: (value) {
+                                fieldsHaveChanged = true;
+                              }),
+                          noItemsFoundBuilder: (context) {
+                            return SizedBox();
+                          },
+                          suggestionsCallback: (pattern) {
+                            return getSuggestions(
+                                pattern, LifeSearch.attendants);
+                          },
+                          itemBuilder: (context, suggestion) {
+                            return ListTile(
+                              title: Text(suggestion),
+                            );
+                          },
+                          transitionBuilder:
+                              (context, suggestionsBox, controller) {
+                            return suggestionsBox;
+                          },
+                          validator: (value) {
+                            if (value != null && value.length > 20)
+                              return 'Geben Sie maximal 20 Zeichen ein.';
+                            return null;
+                          },
+                          onSuggestionSelected: (suggestion) {
+                            this._typeAheadControllerAttendant.text =
+                                suggestion;
+                          },
+                        ),
+                        DropdownButtonFormField<String>(
+                          iconDisabledColor: Colors.grey.shade200,
+                          decoration:
+                              InputDecoration(labelText: 'Fahrzeugname'),
+                          disabledHint: SizedBox(
+                            child: Text(
+                              _vehicleName,
+                              style: TextStyle(
+                                // fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          value: _vehicleName,
+                          onChanged: _dropdownMenuItemList.length > 0
+                              ? (String value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _vehicleName = value;
+                                      for (int i = 0;
+                                          i < vehicles.length;
+                                          i++) {
+                                        if (vehicles[i].name == _vehicleName)
+                                          _typeAheadControllerLicensePlate
+                                              .text = vehicles[i].licensePlate;
+                                      }
+                                    });
+                                  }
+                                }
+                              : null,
+                          items: _dropdownMenuItemList.length > 0
+                              ? _dropdownMenuItemList
+                              : null,
+                        ),
+                        TypeAheadFormField(
+                          textFieldConfiguration: TextFieldConfiguration(
+                              decoration:
+                                  InputDecoration(labelText: 'Kennzeichen'),
+                              keyboardType: TextInputType.text,
+                              controller: _typeAheadControllerLicensePlate,
+                              onChanged: (value) {
+                                fieldsHaveChanged = true;
+                              }),
+                          noItemsFoundBuilder: (context) {
+                            return SizedBox();
+                          },
+                          validator: (value) {
+                            if (value != null && value.length > 12)
+                              return 'Geben Sie maximal 12 Zeichen ein.';
+                            return null;
+                          },
+                          suggestionsCallback: (pattern) {
+                            return getSuggestions(
+                                pattern, LifeSearch.licensePlates);
+                          },
+                          itemBuilder: (context, suggestion) {
+                            return ListTile(
+                              title: Text(suggestion),
+                            );
+                          },
+                          transitionBuilder:
+                              (context, suggestionsBox, controller) {
+                            return suggestionsBox;
+                          },
+                          onSuggestionSelected: (suggestion) {
+                            this._typeAheadControllerLicensePlate.text =
+                                suggestion;
+                          },
+                        ),
+                        SizedBox(
+                          height: 10,
+                        )
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.shade400,
+                      ),
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Zeit',
+                          style: TextStyle(
+                              color: Theme.of(context).accentColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            await _selectDate().then((value) {
+                              if (value != null) {
+                                _initialDate.text =
+                                    DateFormat.yMMMd('de_DE').format(value);
+                                dateTime = value;
+                              }
+                            });
+                          },
+                          child: IgnorePointer(
+                            child: Stack(
+                                alignment: AlignmentDirectional.centerEnd,
+                                children: <Widget>[
+                                  TextFormField(
+                                      maxLines: 1,
+                                      validator: (value) {
+                                        if (value.isEmpty || value.length < 1) {
+                                          return 'Wähle ein Datum.';
+                                        }
+                                        return null;
+                                      },
+                                      controller: _initialDate,
+                                      decoration: InputDecoration(
+                                        labelText: 'Datum',
+                                        labelStyle: TextStyle(
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                        ),
+                                      ),
+                                      onChanged: (value) {
+                                        fieldsHaveChanged = true;
+                                      }),
+                                  Icon(
+                                    Icons.calendar_today,
+                                    // color: Colors.black,
+                                  ),
+                                ]),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            await _selectTime().then((value) {
+                              if (value != null) {
+                                _dayTime.text = value.hour.toString() +
+                                    ':' +
+                                    value.minute.toString();
+                              }
+                            });
+                          },
+                          child: IgnorePointer(
+                            child: Stack(
+                                alignment: AlignmentDirectional.centerEnd,
+                                children: <Widget>[
+                                  TextFormField(
+                                    controller: _dayTime,
+                                    decoration: InputDecoration(
+                                      labelText: 'Tageszeit',
+                                      labelStyle: TextStyle(
+                                        decorationStyle:
+                                            TextDecorationStyle.solid,
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      fieldsHaveChanged = true;
+                                    },
+                                  ),
+                                  Icon(
+                                    Icons.watch_later_outlined,
+                                    // color: Colors.black,
+                                  ),
+                                ]),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(
                     height: 50,
-                  )
+                  ),
                 ],
               ),
             ),

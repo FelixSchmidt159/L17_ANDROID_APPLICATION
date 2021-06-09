@@ -28,7 +28,7 @@ class AppDrawer extends StatelessWidget {
           Divider(),
           ListTile(
             leading: Icon(Icons.show_chart_rounded),
-            title: Text('Ziel'),
+            title: Text('Kilometerstandvorgabe'),
             onTap: () {
               Navigator.of(context).pushNamed(
                 ChartBarScreen.routeName,
