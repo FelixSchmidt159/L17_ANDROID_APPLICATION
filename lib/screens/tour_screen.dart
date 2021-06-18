@@ -499,13 +499,34 @@ class _TourScreenState extends State<TourScreen> {
                 children: <Widget>[
                   Container(
                     padding: const EdgeInsets.all(10.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color:
-                            _missingStart ? Colors.red : Colors.grey.shade400,
-                      ),
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
+                    decoration: _missingStart
+                        ? BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              bottom: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              left: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              right: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          )
+                        : BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey.shade400,
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
                     child: Column(
                       children: [
                         Text(
@@ -618,12 +639,34 @@ class _TourScreenState extends State<TourScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.all(10.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: _missingGoal ? Colors.red : Colors.grey.shade400,
-                      ),
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
+                    decoration: _missingGoal
+                        ? BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              bottom: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              left: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              right: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          )
+                        : BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey.shade400,
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
                     child: Column(
                       children: [
                         Text(
@@ -756,12 +799,34 @@ class _TourScreenState extends State<TourScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.all(10.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.grey.shade400,
-                      ),
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
+                    decoration: _missingVehicle
+                        ? BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              bottom: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              left: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                              right: BorderSide(
+                                width: 3.0,
+                                color: Colors.red,
+                              ),
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          )
+                        : BoxDecoration(
+                            border: Border.all(
+                              color: Colors.grey.shade400,
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
                     child: Column(
                       children: [
                         Text(
