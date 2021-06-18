@@ -62,7 +62,7 @@ class _ApplicantScreenState extends State<ApplicantScreen> {
                           ApplicantDetailScreen.routeName,
                           arguments: Applicant("", ""));
                     },
-                    child: Text('Bewerber hinzufügen'))
+                    child: Text('Fahrer hinzufügen'))
               ],
             ),
           );

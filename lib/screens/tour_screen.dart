@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/applicants.dart';
-import 'package:l17/providers/tour.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:l17/providers/vehicle.dart';
 import 'package:provider/provider.dart';
@@ -49,15 +48,19 @@ class _TourScreenState extends State<TourScreen> {
   String suggestedRoadCondition = "trocken";
   String suggestedWeather = "heiter";
   String suggestedLicensePlate = "";
+  String _vehicleName = "";
   bool _initializeArguments = true;
   bool _initializeVehicles = true;
   bool _initializeSuggestions = true;
+  bool fieldsHaveChanged = false;
+  bool _missingVehicle = false;
+  bool _missingGoal = false;
+  bool _missingStart = false;
   String _selectedDriver;
   List<Vehicle> vehicles = [];
-  bool fieldsHaveChanged = false;
   List<DropdownMenuItem<String>> _dropdownMenuItemList = [];
   StreamSubscription<QuerySnapshot> _vehicleListener;
-  String _vehicleName = "";
+
   DateTime dateTime = DateTime.now();
 
   @override
@@ -304,7 +307,6 @@ class _TourScreenState extends State<TourScreen> {
           'name': vehicles[vehicleIdIndex].name,
           'licensePlate': vehicles[vehicleIdIndex].licensePlate,
         }).catchError((e) => print(e));
-        ;
         return true;
       } else {
         return true;
@@ -421,17 +423,72 @@ class _TourScreenState extends State<TourScreen> {
     return (_saveForm()) ?? false;
   }
 
+  bool checkMissingFields() {
+    bool missingFields = false;
+    if (_typeAheadControllerAttendant.text == "") missingFields = true;
+    if (_dayTime.text == "") missingFields = true;
+    if (_distance.text == "") missingFields = true;
+    if (_typeAheadControllerLicensePlate.text == "") missingFields = true;
+    if (_mileageBegin.text == "") missingFields = true;
+    if (_mileageEnd.text == "") missingFields = true;
+    if (suggestedRoadCondition == "") missingFields = true;
+    if (_typeAheadControllerTourBegin.text == "") missingFields = true;
+    if (_typeAheadControllerTourEnd.text == "") missingFields = true;
+    if (suggestedWeather == "") missingFields = true;
+    return missingFields;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
         child: Scaffold(
           appBar: AppBar(
-            title: Text('Tour'),
+            // title: Text('Fahrt'),
             actions: <Widget>[
-              // IconButton(
-              //   icon: Icon(Icons.save),
-              //   onPressed: _saveForm,
-              // ),
+              tourObject.id != ""
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 15, 0),
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          primary: Colors.white,
+                          textStyle: TextStyle(
+                              // fontSize: 15,
+                              ),
+                        ),
+                        onPressed: () async {
+                          if (checkMissingFields()) {
+                            if (_typeAheadControllerTourBegin.text == "" ||
+                                _mileageBegin.text == "") {
+                              _missingStart = true;
+                            } else {
+                              _missingStart = false;
+                            }
+                            if (_typeAheadControllerTourEnd.text == "" ||
+                                _mileageEnd.text == "") {
+                              _missingGoal = true;
+                            } else {
+                              _missingGoal = false;
+                            }
+                            if (_typeAheadControllerAttendant.text == "" ||
+                                _typeAheadControllerLicensePlate.text == "") {
+                              _missingVehicle = true;
+                            } else {
+                              _missingVehicle = false;
+                            }
+                            setState(() {});
+                          } else {
+                            _missingStart = false;
+                            _missingGoal = false;
+                            _missingVehicle = false;
+                            if (await _saveForm()) {
+                              Navigator.pop(context);
+                            }
+                          }
+                        },
+                        child: const Text('Fahrt abschließen'),
+                      ),
+                    )
+                  : Container(),
             ],
           ),
           body: Padding(
@@ -444,7 +501,8 @@ class _TourScreenState extends State<TourScreen> {
                     padding: const EdgeInsets.all(10.0),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.grey.shade400,
+                        color:
+                            _missingStart ? Colors.red : Colors.grey.shade400,
                       ),
                       borderRadius: BorderRadius.circular(10.0),
                     ),
@@ -562,7 +620,7 @@ class _TourScreenState extends State<TourScreen> {
                     padding: const EdgeInsets.all(10.0),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.grey.shade400,
+                        color: _missingGoal ? Colors.red : Colors.grey.shade400,
                       ),
                       borderRadius: BorderRadius.circular(10.0),
                     ),
@@ -769,7 +827,8 @@ class _TourScreenState extends State<TourScreen> {
                     padding: const EdgeInsets.all(10.0),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.grey.shade400,
+                        color:
+                            _missingVehicle ? Colors.red : Colors.grey.shade400,
                       ),
                       borderRadius: BorderRadius.circular(10.0),
                     ),

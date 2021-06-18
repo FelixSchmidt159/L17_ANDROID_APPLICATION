@@ -68,7 +68,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Bewerber'),
+          title: Text('Fahrer'),
           // actions: <Widget>[
           //   IconButton(
           //     icon: Icon(Icons.save),
@@ -92,7 +92,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
                   onSaved: (value) {
                     _editedApplicant = Applicant(value, _editedApplicant.id);
                   },
-                  decoration: InputDecoration(labelText: 'Name des Bewerbers'),
+                  decoration: InputDecoration(labelText: 'Name des Fahrers'),
                   keyboardType: TextInputType.name,
                 )
               ],

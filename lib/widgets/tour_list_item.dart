@@ -109,7 +109,7 @@ class _TourListItemState extends State<TourListItem> {
               ? Row(
                   children: [
                     Text(
-                      'Daten fehlen  ',
+                      'Fahrt abschließen  ',
                       style: TextStyle(
                           fontSize: 18,
                           // fontWeight: FontWeight.bold,
