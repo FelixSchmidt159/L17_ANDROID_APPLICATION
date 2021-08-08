@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/providers/applicant.dart';
+import 'package:l17/models/applicant.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:provider/provider.dart';
@@ -16,9 +16,11 @@ class ApplicantListItem extends StatefulWidget {
 }
 
 class _ApplicantListItemState extends State<ApplicantListItem> {
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final _currentUser = FirebaseAuth.instance.currentUser;
   String _selectedDriver;
 
+  // when a applicant is deleted this method ensures that all information concenring
+  // this applicant will be deleted in the database
   void _showDialog() {
     // flutter defined function
     showDialog(
@@ -45,7 +47,7 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
                 }
                 var instance = FirebaseFirestore.instance
                     .collection('users')
-                    .doc(currentUser.uid)
+                    .doc(_currentUser.uid)
                     .collection('drivers')
                     .doc(widget.applicant.id);
 
@@ -108,6 +110,5 @@ class _ApplicantListItemState extends State<ApplicantListItem> {
         ),
       ),
     );
-    // Divider();
   }
 }

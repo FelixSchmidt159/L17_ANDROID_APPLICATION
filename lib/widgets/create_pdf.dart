@@ -4,8 +4,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:l17/providers/applicants.dart';
-import 'package:l17/providers/tour.dart';
-import 'package:l17/providers/vehicle.dart';
+import 'package:l17/models/tour.dart';
+import 'package:l17/models/vehicle.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -25,26 +25,22 @@ class CreatePdf extends StatefulWidget {
   _CreatePdfState createState() => _CreatePdfState();
 }
 
-// class _LineChartWidgetState extends State<LineChartWidget> {
 class _CreatePdfState extends State<CreatePdf> {
-  List<List<String>> data = [];
-  File pdfFile;
+  List<List<String>> _data = [];
+  File _pdfFile;
   String _selectedDriver;
-  final currentUser = FirebaseAuth.instance.currentUser;
-  List<Vehicle> vehicles = [];
+  final _currentUser = FirebaseAuth.instance.currentUser;
+  List<Vehicle> _vehicles = [];
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
+  // fetches all tours and vehicles to create the data which is then used for the
+  // pdf
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     List<Tour> tours = [];
     if (_selectedDriver != null) {
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
@@ -72,22 +68,22 @@ class _CreatePdfState extends State<CreatePdf> {
           }
           FirebaseFirestore.instance
               .collection('users')
-              .doc(currentUser.uid)
+              .doc(_currentUser.uid)
               .collection('vehicles')
               .get()
               .then((value) {
             var docs = value.docs;
             if (docs.length > 0) {
               for (int i = 0; i < docs.length; i++) {
-                vehicles.add(Vehicle(
+                _vehicles.add(Vehicle(
                     docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
               }
             }
-            data = generatePdfData(tours);
-            generateDocument(PdfPageFormat.a4, data).then((value) {
+            _data = generatePdfData(tours);
+            generateDocument(PdfPageFormat.a4, _data).then((value) {
               if (mounted) {
                 setState(() {
-                  pdfFile = value;
+                  _pdfFile = value;
                 });
               }
             });
@@ -106,7 +102,7 @@ class _CreatePdfState extends State<CreatePdf> {
       padding: EdgeInsets.all(8),
       child: Builder(
         builder: (context) {
-          if (pdfFile != null) {
+          if (_pdfFile != null) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -114,12 +110,12 @@ class _CreatePdfState extends State<CreatePdf> {
                 IconButton(
                     icon: Icon(Icons.file_download),
                     onPressed: () {
-                      openFile(pdfFile);
+                      openFile(_pdfFile);
                     }),
                 Expanded(
                   child: RotatedBox(
                     child: SfPdfViewer.file(
-                      pdfFile,
+                      _pdfFile,
                     ),
                     quarterTurns: 3,
                   ),
@@ -145,6 +141,8 @@ class _CreatePdfState extends State<CreatePdf> {
     );
   }
 
+  // creates the data in the format, which the class requires, in order to build
+  // the driving protocol
   List<List<String>> generatePdfData(List<Tour> items) {
     List<String> header = [];
     int distanceDriven = 0;
@@ -154,12 +152,12 @@ class _CreatePdfState extends State<CreatePdf> {
     header.add('Kilometerstand \n Start');
     header.add('Kilometerstand \n Ziel');
 
-    for (int i = 0; i < vehicles.length; i++) {
+    for (int i = 0; i < _vehicles.length; i++) {
       header.add('priv. Kilometer' +
           '\n' +
-          vehicles[i].name +
+          _vehicles[i].name +
           '\n' +
-          vehicles[i].licensePlate);
+          _vehicles[i].licensePlate);
     }
     header.add('Kennzeichen');
     header.add('Tageszeit');
@@ -183,9 +181,9 @@ class _CreatePdfState extends State<CreatePdf> {
       row.add(items[w].mileageEnd.toString() == "0"
           ? ""
           : items[w].mileageEnd.toString());
-      for (int i = 0; i < vehicles.length; i++) {
-        if (vehicles[i].licensePlate == items[w].licensePlate &&
-            vehicles[i].name == items[w].carName) {
+      for (int i = 0; i < _vehicles.length; i++) {
+        if (_vehicles[i].licensePlate == items[w].licensePlate &&
+            _vehicles[i].name == items[w].carName) {
           if ((w + 1) < items.length) {
             for (int j = w + 1; j < items.length; j++) {
               if (items[j].licensePlate == items[w].licensePlate &&
@@ -215,7 +213,7 @@ class _CreatePdfState extends State<CreatePdf> {
       pdfData.add(row);
     }
     row = [];
-    for (int i = 0; i < 10 + vehicles.length; i++) {
+    for (int i = 0; i < 10 + _vehicles.length; i++) {
       if (i == 1) {
         row.add(
           'Gesamt: $distanceDriven km',
@@ -232,6 +230,7 @@ class _CreatePdfState extends State<CreatePdf> {
     await OpenFile.open(url);
   }
 
+  // saves the generated document with a given name
   Future<File> mySaveDocument({
     @required String name,
     @required pw.Document pdf,
@@ -245,6 +244,8 @@ class _CreatePdfState extends State<CreatePdf> {
     return file;
   }
 
+  // defines the pdf format, how the cells and rows should look
+  // and creates an pdf document
   Future<File> generateDocument(
       PdfPageFormat format, List<List<String>> data) async {
     final doc = pw.Document(pageMode: PdfPageMode.outlines);

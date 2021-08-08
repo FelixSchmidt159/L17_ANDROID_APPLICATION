@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:l17/providers/vehicle.dart';
+import 'package:l17/models/tour.dart';
+import 'package:l17/models/vehicle.dart';
 import 'package:provider/provider.dart';
 
 class TourScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ enum LifeSearch { attendants, locations, licensePlates }
 
 class _TourScreenState extends State<TourScreen> {
   final currentUser = FirebaseAuth.instance.currentUser;
-  TourScreenArguments tourObject;
+  Tour tourObject;
 
   final _form = GlobalKey<FormState>();
   final TextEditingController _typeAheadControllerLicensePlate =
@@ -44,10 +44,10 @@ class _TourScreenState extends State<TourScreen> {
   List<String> _attendants = [];
   List<String> _locations = [];
   List<String> _licensePlates = [];
-  String suggestedAttendant = "";
-  String suggestedRoadCondition = "trocken";
-  String suggestedWeather = "heiter";
-  String suggestedLicensePlate = "";
+  String _suggestedAttendant = "";
+  String _suggestedRoadCondition = "trocken";
+  String _suggestedWeather = "heiter";
+  String _suggestedLicensePlate = "";
   String _vehicleName = "";
   bool _initializeArguments = true;
   bool _initializeVehicles = true;
@@ -57,11 +57,10 @@ class _TourScreenState extends State<TourScreen> {
   bool _missingGoal = false;
   bool _missingStart = false;
   String _selectedDriver;
-  List<Vehicle> vehicles = [];
+  List<Vehicle> _vehicles = [];
   List<DropdownMenuItem<String>> _dropdownMenuItemList = [];
   StreamSubscription<QuerySnapshot> _vehicleListener;
-
-  DateTime dateTime = DateTime.now();
+  DateTime _dateTime = DateTime.now();
 
   @override
   void dispose() {
@@ -83,38 +82,38 @@ class _TourScreenState extends State<TourScreen> {
   void didChangeDependencies() {
     if (mounted) {
       _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-      tourObject =
-          ModalRoute.of(context).settings.arguments as TourScreenArguments;
+      tourObject = ModalRoute.of(context).settings.arguments as Tour;
     }
 
     if (_initializeArguments) {
-      suggestedRoadCondition = tourObject.tour.roadCondition == ""
-          ? "trocken"
-          : tourObject.tour.roadCondition;
-      suggestedWeather =
-          tourObject.tour.weather == "" ? "heiter" : tourObject.tour.weather;
-      _typeAheadControllerTourBegin.text = tourObject.tour.tourBegin;
-      _typeAheadControllerTourEnd.text = tourObject.tour.tourEnd;
-      _typeAheadControllerAttendant.text = tourObject.tour.attendant;
-      _dayTime.text = tourObject.tour.daytime;
-      _vehicleName = tourObject.tour.carName;
-      _typeAheadControllerLicensePlate.text = tourObject.tour.licensePlate;
+      _suggestedRoadCondition =
+          tourObject.roadCondition == "" ? "trocken" : tourObject.roadCondition;
+      _suggestedWeather =
+          tourObject.weather == "" ? "heiter" : tourObject.weather;
+      _typeAheadControllerTourBegin.text = tourObject.tourBegin;
+      _typeAheadControllerTourEnd.text = tourObject.tourEnd;
+      _typeAheadControllerAttendant.text = tourObject.attendant;
+      _dayTime.text = tourObject.daytime;
+      _vehicleName = tourObject.carName;
+      _typeAheadControllerLicensePlate.text = tourObject.licensePlate;
       _initialDate.text =
-          DateFormat.yMMMd('de_DE').format(tourObject.tour.timestamp);
-      dateTime = tourObject.tour.timestamp;
-      _mileageEnd.text = tourObject.tour.mileageEnd == 0
+          DateFormat.yMMMd('de_DE').format(tourObject.timestamp);
+      _dateTime = tourObject.timestamp;
+      _mileageEnd.text =
+          tourObject.mileageEnd == 0 ? "" : tourObject.mileageEnd.toString();
+      _mileageBegin.text = tourObject.mileageBegin == 0
           ? ""
-          : tourObject.tour.mileageEnd.toString();
-      _mileageBegin.text = tourObject.tour.mileageBegin == 0
-          ? ""
-          : tourObject.tour.mileageBegin.toString();
-      _distance.text = tourObject.tour.distance == 0
-          ? ""
-          : tourObject.tour.distance.toString();
+          : tourObject.mileageBegin.toString();
+      _distance.text =
+          tourObject.distance == 0 ? "" : tourObject.distance.toString();
       _initializeArguments = false;
     }
 
+    // fetches all given data based on already stored tours to give the user
+    // suggestions in the input fields
     if (_selectedDriver != null && _initializeSuggestions) {
+      // fetches all attendants license paltes and locations, which were already
+      // stored
       FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -136,8 +135,8 @@ class _TourScreenState extends State<TourScreen> {
               if (toursDocs[i]['tourEnd'] != "")
                 _locations.add(toursDocs[i]['tourEnd']);
               if (i == 0) {
-                suggestedAttendant = toursDocs[i]['attendant'];
-                suggestedLicensePlate = toursDocs[i]['licensePlate'];
+                _suggestedAttendant = toursDocs[i]['attendant'];
+                _suggestedLicensePlate = toursDocs[i]['licensePlate'];
               }
             }
             _locations = _locations.toSet().toList();
@@ -148,12 +147,12 @@ class _TourScreenState extends State<TourScreen> {
               if (mounted) {
                 setState(() {
                   fieldsHaveChanged = true;
-                  if (tourObject.tour.licensePlate == "") {
+                  if (tourObject.licensePlate == "") {
                     _typeAheadControllerLicensePlate.text =
-                        suggestedLicensePlate;
+                        _suggestedLicensePlate;
                   }
                   if (_typeAheadControllerAttendant.text == "") {
-                    _typeAheadControllerAttendant.text = suggestedAttendant;
+                    _typeAheadControllerAttendant.text = _suggestedAttendant;
                   }
                 });
               }
@@ -163,6 +162,8 @@ class _TourScreenState extends State<TourScreen> {
       );
       _initializeSuggestions = false;
     }
+
+    // creates the car dropdown list
     if (_initializeVehicles) {
       bool found = true;
       _vehicleListener = FirebaseFirestore.instance
@@ -171,18 +172,18 @@ class _TourScreenState extends State<TourScreen> {
           .collection('vehicles')
           .snapshots()
           .listen((event) {
-        vehicles = [];
+        _vehicles = [];
         _dropdownMenuItemList = [];
         final toursDocs = event.docs;
         if (toursDocs.isNotEmpty) {
           found = false;
           for (int i = 0; i < toursDocs.length; i++) {
-            vehicles.add(Vehicle(toursDocs[i]['name'],
+            _vehicles.add(Vehicle(toursDocs[i]['name'],
                 toursDocs[i]['licensePlate'], toursDocs[i].id));
             if (_vehicleName == toursDocs[i]['name']) found = true;
           }
           _dropdownMenuItemList =
-              vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
+              _vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
             return DropdownMenuItem<String>(
               value: vehicle.name,
               child: SizedBox(
@@ -200,15 +201,14 @@ class _TourScreenState extends State<TourScreen> {
             setState(() {});
           }
         }
+
         if (!found)
           _dropdownMenuItemList.add(DropdownMenuItem<String>(
             value: _vehicleName,
             child: SizedBox(
               child: Text(
                 _vehicleName,
-                style: TextStyle(
-                    // fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -221,14 +221,16 @@ class _TourScreenState extends State<TourScreen> {
     super.didChangeDependencies();
   }
 
+  // creates or updates an tour document depending on if the tour document already
+  // exists
   Future<bool> _saveForm() async {
     int vehicleIdIndex = 0;
     final isValid = _form.currentState.validate();
     if (!isValid) {
       return false;
     }
-    for (int i = 0; i < vehicles.length; i++) {
-      if (vehicles[i].name.toLowerCase() == _vehicleName.toLowerCase()) {
+    for (int i = 0; i < _vehicles.length; i++) {
+      if (_vehicles[i].name.toLowerCase() == _vehicleName.toLowerCase()) {
         vehicleIdIndex = i;
         break;
       }
@@ -242,7 +244,7 @@ class _TourScreenState extends State<TourScreen> {
             .doc(_selectedDriver)
             .collection('tours')
             .add({
-          'timestamp': dateTime,
+          'timestamp': _dateTime,
           'distance': num.tryParse(_distance.text) == null
               ? 0
               : int.parse(_distance.text),
@@ -255,10 +257,10 @@ class _TourScreenState extends State<TourScreen> {
           'licensePlate': _typeAheadControllerLicensePlate.text,
           'tourBegin': _typeAheadControllerTourBegin.text,
           'tourEnd': _typeAheadControllerTourEnd.text,
-          'roadCondition': suggestedRoadCondition,
+          'roadCondition': _suggestedRoadCondition,
           'attendant': _typeAheadControllerAttendant.text,
           'daytime': _dayTime.text,
-          'weather': suggestedWeather,
+          'weather': _suggestedWeather,
           'carName': _vehicleName,
         }).catchError((e) => print(e));
       } else {
@@ -270,7 +272,7 @@ class _TourScreenState extends State<TourScreen> {
             .collection('tours')
             .doc(tourObject.id)
             .update({
-          'timestamp': dateTime,
+          'timestamp': _dateTime,
           'distance': num.tryParse(_distance.text) == null
               ? 0
               : int.parse(_distance.text),
@@ -283,29 +285,32 @@ class _TourScreenState extends State<TourScreen> {
           'licensePlate': _typeAheadControllerLicensePlate.text,
           'tourBegin': _typeAheadControllerTourBegin.text,
           'tourEnd': _typeAheadControllerTourEnd.text,
-          'roadCondition': suggestedRoadCondition,
+          'roadCondition': _suggestedRoadCondition,
           'attendant': _typeAheadControllerAttendant.text,
           'daytime': _dayTime.text,
-          'weather': suggestedWeather,
+          'weather': _suggestedWeather,
           'carName': _vehicleName,
         }).catchError((e) => print(e));
       }
-      if (vehicleIdIndex < vehicles.length &&
-          vehicles[vehicleIdIndex].name.toLowerCase() ==
+
+      // when a new tour document has been created it updates the cars last
+      // mileage
+      if (vehicleIdIndex < _vehicles.length &&
+          _vehicles[vehicleIdIndex].name.toLowerCase() ==
               _vehicleName.toLowerCase() &&
-          vehicles[vehicleIdIndex].licensePlate.toLowerCase() ==
+          _vehicles[vehicleIdIndex].licensePlate.toLowerCase() ==
               _typeAheadControllerLicensePlate.text.toLowerCase()) {
         FirebaseFirestore.instance
             .collection('users')
             .doc(currentUser.uid)
             .collection('vehicles')
-            .doc(vehicles[vehicleIdIndex].id)
+            .doc(_vehicles[vehicleIdIndex].id)
             .update({
           'lastMileage': num.tryParse(_mileageEnd.text) == null
               ? 0
               : int.parse(_mileageEnd.text),
-          'name': vehicles[vehicleIdIndex].name,
-          'licensePlate': vehicles[vehicleIdIndex].licensePlate,
+          'name': _vehicles[vehicleIdIndex].name,
+          'licensePlate': _vehicles[vehicleIdIndex].licensePlate,
         }).catchError((e) => print(e));
         return true;
       } else {
@@ -327,7 +332,8 @@ class _TourScreenState extends State<TourScreen> {
     }
   }
 
-  List<String> getSuggestions(
+  // Gives suggestions based on the given input field
+  List<String> _getSuggestions(
     String pattern,
     LifeSearch lifeSearchType,
   ) {
@@ -357,11 +363,12 @@ class _TourScreenState extends State<TourScreen> {
     }
 
     if (lifeSearchType == LifeSearch.licensePlates) {
-      for (int i = 0; i < vehicles.length; i++) {
-        suggestions.add(vehicles[i].licensePlate);
+      for (int i = 0; i < _vehicles.length; i++) {
+        suggestions.add(_vehicles[i].licensePlate);
       }
     }
 
+    // do not give more than three suggestions
     suggestions = suggestions.toSet().toList();
     if (suggestions.length >= 3) {
       List<String> limitedSuggestions = [];
@@ -371,15 +378,17 @@ class _TourScreenState extends State<TourScreen> {
     return suggestions;
   }
 
+  // picks a date
   Future<DateTime> _selectDate() async {
     return await showDatePicker(
       context: context,
-      initialDate: dateTime,
+      initialDate: _dateTime,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
   }
 
+  // picks a time
   Future<TimeOfDay> _selectTime() async {
     return await showTimePicker(
       context: context,
@@ -389,41 +398,12 @@ class _TourScreenState extends State<TourScreen> {
     );
   }
 
-  // Future<bool> _onWillPop() async {
-  //   if (!fieldsHaveChanged) return true;
-  //   return (await showDialog(
-  //         context: context,
-  //         builder: (context) => new AlertDialog(
-  //           title: Text(
-  //             'Die Änderungen wurden nicht gespeichert.',
-  //           ),
-  //           content: Text('Wollen Sie die Änderungen verwerfen?'),
-  //           actions: <Widget>[
-  //             TextButton(
-  //               style: TextButton.styleFrom(
-  //                   backgroundColor: Colors.green, primary: Colors.white),
-  //               onPressed: () {
-  //                 Navigator.of(context).pop(true);
-  //               },
-  //               child: new Text('Ja'),
-  //             ),
-  //             TextButton(
-  //               style: TextButton.styleFrom(
-  //                   backgroundColor: Colors.red, primary: Colors.white),
-  //               onPressed: () => Navigator.of(context).pop(false),
-  //               child: new Text('Nein'),
-  //             ),
-  //           ],
-  //         ),
-  //       )) ??
-  //       false;
-  // }
-
   Future<bool> _onWillPop() async {
     return (_saveForm()) ?? false;
   }
 
-  bool checkMissingFields() {
+  // check if all fields are filled with information
+  bool _checkMissingFields() {
     bool missingFields = false;
     if (_typeAheadControllerAttendant.text == "") missingFields = true;
     if (_dayTime.text == "") missingFields = true;
@@ -431,10 +411,10 @@ class _TourScreenState extends State<TourScreen> {
     if (_typeAheadControllerLicensePlate.text == "") missingFields = true;
     if (_mileageBegin.text == "") missingFields = true;
     if (_mileageEnd.text == "") missingFields = true;
-    if (suggestedRoadCondition == "") missingFields = true;
+    if (_suggestedRoadCondition == "") missingFields = true;
     if (_typeAheadControllerTourBegin.text == "") missingFields = true;
     if (_typeAheadControllerTourEnd.text == "") missingFields = true;
-    if (suggestedWeather == "") missingFields = true;
+    if (_suggestedWeather == "") missingFields = true;
     return missingFields;
   }
 
@@ -456,7 +436,7 @@ class _TourScreenState extends State<TourScreen> {
                               ),
                         ),
                         onPressed: () async {
-                          if (checkMissingFields()) {
+                          if (_checkMissingFields()) {
                             if (_typeAheadControllerTourBegin.text == "" ||
                                 _mileageBegin.text == "") {
                               _missingStart = true;
@@ -554,7 +534,7 @@ class _TourScreenState extends State<TourScreen> {
                             return null;
                           },
                           suggestionsCallback: (pattern) {
-                            return getSuggestions(
+                            return _getSuggestions(
                                 pattern, LifeSearch.locations);
                           },
                           itemBuilder: (context, suggestion) {
@@ -586,10 +566,10 @@ class _TourScreenState extends State<TourScreen> {
                                     return 'Geben Sie bitte eine ganze Zahl ein.';
                                   }
                                   if (value != null && value.length > 7)
-                                    return 'Geben Sie maximal 7 Zeichen ein.';
+                                    return 'Geben Sie maximal 7 Zeichen ein';
                                   if (num.tryParse(value) != null &&
                                       int.parse(value) < 0)
-                                    return 'Sie können nur positive Zahlen als Ziel definieren.';
+                                    return 'Sie können nur positive Zahlen als Ziel definieren';
                                   if (_distance.text != null &&
                                       num.tryParse(_distance.text) != null &&
                                       int.parse(_distance.text) >= 65000)
@@ -690,11 +670,11 @@ class _TourScreenState extends State<TourScreen> {
                           },
                           validator: (value) {
                             if (value != null && value.length > 20)
-                              return 'Geben Sie maximal 20 Zeichen ein.';
+                              return 'Geben Sie maximal 20 Zeichen ein';
                             return null;
                           },
                           suggestionsCallback: (pattern) {
-                            return getSuggestions(
+                            return _getSuggestions(
                                 pattern, LifeSearch.locations);
                           },
                           itemBuilder: (context, suggestion) {
@@ -721,13 +701,13 @@ class _TourScreenState extends State<TourScreen> {
                                 validator: (value) {
                                   if (value.isNotEmpty &&
                                       num.tryParse(value) == null) {
-                                    return 'Geben Sie bitte eine ganze Zahl ein.';
+                                    return 'Geben Sie bitte eine ganze Zahl ein';
                                   }
                                   if (value != null && value.length > 7)
-                                    return 'Geben Sie maximal 7 Zeichen ein.';
+                                    return 'Geben Sie maximal 7 Zeichen ein';
                                   if (num.tryParse(value) != null &&
                                       int.parse(value) < 0)
-                                    return 'Sie können nur positive Zahlen als Ziel definieren.';
+                                    return 'Sie können nur positive Zahlen als Ziel definieren';
                                   if (_distance.text != null &&
                                       num.tryParse(_distance.text) != null &&
                                       int.parse(_distance.text) >= 65000)
@@ -826,11 +806,11 @@ class _TourScreenState extends State<TourScreen> {
                           onChanged: (value) {
                             setState(() {
                               fieldsHaveChanged = true;
-                              suggestedRoadCondition = value;
+                              _suggestedRoadCondition = value;
                             });
                           },
                           key: Key('condition'),
-                          value: suggestedRoadCondition,
+                          value: _suggestedRoadCondition,
                         ),
                         DropdownButtonFormField<String>(
                           decoration: InputDecoration(labelText: 'Witterung'),
@@ -851,11 +831,11 @@ class _TourScreenState extends State<TourScreen> {
                           onChanged: (value) {
                             setState(() {
                               fieldsHaveChanged = true;
-                              suggestedWeather = value;
+                              _suggestedWeather = value;
                             });
                           },
                           key: Key('weather'),
-                          value: suggestedWeather,
+                          value: _suggestedWeather,
                         ),
                         SizedBox(
                           height: 10,
@@ -917,7 +897,7 @@ class _TourScreenState extends State<TourScreen> {
                             return SizedBox();
                           },
                           suggestionsCallback: (pattern) {
-                            return getSuggestions(
+                            return _getSuggestions(
                                 pattern, LifeSearch.attendants);
                           },
                           itemBuilder: (context, suggestion) {
@@ -961,11 +941,11 @@ class _TourScreenState extends State<TourScreen> {
                                     setState(() {
                                       _vehicleName = value;
                                       for (int i = 0;
-                                          i < vehicles.length;
+                                          i < _vehicles.length;
                                           i++) {
-                                        if (vehicles[i].name == _vehicleName)
+                                        if (_vehicles[i].name == _vehicleName)
                                           _typeAheadControllerLicensePlate
-                                              .text = vehicles[i].licensePlate;
+                                              .text = _vehicles[i].licensePlate;
                                       }
                                     });
                                   }
@@ -993,7 +973,7 @@ class _TourScreenState extends State<TourScreen> {
                             return null;
                           },
                           suggestionsCallback: (pattern) {
-                            return getSuggestions(
+                            return _getSuggestions(
                                 pattern, LifeSearch.licensePlates);
                           },
                           itemBuilder: (context, suggestion) {
@@ -1042,7 +1022,7 @@ class _TourScreenState extends State<TourScreen> {
                               if (value != null) {
                                 _initialDate.text =
                                     DateFormat.yMMMd('de_DE').format(value);
-                                dateTime = value;
+                                _dateTime = value;
                               }
                             });
                           },
@@ -1071,7 +1051,6 @@ class _TourScreenState extends State<TourScreen> {
                                       }),
                                   Icon(
                                     Icons.calendar_today,
-                                    // color: Colors.black,
                                   ),
                                 ]),
                           ),
@@ -1105,7 +1084,6 @@ class _TourScreenState extends State<TourScreen> {
                                   ),
                                   Icon(
                                     Icons.watch_later_outlined,
-                                    // color: Colors.black,
                                   ),
                                 ]),
                           ),
@@ -1127,6 +1105,8 @@ class _TourScreenState extends State<TourScreen> {
         onWillPop: _onWillPop);
   }
 
+  // triggers the camera and updates the input field if the image processing
+  // return a mileage
   Future<Null> _pickImage(bool mileageBegin) async {
     if (mileageBegin) {
       final pickedImage =
@@ -1191,6 +1171,7 @@ class _TourScreenState extends State<TourScreen> {
     }
   }
 
+  // processes an image and gives a result
   Future<VisionText> textRecognizer(File image) async {
     final data = FirebaseVisionImage.fromFile(image);
     final TextRecognizer textRecognizer =
@@ -1198,23 +1179,22 @@ class _TourScreenState extends State<TourScreen> {
     return await textRecognizer.processImage(data);
   }
 
+  // crops an image
   Future<File> _cropImage(String path) async {
     final croppedImage = await ImageCropper.cropImage(
-        sourcePath: path,
-        aspectRatioPresets: Platform.isAndroid
-            ? [CropAspectRatioPreset.ratio16x9]
-            : [CropAspectRatioPreset.ratio16x9],
-        androidUiSettings: AndroidUiSettings(
-            toolbarTitle: 'Zuschneiden',
-            toolbarColor: Theme.of(context).backgroundColor,
-            statusBarColor: Theme.of(context).backgroundColor,
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: Theme.of(context).backgroundColor,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false),
-        iosUiSettings: IOSUiSettings(
-          title: 'Cropper',
-        ));
+      sourcePath: path,
+      aspectRatioPresets: Platform.isAndroid
+          ? [CropAspectRatioPreset.ratio16x9]
+          : [CropAspectRatioPreset.ratio16x9],
+      androidUiSettings: AndroidUiSettings(
+          toolbarTitle: 'Zuschneiden',
+          toolbarColor: Theme.of(context).backgroundColor,
+          statusBarColor: Theme.of(context).backgroundColor,
+          toolbarWidgetColor: Colors.white,
+          activeControlsWidgetColor: Theme.of(context).backgroundColor,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false),
+    );
     return croppedImage;
   }
 }

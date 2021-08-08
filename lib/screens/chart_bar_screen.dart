@@ -20,12 +20,13 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
   final _currentUser = FirebaseAuth.instance.currentUser;
   final _form = GlobalKey<FormState>();
   final TextEditingController _distanceController = TextEditingController();
-  bool _init = true;
+  bool _initialize = true;
   String _distanceGoalId;
   int _distanceGoal = 0;
   StreamSubscription<QuerySnapshot> _distanceListener;
   StreamSubscription<QuerySnapshot> _goalListener;
 
+  /// cancel and dispose all controllers and snapshots to avoid memory leaks
   @override
   void dispose() {
     if (_goalListener != null) _goalListener.cancel();
@@ -37,7 +38,8 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
 
-    if (_selectedDriver != null && _init) {
+    if (_selectedDriver != null && _initialize) {
+      // fetch the amount of driven kilometres
       _distanceListener = FirebaseFirestore.instance
           .collection('users')
           .doc(_currentUser.uid)
@@ -58,6 +60,7 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
         }
       });
 
+      // fetch the driving goal
       _goalListener = FirebaseFirestore.instance
           .collection('users')
           .doc(_currentUser.uid)
@@ -77,12 +80,14 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
           });
         }
       });
-      _init = false;
+      _initialize = false;
     }
 
     super.didChangeDependencies();
   }
 
+  /// create or updates the goal document depending on if the document already
+  /// exists
   Future<bool> _saveForm() async {
     final isValid = _form.currentState.validate();
     if (!isValid) {
@@ -123,6 +128,7 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
   }
 
   Future<bool> _onWillPop() async {
+    if (_selectedDriver == null || _overallDistance == 0) return true;
     return (_saveForm()) ?? false;
   }
 
@@ -130,12 +136,6 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
   Widget build(BuildContext context) {
     final appBar = AppBar(
       title: Text('Ziel'),
-      actions: [
-        // IconButton(
-        //   icon: Icon(Icons.save),
-        //   onPressed: _saveForm,
-        // )
-      ],
     );
     var height = MediaQuery.of(context).size.height -
         MediaQuery.of(context).padding.top -
@@ -154,7 +154,6 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
                 _overallDistance != 0
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
-                        // mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(10, 40, 10, 5),
@@ -186,11 +185,11 @@ class _ChartBarScreenState extends State<ChartBarScreen> {
                                 controller: _distanceController,
                                 validator: (value) {
                                   if (num.tryParse(value) == null)
-                                    return 'Geben Sie das Ziel als Ganzzahl an.';
+                                    return 'Geben Sie das Ziel als Ganzzahl an';
                                   if (int.parse(value) > 64000)
-                                    return 'Sie können nur Ziele bis 64000 km definieren.';
+                                    return 'Sie können nur Ziele bis 64000 km definieren';
                                   if (int.parse(value) < 0)
-                                    return 'Sie können nur positive Zahlen als Ziel definieren.';
+                                    return 'Sie können nur positive Zahlen als Ziel definieren';
                                   return null;
                                 },
                                 onChanged: (value) {

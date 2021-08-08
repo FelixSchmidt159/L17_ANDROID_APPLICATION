@@ -11,16 +11,17 @@ class LineChartWidget extends StatefulWidget {
 }
 
 class _LineChartWidgetState extends State<LineChartWidget> {
-  List<Color> gradientColors = [
+  List<Color> _gradientColors = [
     const Color(0xff23b6e6),
     const Color(0xff02d39a),
   ];
   String _selectedDriver;
-  final currentUser = FirebaseAuth.instance.currentUser;
-  double width = 0.0;
-  int maxDistance = 3000;
-  int factor = 500;
+  final _currentUser = FirebaseAuth.instance.currentUser;
+  double _width = 0.0;
+  int _maxDistance = 3000;
+  int _factor = 500;
 
+  // subscribe to the Provider
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     super.didChangeDependencies();
@@ -29,11 +30,11 @@ class _LineChartWidgetState extends State<LineChartWidget> {
   bool showAvg = false;
   @override
   Widget build(BuildContext context) {
-    width = MediaQuery.of(context).size.width;
+    _width = MediaQuery.of(context).size.width;
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
@@ -43,7 +44,6 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         if (toursSnapshot.connectionState == ConnectionState.waiting &&
             _selectedDriver != null) {
           return Container(
-            // height: widget.height * 0.90,
             child: Center(
               child: CircularProgressIndicator(),
             ),
@@ -51,17 +51,14 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         }
         final toursDocs = toursSnapshot.data.docs;
         return Container(
-          width: width,
+          width: _width,
           child: Stack(
             children: <Widget>[
               AspectRatio(
                 aspectRatio: 1.40,
                 child: Container(
-                  decoration: BoxDecoration(
-                      // borderRadius: BorderRadius.all(
-                      //   Radius.circular(18),
-                      // ),
-                      color: Theme.of(context).accentColor),
+                  decoration:
+                      BoxDecoration(color: Theme.of(context).accentColor),
                   child: Padding(
                     padding: const EdgeInsets.only(
                         right: 18.0, left: 12.0, top: 24, bottom: 12),
@@ -78,6 +75,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
     );
   }
 
+  // generate the chart, depending on the tours and the amount of driven kilometres
   LineChartData mainData(dynamic data) {
     List<FlSpot> graphData = [];
     var currentYear = DateTime.now().year;
@@ -92,21 +90,21 @@ class _LineChartWidgetState extends State<LineChartWidget> {
       arr[i] += arr[i - 1];
     }
 
-    maxDistance = arr[DateTime.now().month - 1];
-    if (maxDistance >= 3000) {
-      factor = 1000;
+    _maxDistance = arr[DateTime.now().month - 1];
+    if (_maxDistance >= 3000) {
+      _factor = 1000;
     }
-    if (maxDistance >= 15000) {
-      factor = 2000;
+    if (_maxDistance >= 15000) {
+      _factor = 2000;
     }
-    if (maxDistance >= 30000) {
-      factor = 4000;
+    if (_maxDistance >= 30000) {
+      _factor = 4000;
     }
     for (int i = 0; i < DateTime.now().month; i++) {
       if (arr[i] > 64000) {
-        graphData.add(FlSpot((i.toDouble()), 64000 / factor));
+        graphData.add(FlSpot((i.toDouble()), 64000 / _factor));
       } else
-        graphData.add(FlSpot((i.toDouble()), arr[i].toDouble() / factor));
+        graphData.add(FlSpot((i.toDouble()), arr[i].toDouble() / _factor));
     }
     return LineChartData(
       gridData: FlGridData(
@@ -159,7 +157,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
             fontSize: 15,
           ),
           getTitles: (value) {
-            if (factor == 500) {
+            if (_factor == 500) {
               switch (value.toInt()) {
                 case 1:
                   return '500';
@@ -177,7 +175,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
                   return '[km]';
               }
               return '';
-            } else if (factor == 1000) {
+            } else if (_factor == 1000) {
               switch (value.toInt()) {
                 case 1:
                   return '1000';
@@ -200,7 +198,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
                   return '[km]';
               }
               return '';
-            } else if (factor == 2000) {
+            } else if (_factor == 2000) {
               switch (value.toInt()) {
                 case 1:
                   return '2000';
@@ -262,12 +260,12 @@ class _LineChartWidgetState extends State<LineChartWidget> {
       minX: 0,
       maxX: 13,
       minY: 0,
-      maxY: factor == 500 ? 8 : 18,
+      maxY: _factor == 500 ? 8 : 18,
       lineBarsData: [
         LineChartBarData(
           spots: graphData,
           isCurved: true,
-          colors: gradientColors,
+          colors: _gradientColors,
           barWidth: 5,
           isStrokeCapRound: true,
           dotData: FlDotData(
@@ -276,7 +274,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
           belowBarData: BarAreaData(
             show: true,
             colors:
-                gradientColors.map((color) => color.withOpacity(0.3)).toList(),
+                _gradientColors.map((color) => color.withOpacity(0.3)).toList(),
           ),
         ),
       ],

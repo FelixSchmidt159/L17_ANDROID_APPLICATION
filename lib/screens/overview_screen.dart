@@ -5,13 +5,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
-import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/applicants.dart';
-import 'package:l17/providers/tour.dart';
-import 'package:l17/providers/vehicle.dart';
+import 'package:l17/models/tour.dart';
+import 'package:l17/models/vehicle.dart';
 
 import 'package:l17/screens/tour_screen.dart';
 import 'package:l17/widgets/create_pdf.dart';
@@ -28,28 +26,30 @@ class OverviewScreen extends StatefulWidget {
 
 class _OverviewScreenState extends State<OverviewScreen> {
   int _selectedIndex = 1;
-  var currentUser = FirebaseAuth.instance.currentUser;
+  var _currentUser = FirebaseAuth.instance.currentUser;
   final TextEditingController _textFieldController = TextEditingController();
   final TextEditingController _typeAheadControllerVehicle =
       TextEditingController();
-  bool initTours = true;
-  bool initVehicles = true;
+  bool _initializeTours = true;
+  bool _initializeVehicles = true;
   String _selectedDriver;
-  List<Vehicle> vehicles = [];
-  String licensePlate = "";
-  Map lastMileageMap = Map();
-  StreamSubscription<QuerySnapshot> vehicleListener;
-  StreamSubscription<QuerySnapshot> licensePlateListener;
-  List<String> possibleCarNames = [];
-  List<DropdownMenuItem<String>> dropdownMenuItemList = [];
+  List<Vehicle> _vehicles = [];
+  String _licensePlate = "";
+  Map _lastMileageMap = Map();
+  StreamSubscription<QuerySnapshot> _vehicleListener;
+  StreamSubscription<QuerySnapshot> _licensePlateListener;
+  List<String> _possibleCarNames = [];
+  List<DropdownMenuItem<String>> _dropdownMenuItemList = [];
 
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-    if (_selectedDriver != null && initTours) {
-      licensePlateListener = FirebaseFirestore.instance
+    if (_selectedDriver != null && _initializeTours) {
+      // fetches all of the used cars and store them in a list _possibleCarNames
+      // _possibleCarNames contains only unique names
+      _licensePlateListener = FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
@@ -57,37 +57,41 @@ class _OverviewScreenState extends State<OverviewScreen> {
           .snapshots()
           .listen((event) {
         var toursDocs = event.docs;
-        possibleCarNames = [];
+        _possibleCarNames = [];
         if (toursDocs.isNotEmpty) {
           for (int i = 0; i < toursDocs.length; i++) {
             if (toursDocs[i]['carName'] != "") {
-              possibleCarNames.add(toursDocs[i]['carName']);
+              _possibleCarNames.add(toursDocs[i]['carName']);
             }
           }
-          possibleCarNames = possibleCarNames.toSet().toList();
+          _possibleCarNames = _possibleCarNames.toSet().toList();
         }
-        if (initVehicles) {
-          vehicleListener = FirebaseFirestore.instance
+
+        if (_initializeVehicles) {
+          // creates an map containg all vehicles and their last mileage
+          _vehicleListener = FirebaseFirestore.instance
               .collection('users')
-              .doc(currentUser.uid)
+              .doc(_currentUser.uid)
               .collection('vehicles')
               .snapshots()
               .listen((event) {
-            vehicles = [];
+            _vehicles = [];
             var toursDocs = event.docs;
-            dropdownMenuItemList = [];
-            lastMileageMap = Map();
+            _dropdownMenuItemList = [];
+            _lastMileageMap = Map();
             _typeAheadControllerVehicle.text = "";
-            licensePlate = "";
+            _licensePlate = "";
             if (toursDocs.isNotEmpty) {
               for (int i = 0; i < toursDocs.length; i++) {
-                vehicles.add(Vehicle(toursDocs[i]['name'],
+                _vehicles.add(Vehicle(toursDocs[i]['name'],
                     toursDocs[i]['licensePlate'], toursDocs[i].id));
-                lastMileageMap[toursDocs[i]['name']] =
+                _lastMileageMap[toursDocs[i]['name']] =
                     toursDocs[i]['lastMileage'];
               }
-              dropdownMenuItemList =
-                  vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
+
+              // creates a dropdownlist containing all existing vehicles
+              _dropdownMenuItemList =
+                  _vehicles.map<DropdownMenuItem<String>>((Vehicle vehicle) {
                 return DropdownMenuItem<String>(
                   value: vehicle.name,
                   child: SizedBox(
@@ -102,40 +106,44 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   ),
                 );
               }).toList();
-              for (int i = 0; i < possibleCarNames.length; i++) {
-                if (lastMileageMap[possibleCarNames[i]] != null) {
-                  _typeAheadControllerVehicle.text = possibleCarNames[i];
+
+              // prepare the controllers, which represent the selected car and
+              // their last mileage
+              for (int i = 0; i < _possibleCarNames.length; i++) {
+                if (_lastMileageMap[_possibleCarNames[i]] != null) {
+                  _typeAheadControllerVehicle.text = _possibleCarNames[i];
                   _textFieldController.text =
-                      lastMileageMap[possibleCarNames[i]] == 0
+                      _lastMileageMap[_possibleCarNames[i]] == 0
                           ? ""
-                          : lastMileageMap[possibleCarNames[i]].toString();
-                  for (int j = 0; j < vehicles.length; j++) {
-                    if (vehicles[j].name == possibleCarNames[i]) {
-                      licensePlate = vehicles[j].licensePlate;
-                      j = vehicles.length;
+                          : _lastMileageMap[_possibleCarNames[i]].toString();
+                  for (int j = 0; j < _vehicles.length; j++) {
+                    if (_vehicles[j].name == _possibleCarNames[i]) {
+                      _licensePlate = _vehicles[j].licensePlate;
+                      j = _vehicles.length;
                     }
                   }
-                  i = possibleCarNames.length;
+                  i = _possibleCarNames.length;
                 }
               }
+
               if (_typeAheadControllerVehicle.text == null ||
                   _typeAheadControllerVehicle.text.isEmpty) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _typeAheadControllerVehicle.text = vehicles[0].name;
+                  _typeAheadControllerVehicle.text = _vehicles[0].name;
                   _textFieldController.text =
-                      lastMileageMap[vehicles[0].name] == 0
+                      _lastMileageMap[_vehicles[0].name] == 0
                           ? ""
-                          : lastMileageMap[vehicles[0].name].toString();
+                          : _lastMileageMap[_vehicles[0].name].toString();
 
-                  licensePlate = vehicles[0].licensePlate;
+                  _licensePlate = _vehicles[0].licensePlate;
                 });
               }
               if (mounted) setState(() {});
             }
-            initVehicles = false;
+            _initializeVehicles = false;
           });
         }
-        initTours = false;
+        _initializeTours = false;
       });
     }
 
@@ -144,8 +152,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   void dispose() {
-    if (vehicleListener != null) vehicleListener.cancel();
-    if (licensePlateListener != null) licensePlateListener.cancel();
+    if (_vehicleListener != null) _vehicleListener.cancel();
+    if (_licensePlateListener != null) _licensePlateListener.cancel();
     _textFieldController.dispose();
     _typeAheadControllerVehicle.dispose();
     super.dispose();
@@ -207,7 +215,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       if (index != 2)
         _selectedIndex = index;
       else {
-        if (dropdownMenuItemList.length > 0)
+        if (_dropdownMenuItemList.length > 0)
           _displayTextInputDialog(context);
         else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -243,7 +251,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
                         iconDisabledColor: Colors.grey.shade200,
                         underline: Container(),
                         disabledHint: SizedBox(
-                          // width: width * 0.75,
                           child: Text(
                             _typeAheadControllerVehicle.text,
                             style: TextStyle(
@@ -254,26 +261,27 @@ class _OverviewScreenState extends State<OverviewScreen> {
                           ),
                         ),
                         value: _typeAheadControllerVehicle.text,
-                        onChanged: dropdownMenuItemList.length > 0
+                        onChanged: _dropdownMenuItemList.length > 0
                             ? (String value) {
                                 if (value != null) {
                                   setState(() {
                                     _typeAheadControllerVehicle.text = value;
                                     _textFieldController.text =
-                                        lastMileageMap[value] == 0
+                                        _lastMileageMap[value] == 0
                                             ? ""
-                                            : lastMileageMap[value].toString();
-                                    licensePlate = "";
-                                    for (int i = 0; i < vehicles.length; i++) {
-                                      if (vehicles[i].name == value)
-                                        licensePlate = vehicles[i].licensePlate;
+                                            : _lastMileageMap[value].toString();
+                                    _licensePlate = "";
+                                    for (int i = 0; i < _vehicles.length; i++) {
+                                      if (_vehicles[i].name == value)
+                                        _licensePlate =
+                                            _vehicles[i].licensePlate;
                                     }
                                   });
                                 }
                               }
                             : null,
-                        items: dropdownMenuItemList.length > 0
-                            ? dropdownMenuItemList
+                        items: _dropdownMenuItemList.length > 0
+                            ? _dropdownMenuItemList
                             : null,
                       ),
                       Stack(
@@ -320,41 +328,39 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 onPressed: () {
                   var daytime = DateTime.now();
                   Navigator.pop(context);
-                  Navigator.of(context).pushNamed(
-                    TourScreen.routeName,
-                    arguments: TourScreenArguments(
-                        Tour(
-                            timestamp: daytime,
-                            mileageBegin:
-                                num.tryParse(_textFieldController.text) == null
-                                    ? 0
-                                    : int.parse(_textFieldController.text),
-                            mileageEnd: 0,
-                            attendant: "",
-                            distance: 0,
-                            licensePlate: licensePlate,
-                            tourBegin: "",
-                            tourEnd: "",
-                            roadCondition: "",
-                            daytime: DateFormat.Hm('de_DE').format(daytime),
-                            weather: "",
-                            carName: _typeAheadControllerVehicle.text),
-                        ""),
-                  );
+                  Navigator.of(context).pushNamed(TourScreen.routeName,
+                      arguments: Tour(
+                          timestamp: daytime,
+                          mileageBegin:
+                              num.tryParse(_textFieldController.text) == null
+                                  ? 0
+                                  : int.parse(_textFieldController.text),
+                          mileageEnd: 0,
+                          attendant: "",
+                          distance: 0,
+                          licensePlate: _licensePlate,
+                          tourBegin: "",
+                          tourEnd: "",
+                          roadCondition: "",
+                          daytime: DateFormat.Hm('de_DE').format(daytime),
+                          weather: "",
+                          carName: _typeAheadControllerVehicle.text,
+                          id: ""));
                 },
-              ),
+              )
             ],
           );
         });
   }
 
+  // triggers the smartphone camera
   Future<Null> _pickImage() async {
     final pickedImage =
         await ImagePicker().getImage(source: ImageSource.camera);
     if (pickedImage != null) {
       final croppedImage = await _cropImage(pickedImage.path);
       if (croppedImage != null) {
-        textRecognizer(croppedImage).then((value) {
+        _textRecognizer(croppedImage).then((value) {
           _textFieldController.text =
               num.tryParse(value.text) == null ? "" : value.text;
         });
@@ -362,30 +368,30 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
   }
 
-  Future<VisionText> textRecognizer(File image) async {
+  // processes the image and gives the result
+  Future<VisionText> _textRecognizer(File image) async {
     final data = FirebaseVisionImage.fromFile(image);
     final TextRecognizer textRecognizer =
         FirebaseVision.instance.textRecognizer();
     return await textRecognizer.processImage(data);
   }
 
+  // crops a given image from file path
   Future<File> _cropImage(String path) async {
     final croppedImage = await ImageCropper.cropImage(
-        sourcePath: path,
-        aspectRatioPresets: Platform.isAndroid
-            ? [CropAspectRatioPreset.ratio16x9]
-            : [CropAspectRatioPreset.ratio16x9],
-        androidUiSettings: AndroidUiSettings(
-            toolbarTitle: 'Zuschneiden',
-            toolbarColor: Theme.of(context).backgroundColor,
-            statusBarColor: Theme.of(context).backgroundColor,
-            toolbarWidgetColor: Colors.white,
-            activeControlsWidgetColor: Theme.of(context).backgroundColor,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false),
-        iosUiSettings: IOSUiSettings(
-          title: 'Cropper',
-        ));
+      sourcePath: path,
+      aspectRatioPresets: Platform.isAndroid
+          ? [CropAspectRatioPreset.ratio16x9]
+          : [CropAspectRatioPreset.ratio16x9],
+      androidUiSettings: AndroidUiSettings(
+          toolbarTitle: 'Zuschneiden',
+          toolbarColor: Theme.of(context).backgroundColor,
+          statusBarColor: Theme.of(context).backgroundColor,
+          toolbarWidgetColor: Colors.white,
+          activeControlsWidgetColor: Theme.of(context).backgroundColor,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false),
+    );
     return croppedImage;
   }
 }

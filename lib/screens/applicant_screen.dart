@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/providers/applicant.dart';
+import 'package:l17/models/applicant.dart';
 import 'package:l17/screens/applicant_detail_screen.dart';
 import 'package:l17/widgets/applicant_list_item.dart';
 
@@ -16,6 +16,7 @@ class _ApplicantScreenState extends State<ApplicantScreen> {
   final appBar = AppBar(
     title: Text('Fahrer'),
   );
+
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height -

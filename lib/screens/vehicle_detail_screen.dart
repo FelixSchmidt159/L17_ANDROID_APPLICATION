@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/providers/vehicle.dart';
+import 'package:l17/models/vehicle.dart';
 
 class VehicleDetailScreen extends StatefulWidget {
   static const routeName = '/vehicle-detail-screen';
@@ -12,31 +12,32 @@ class VehicleDetailScreen extends StatefulWidget {
 }
 
 class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final _currentUser = FirebaseAuth.instance.currentUser;
   final _form = GlobalKey<FormState>();
-  Vehicle vehicle;
-  bool initialize = true;
-  StreamSubscription<QuerySnapshot> vehicleListener;
-  List<Vehicle> vehicles = [];
+  Vehicle _vehicle;
+  bool _initialize = true;
+  StreamSubscription<QuerySnapshot> _vehicleListener;
+  List<Vehicle> _vehicles = [];
+  Vehicle _editedVehicle = Vehicle("", "", "");
 
-  var _editedVehicle = Vehicle("", "", "");
-
+  // fetches all vehicles
   @override
   void didChangeDependencies() {
-    if (initialize) {
-      vehicle = ModalRoute.of(context).settings.arguments as Vehicle;
-      _editedVehicle = Vehicle(vehicle.name, vehicle.licensePlate, vehicle.id);
-      initialize = false;
-      vehicleListener = FirebaseFirestore.instance
+    if (_initialize) {
+      _vehicle = ModalRoute.of(context).settings.arguments as Vehicle;
+      _editedVehicle =
+          Vehicle(_vehicle.name, _vehicle.licensePlate, _vehicle.id);
+      _initialize = false;
+      _vehicleListener = FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('vehicles')
           .snapshots()
           .listen((event) {
         var docs = event.docs;
         if (docs.isNotEmpty) {
           for (int i = 0; i < docs.length; i++) {
-            vehicles.add(
+            _vehicles.add(
                 Vehicle(docs[i]['name'], docs[i]['licensePlate'], docs[i].id));
           }
           setState(() {});
@@ -47,13 +48,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     super.didChangeDependencies();
   }
 
+  // cancel subscribtion to avoid memory leaks
   @override
   void dispose() {
-    if (vehicleListener != null) vehicleListener.cancel();
-    // TODO: implement dispose
+    if (_vehicleListener != null) _vehicleListener.cancel();
     super.dispose();
   }
 
+  // stores or updates an vehicle document depending on if it already exists
   Future<bool> _saveForm() async {
     final isValid = _form.currentState.validate();
     if (!isValid) {
@@ -63,7 +65,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     if (_editedVehicle.id == "") {
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('vehicles')
           .add({
         'name': _editedVehicle.name,
@@ -74,7 +76,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     } else {
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('vehicles')
           .doc(_editedVehicle.id)
           .update({
@@ -97,12 +99,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Fahrzeuge'),
-          actions: <Widget>[
-            // IconButton(
-            //   icon: Icon(Icons.save),
-            //   onPressed: _saveForm,
-            // ),
-          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -116,10 +112,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     if (value.length > 20)
                       return 'Der Name darf nicht länger als 20 Zeichen sein';
                     if (value.isEmpty) return 'Geben Sie einen Namen ein';
-                    for (int i = 0; i < vehicles.length; i++) {
+                    for (int i = 0; i < _vehicles.length; i++) {
                       if (value.toLowerCase() ==
-                              vehicles[i].name.toLowerCase() &&
-                          vehicle.id == "")
+                              _vehicles[i].name.toLowerCase() &&
+                          _vehicle.id == "")
                         return 'Dieser Namer existiert bereits';
                     }
                     return null;

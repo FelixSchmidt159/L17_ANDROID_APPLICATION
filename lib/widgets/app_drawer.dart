@@ -12,10 +12,8 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: <Widget>[
           AppBar(
-            // title: Text('Hallo!'),
             automaticallyImplyLeading: false,
           ),
-          // Divider(),
           ListTile(
             leading: Icon(Icons.bar_chart_sharp),
             title: Text('Statistik'),

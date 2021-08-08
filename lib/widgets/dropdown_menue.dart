@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/applicant.dart';
+import '../models/applicant.dart';
 import '../providers/applicants.dart';
 
 class DropDownMenue extends StatefulWidget {
@@ -16,20 +16,21 @@ class DropDownMenue extends StatefulWidget {
 }
 
 class _DropDownMenueState extends State<DropDownMenue> {
-  var currentUser = FirebaseAuth.instance.currentUser;
+  var _currentUser = FirebaseAuth.instance.currentUser;
   List<Applicant> _items = [];
   String _selectedDriver;
-  bool init = true;
+  bool _init = true;
   String _driver;
 
+  // fetches all drivers and creates and dropdown list, where the user can
+  // select the driver
   @override
   Widget build(BuildContext context) {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
-
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .snapshots(),
       builder: (ctx, toursSnapshot) {
@@ -46,12 +47,12 @@ class _DropDownMenueState extends State<DropDownMenue> {
           _items.add(Applicant(toursDocs[i]['name'], toursDocs[i].id));
         }
         if (_items.length > 0) _driver = _items[0].name;
-        init = true;
+        _init = true;
 
         var dropdownMenuItemList =
             _items.map<DropdownMenuItem<String>>((Applicant applicant) {
           if (applicant.id == _selectedDriver) {
-            init = false;
+            _init = false;
           }
           return DropdownMenuItem<String>(
             value: applicant.id,
@@ -69,7 +70,7 @@ class _DropDownMenueState extends State<DropDownMenue> {
           );
         }).toList();
 
-        if (init) {
+        if (_init) {
           _selectedDriver = null;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Provider.of<Applicants>(context, listen: false).selectedDriverId =
@@ -97,15 +98,6 @@ class _DropDownMenueState extends State<DropDownMenue> {
                   child: DropdownButton<String>(
                     iconDisabledColor: Colors.grey.shade200,
                     underline: Container(),
-                    // hint: SizedBox(
-                    //     width: widget.width * 0.75,
-                    //     child: Text(
-                    //       '',
-                    //       style: TextStyle(
-                    //           fontWeight: FontWeight.bold, color: Colors.black),
-                    //       textAlign: TextAlign.center,
-                    //       overflow: TextOverflow.ellipsis,
-                    //     )),
                     disabledHint: SizedBox(
                       width: widget.width * 0.75,
                       child: Text(

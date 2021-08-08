@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class MatColor {
+
+  ///  Defines the material color, which is used in this application
   static MaterialColor createMaterialColor(Color color) {
     List strengths = <double>[.05];
     Map swatch = <int, Color>{};

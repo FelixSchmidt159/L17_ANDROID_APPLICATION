@@ -13,6 +13,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _auth = FirebaseAuth.instance;
   var _isLoading = false;
 
+  /// creates or signs in a user depending on the option he choose
   void _submitAuthForm(String email, String password, String username,
       bool isLogin, BuildContext ctx) async {
     UserCredential authResult;

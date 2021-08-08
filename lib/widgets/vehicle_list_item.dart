@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/providers/vehicle.dart';
+import 'package:l17/models/vehicle.dart';
 import 'package:l17/screens/vehicle_detail_screen.dart';
 
 class VehicleListItem extends StatefulWidget {
@@ -16,12 +16,11 @@ class VehicleListItem extends StatefulWidget {
 class _VehicleListItemState extends State<VehicleListItem> {
   final _currentUser = FirebaseAuth.instance.currentUser;
 
+  // delete a vehicle
   void _showDialog() {
-    // flutter defined function
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        // return object of type Dialog
         return AlertDialog(
           title: new Text("Fahrzeug löschen"),
           content: new Text("Wollen Sie dieses Fahrzeug wirklich löschen?"),

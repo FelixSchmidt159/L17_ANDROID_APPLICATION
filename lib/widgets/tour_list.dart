@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:l17/providers/applicants.dart';
-import 'package:l17/providers/tour.dart';
+import 'package:l17/models/tour.dart';
 import 'package:l17/screens/chart_bar_screen.dart';
 import 'package:l17/widgets/chart_bar.dart';
 import 'package:l17/widgets/dropdown_menue.dart';
@@ -29,6 +29,7 @@ class _TourListState extends State<TourList> {
   StreamSubscription<QuerySnapshot> _streamSubscriptionGoals;
   StreamSubscription<QuerySnapshot> _streamSubscriptionTours;
 
+  // fetches all tours and calculates the sum of driven distance
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
@@ -60,6 +61,7 @@ class _TourListState extends State<TourList> {
         }
       });
 
+      // fetches the goals, which the user set
       _streamSubscriptionGoals = FirebaseFirestore.instance
           .collection('users')
           .doc(_currentUser.uid)
@@ -81,6 +83,7 @@ class _TourListState extends State<TourList> {
     super.didChangeDependencies();
   }
 
+  // cancle all subscriptions to avoid memory leaks
   @override
   void dispose() {
     if (_streamSubscriptionTours != null) _streamSubscriptionTours.cancel();
@@ -96,7 +99,6 @@ class _TourListState extends State<TourList> {
         Container(
           color: Colors.grey.shade200,
           height: widget.height * 0.10,
-          // padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -159,7 +161,7 @@ class _TourListState extends State<TourList> {
                           child: ListView.builder(
                             itemBuilder: (context, index) {
                               return TourListItem(
-                                  Tour(
+                                Tour(
                                     timestamp:
                                         DateTime.fromMicrosecondsSinceEpoch(
                                             toursDocs[index]['timestamp']
@@ -178,8 +180,8 @@ class _TourListState extends State<TourList> {
                                     daytime: toursDocs[index]['daytime'],
                                     weather: toursDocs[index]['weather'],
                                     carName: toursDocs[index]['carName'],
-                                  ),
-                                  toursDocs[index].id);
+                                    id: toursDocs[index].id),
+                              );
                             },
                             itemCount: toursDocs.length,
                           ),
@@ -195,7 +197,7 @@ class _TourListState extends State<TourList> {
                                 color: Theme.of(context).iconTheme.color,
                                 size: 50,
                               ),
-                              Text('Fügen Sie eine neue Fahrt hinzu.'),
+                              Text('Fügen Sie eine neue Fahrt hinzu'),
                             ],
                           ),
                         );
@@ -211,7 +213,7 @@ class _TourListState extends State<TourList> {
                       Icons.people,
                       size: 50,
                     ),
-                    Text('Fügen Sie einen neuen Fahrer im Side-Menü hinzu.'),
+                    Text('Fügen Sie einen neuen Fahrer im Side-Menü hinzu'),
                   ],
                 ),
               )

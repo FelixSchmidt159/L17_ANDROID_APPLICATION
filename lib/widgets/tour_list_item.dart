@@ -2,18 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:l17/models/TourScreenArguments.dart';
 import 'package:l17/providers/applicants.dart';
 import 'package:provider/provider.dart';
 
 import '../screens/tour_screen.dart';
-import '../providers/tour.dart';
+import '../models/tour.dart';
 
 class TourListItem extends StatefulWidget {
   final Tour tour;
-  final String id;
 
-  TourListItem(this.tour, this.id);
+  TourListItem(this.tour);
 
   @override
   _TourListItemState createState() => _TourListItemState();
@@ -21,8 +19,9 @@ class TourListItem extends StatefulWidget {
 
 class _TourListItemState extends State<TourListItem> {
   String _selectedDriver;
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final _currentUser = FirebaseAuth.instance.currentUser;
 
+  // check if there is missing information concerning the tour
   bool checkMissingFields() {
     bool missingFields = false;
     if (widget.tour.attendant == "") missingFields = true;
@@ -38,6 +37,7 @@ class _TourListItemState extends State<TourListItem> {
     return missingFields;
   }
 
+  // when deleting a tour, ensure that all corresponding data is deleted as well
   void _showDialog() {
     // flutter defined function
     showDialog(
@@ -56,11 +56,11 @@ class _TourListItemState extends State<TourListItem> {
                 Navigator.pop(context);
                 FirebaseFirestore.instance
                     .collection('users')
-                    .doc(currentUser.uid)
+                    .doc(_currentUser.uid)
                     .collection('drivers')
                     .doc(_selectedDriver)
                     .collection('tours')
-                    .doc(widget.id)
+                    .doc(widget.tour.id)
                     .delete();
                 setState(() {});
               },
@@ -86,8 +86,8 @@ class _TourListItemState extends State<TourListItem> {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pushNamed(TourScreen.routeName,
-            arguments: TourScreenArguments(widget.tour, widget.id));
+        Navigator.of(context)
+            .pushNamed(TourScreen.routeName, arguments: widget.tour);
       },
       child: Card(
         elevation: 5,

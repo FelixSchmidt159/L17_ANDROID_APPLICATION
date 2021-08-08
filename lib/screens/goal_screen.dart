@@ -14,14 +14,16 @@ class GoalScreen extends StatefulWidget {
 }
 
 class _GoalScreenState extends State<GoalScreen> {
-  double width = 0.0;
+  double _width = 0.0;
   String _selectedDriver;
-  final currentUser = FirebaseAuth.instance.currentUser;
-  int distLastSevenDays = 0;
-  int distLastThirtyDays = 30;
-  DateTime day = DateTime.now();
-  int maxDistance = 0;
+  final _currentUser = FirebaseAuth.instance.currentUser;
+  int _distLastSevenDays = 0;
+  int _distLastThirtyDays = 30;
+  DateTime _day = DateTime.now();
+  int _maxDistance = 0;
 
+  /// fetches the tours, which are driven the last seven and thirty days
+  /// and the tour with the highest driven distance
   @override
   void didChangeDependencies() {
     _selectedDriver = Provider.of<Applicants>(context).selectedDriverId;
@@ -29,10 +31,12 @@ class _GoalScreenState extends State<GoalScreen> {
     var tsS = Timestamp.fromDate(now.subtract(Duration(days: 7)));
     var tsN = Timestamp.fromDate(now);
     var tsT = Timestamp.fromDate(now.subtract(Duration(days: 30)));
+
     if (_selectedDriver != null) {
+      // fetches the tours from the last seven days
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
@@ -40,30 +44,32 @@ class _GoalScreenState extends State<GoalScreen> {
               isLessThanOrEqualTo: tsN, isGreaterThanOrEqualTo: tsS)
           .get()
           .then((value) {
-        distLastSevenDays = 0;
+        _distLastSevenDays = 0;
         var docs = value.docs;
 
         for (int i = 0; i < docs.length; i++) {
-          distLastSevenDays += docs[i]['distance'];
+          _distLastSevenDays += docs[i]['distance'];
         }
         if (mounted) {
           setState(() {});
         }
       });
+
+      // fetches the tour with the highest driven distance
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
           .get()
           .then((value) {
         var docs = value.docs;
-        maxDistance = 0;
+        _maxDistance = 0;
         for (int i = 0; i < docs.length; i++) {
-          if (docs[i]['distance'] > maxDistance) {
-            maxDistance = docs[i]['distance'];
-            day = DateTime.fromMicrosecondsSinceEpoch(
+          if (docs[i]['distance'] > _maxDistance) {
+            _maxDistance = docs[i]['distance'];
+            _day = DateTime.fromMicrosecondsSinceEpoch(
                 docs[i]['timestamp'].microsecondsSinceEpoch);
           }
         }
@@ -72,9 +78,10 @@ class _GoalScreenState extends State<GoalScreen> {
         }
       });
 
+      // fetches the tours from the last thirty days
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_selectedDriver)
           .collection('tours')
@@ -82,11 +89,11 @@ class _GoalScreenState extends State<GoalScreen> {
               isLessThanOrEqualTo: tsN, isGreaterThanOrEqualTo: tsT)
           .get()
           .then((value) {
-        distLastThirtyDays = 0;
+        _distLastThirtyDays = 0;
         var docs = value.docs;
 
         for (int i = 0; i < docs.length; i++) {
-          distLastThirtyDays += docs[i]['distance'];
+          _distLastThirtyDays += docs[i]['distance'];
         }
         if (mounted) {
           setState(() {});
@@ -99,7 +106,7 @@ class _GoalScreenState extends State<GoalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    width = MediaQuery.of(context).size.width;
+    _width = MediaQuery.of(context).size.width;
     var appBar = AppBar(
       title: Text('Statistik ${DateTime.now().year}'),
     );
@@ -114,7 +121,7 @@ class _GoalScreenState extends State<GoalScreen> {
       appBar: appBar,
       body: _selectedDriver != null
           ? Container(
-              width: width,
+              width: _width,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -127,19 +134,18 @@ class _GoalScreenState extends State<GoalScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: width * 0.44,
+                        width: _width * 0.44,
                         height: height * 0.15,
                         child: Card(
                           color: Colors.grey.shade200,
                           semanticContainer: false,
                           child: Column(
-                            // mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Row(
                                 children: [
                                   SizedBox(
-                                    width: width * 0.44 * 0.8,
+                                    width: _width * 0.44 * 0.8,
                                     height: height * 0.15 * 0.35,
                                   ),
                                   Icon(Icons.directions_car)
@@ -158,7 +164,7 @@ class _GoalScreenState extends State<GoalScreen> {
                                 padding:
                                     const EdgeInsets.fromLTRB(14, 0, 0, 10),
                                 child: Text(
-                                  distLastSevenDays.toString() + ' km',
+                                  _distLastSevenDays.toString() + ' km',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               )
@@ -167,22 +173,21 @@ class _GoalScreenState extends State<GoalScreen> {
                         ),
                       ),
                       SizedBox(
-                        width: width * 0.04,
+                        width: _width * 0.04,
                       ),
                       Container(
-                        width: width * 0.44,
+                        width: _width * 0.44,
                         height: height * 0.15,
                         child: Card(
                           color: Colors.grey.shade200,
                           semanticContainer: false,
                           child: Column(
-                            // mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Row(
                                 children: [
                                   SizedBox(
-                                    width: width * 0.44 * 0.8,
+                                    width: _width * 0.44 * 0.8,
                                     height: height * 0.15 * 0.35,
                                   ),
                                   Icon(
@@ -202,7 +207,7 @@ class _GoalScreenState extends State<GoalScreen> {
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(14, 0, 0, 2),
                                 child: Text(
-                                  distLastThirtyDays.toString() + ' km',
+                                  _distLastThirtyDays.toString() + ' km',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               )
@@ -216,19 +221,18 @@ class _GoalScreenState extends State<GoalScreen> {
                     height: height * 0.05,
                   ),
                   Container(
-                    width: width * 0.92,
+                    width: _width * 0.92,
                     height: height * 0.15,
                     child: Card(
                       color: Colors.grey.shade200,
                       semanticContainer: false,
                       child: Column(
-                        // mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Row(
                             children: [
                               SizedBox(
-                                width: width * 0.83,
+                                width: _width * 0.83,
                                 height: height * 0.15 * 0.35,
                               ),
                               Icon(
@@ -239,7 +243,7 @@ class _GoalScreenState extends State<GoalScreen> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(14, 0, 0, 2),
                             child: Text(
-                              'Am ${DateFormat.Md('de_DE').format(day)} bist du am meisten gefahren',
+                              'Am ${DateFormat.Md('de_DE').format(_day)} bist du am meisten gefahren',
                               style: TextStyle(
                                   color: Colors.grey.shade500,
                                   fontWeight: FontWeight.bold),
@@ -248,7 +252,7 @@ class _GoalScreenState extends State<GoalScreen> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(14, 0, 0, 10),
                             child: Text(
-                              maxDistance.toString() + ' km',
+                              _maxDistance.toString() + ' km',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           )
@@ -261,7 +265,7 @@ class _GoalScreenState extends State<GoalScreen> {
             )
           : Container(
               height: height,
-              width: width,
+              width: _width,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -270,7 +274,7 @@ class _GoalScreenState extends State<GoalScreen> {
                     Icons.people,
                     size: 50,
                   ),
-                  Text('Fügen Sie einen neuen Fahrer im Side-Menü hinzu.'),
+                  Text('Fügen Sie einen neuen Fahrer im Side-Menü hinzu'),
                 ],
               ),
             ),

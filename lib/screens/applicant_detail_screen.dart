@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:l17/providers/applicant.dart';
+import 'package:l17/models/applicant.dart';
 
 class ApplicantDetailScreen extends StatefulWidget {
   static const routeName = '/applicant-detail-screen';
@@ -11,24 +11,24 @@ class ApplicantDetailScreen extends StatefulWidget {
 }
 
 class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final _currentUser = FirebaseAuth.instance.currentUser;
   final _form = GlobalKey<FormState>();
-  Applicant applicantObject;
-  bool initialize = true;
-
-  var _editedApplicant = Applicant("", "");
+  bool _initialize = true;
+  Applicant _editedApplicant;
 
   @override
   void didChangeDependencies() {
-    if (initialize) {
-      applicantObject = ModalRoute.of(context).settings.arguments as Applicant;
-      _editedApplicant = Applicant(applicantObject.name, applicantObject.id);
-      initialize = false;
+    if (_initialize) {
+      _editedApplicant = ModalRoute.of(context).settings.arguments as Applicant;
+      _initialize = false;
     }
 
     super.didChangeDependencies();
   }
 
+  /// Creates a new applicant document if it doesn´t already exist
+  /// otherwise it will update the given document referenced by the id
+  /// an empty string as an id means the applicant document doesn´t exist yet
   Future<bool> _saveForm() async {
     final isValid = _form.currentState.validate();
     if (!isValid) {
@@ -38,7 +38,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     if (_editedApplicant.id == "") {
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .add({
         'name': _editedApplicant.name,
@@ -47,7 +47,7 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
     } else {
       FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUser.uid)
+          .doc(_currentUser.uid)
           .collection('drivers')
           .doc(_editedApplicant.id)
           .update({
@@ -55,7 +55,6 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       });
       return true;
     }
-    // Navigator.of(context).pop();
   }
 
   Future<bool> _onWillPop() async {
@@ -69,12 +68,6 @@ class _ApplicantDetailScreenState extends State<ApplicantDetailScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Fahrer'),
-          // actions: <Widget>[
-          //   IconButton(
-          //     icon: Icon(Icons.save),
-          //     onPressed: _saveForm,
-          //   ),
-          // ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
